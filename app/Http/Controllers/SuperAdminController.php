@@ -22,53 +22,5 @@ class SuperAdminController extends Controller
         return view('superadmin-dashboard');
     }
 
-    public function home()
-    {
-        return view('livewire.home');
-    }
-
-    public function about()
-    {
-        return view('livewire.about');
-    }
-
-    public function contact()
-    {
-        return view('livewire.contact');
-    }
-
-    public function index()
-    {
-        //
-    }
-
-    public function create()
-    {
-        //
-    }
-
-    public function store(Request $request)
-    {
-        //
-    }
-
-    public function show($id)
-    {
-        //
-    }
-
-    public function edit($id)
-    {
-        //
-    }
-
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    public function destroy($id)
-    {
-        //
-    }
+    
 }

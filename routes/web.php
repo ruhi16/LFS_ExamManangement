@@ -6,16 +6,9 @@ use App\Http\Controllers\StudentdbController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
-use App\Http\Controllers\TeacherController;
 use App\Http\Livewire\Contact;
 use App\Http\Livewire\Home;
 use App\Http\Livewire\About;
-use App\Http\Livewire\AdminAdmissionComponent;
-use App\Http\Livewire\AdminAnsscrDistributionComponent;
-use App\Http\Livewire\AdminAnsscrDistributioncwComponent;
-use App\Http\Livewire\AdminMyclassAnserScriptDistributionBaseComponent;
-use App\Http\Livewire\AdminMyclassSectionComponent;
-use App\Http\Livewire\AdminTeacherWiseMarksEntryLinksComponent;
 use App\Http\Livewire\AdminUserPreviledgeControlComponent;
 use App\Http\Livewire\SubadminMarksEntryComponent;
 use App\Http\Livewire\SubadminMarksEntryEntityComponent;
@@ -57,47 +50,32 @@ Route::group(
         Route::get('/dashboard', [ App\Http\Controllers\AdminController::class, 'dashboard'])
             ->name('adminDash');
 
-        // Route::get('/admission/{myclassSection_id}', [App\Http\Controllers\AdminController::class, 'admission'])->name('admission');
-        // Route::get('/dashboard', AdminDashboard::class)
-        //     ->name('adminDash');
-
-        // --------------------- Admin Dashboard Management ---------------------------------------------
-        // Route::get('/userpreviledgemanagement', AdminUserPreviledgeControlComponent::class)
-        //     ->name('admin.profilemanagement');
-
-        // Route::get('/myclasssectionmanagement', AdminMyclassSectionComponent::class)
-        //     ->name('admin.myclasssectionmanagement');
         
-        // Route::get('/myclasssectionwiseanswerscriptmanagement', AdminMyclassAnserScriptDistributionBaseComponent::class)
-        //     ->name('admin.myclasssectionwiseanswerscriptmanagement');
-
-        // Route::get('teacherwisemarksentrylink', AdminTeacherWiseMarksEntryLinksComponent::class)
-        //     ->name('admin.teacherwisemarksentrylink');
-
-        // --------------------- Admin Dashboard Management -------------------------------------------
-        
-
-        // Route::get('/admission/{myclassSection_id}', AdminAdmissionComponent::class)
-        //     ->name('admin.admission');
-        
-        // Route::get('/ansscrdistribution/{myclassSection_id}', AdminAnsscrDistributionComponent::class)
-        //     ->name('admin.ansscrdistribution');
-        
-        // Route::get('/ansscrdistributionclasswise/{myclass_id}/{exam_id}', AdminAnsscrDistributioncwComponent::class)
-        //     ->name('admin.ansscrdistributioncw');
-
-        
-        // Route::get('/marksentryclasswise/{myclassSection_id}', SubadminMarksEntryComponent::class)
-        //     ->name('admin.marksentry');
-
-        // Route::get('/marksentryentityclasswise/{myclassSection_id}/{myclassSubject_id}/{examdetail_id}', SubadminMarksEntryEntityComponent::class)
-        //     ->name('admin.marksentryentity');
-
         
             
         Route::get('/home', Home::class)->name('home');
         Route::get('/contact', Contact::class)->name('contact');
         Route::get('/about', About::class)->name('about');
+
+        // Route::get('/changePassword', UserChangePasswordComponent::class)
+        //     ->name('subadmin.changePassword');
+
+    }
+);
+
+
+Route::group(
+    ['prefix' => 'office', 'middleware' => ['web', 'isOffice']],
+    function () {
+        Route::get('/dashboard', [ App\Http\Controllers\OfficeController::class, 'dashboard'])
+            ->name('officeDash');
+
+        
+        
+            
+        // Route::get('/home', Home::class)->name('home');
+        // Route::get('/contact', Contact::class)->name('contact');
+        // Route::get('/about', About::class)->name('about');
 
         // Route::get('/changePassword', UserChangePasswordComponent::class)
         //     ->name('subadmin.changePassword');
@@ -144,15 +122,19 @@ Route::get('/dashboard', function () {
     // echo 'Hello from dashboard';
     // echo auth()->user()->name;
     // echo 'Auth:' . Auth::user();
-
-    if (Auth::user() && Auth::user()->role_id == 4) {
+    if (Auth::user() && Auth::user()->role_id == 5) {
         // Super Admin or owner
         return redirect(route('supAdminDash'));
     }
 
+    if (Auth::user() && Auth::user()->role_id == 4) {
+        // Super Admin or owner
+        return redirect(route('adminDash'));
+    }
+
     if (Auth::user() && Auth::user()->role_id == 3) {
         // Admin or Headmaster
-        return redirect(route('adminDash'));
+        return redirect(route('officeDash'));
     }
 
     if (Auth::user() && Auth::user()->role_id == 2) {

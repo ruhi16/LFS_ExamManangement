@@ -66,6 +66,7 @@ class Kernel extends HttpKernel
 
         'isSuperAdmin'=> \App\Http\Middleware\SuperAdminAuthentication::class,
         'isAdmin'=> \App\Http\Middleware\AdminAuthentication::class,
+        'isOffice'=> \App\Http\Middleware\OfficeAuthentication::class,
         'isSubAdmin'=> \App\Http\Middleware\SubAdminAuthentication::class,
         'isUser' => \App\Http\Middleware\UserAuthentication::class,
     ];
