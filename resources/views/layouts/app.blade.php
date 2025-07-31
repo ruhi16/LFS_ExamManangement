@@ -21,6 +21,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 
     @livewireStyles
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .sidebar-transition { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .menu-item-hover:hover { background-color: rgba(59, 130, 246, 0.1); }
+        .submenu-enter { 
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .submenu-enter.open { max-height: 300px; }
+    </style>
 </head>
 
 <body class="font-sans antialiased">
@@ -28,12 +40,12 @@
         @include('layouts.navigation')
 
         <!-- Page Heading -->
-        <header class="bg-blue-400 shadow">
-            <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        {{-- <header class="bg-blue-400 shadow">
+            <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8"> --}}
                 {{-- {{ $slot }} --}}                
-                @yield('header')
-            </div>
-        </header>
+                {{-- @yield('header') --}}
+            {{-- </div>
+        </header> --}}
 
         <!-- Page Content -->
         {{-- <livewire:admin-sidebar-component /> --}}

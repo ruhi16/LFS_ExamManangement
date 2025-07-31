@@ -16,6 +16,11 @@ class AdminAuthentication
      */
     public function handle(Request $request, Closure $next)
     {
+        if (!auth()->check()) {
+            return redirect('/login');
+        }
+
+        
         if(auth()->user() && (auth()->user()->role_id == 4 ) ){
             return $next($request);
         }

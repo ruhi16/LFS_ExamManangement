@@ -13,14 +13,15 @@
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" {{-- user="Hari" --}}>
-                        {{ __('Dashboard') }}       <!-- This is $slot in nav-link -->
+                        {{-- {{ __('Dashboard') }}       <!-- This is $slot in nav-link --> --}}
+                        <span class="font-bold text-blue-800">{{ __('LF School:') }}</span> {{ ' '.__(auth()->user()->role->name). ' Dashboard: ' . __('Role-').__(auth()->user()->role->description) }}
                     </x-nav-link>
                 </div>
             </div>
 
 
             <!-- Special Menu, center at navbar -->
-            @if( Auth::user()->role_id == 3 || Auth::user()->role_id == 4 )
+            {{-- @if( Auth::user()->role_id == 3 || Auth::user()->role_id == 4 )
                 <div class="flex">
                     <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                         <x-nav-link wire:navigate :href="route('home')" :active="request()->routeIs('home')" >
@@ -38,7 +39,7 @@
                         </x-nav-link>
                     </div>
                 </div>
-            @endif
+            @endif --}}
             <!-- Special Menu, center at navbar -->
 
 
