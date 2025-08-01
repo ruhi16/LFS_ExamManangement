@@ -11,9 +11,16 @@ class Contact extends Component
     public $examParts = [];
     public $examModes = [];
     
-    public $selectedExamName;
-    public $selectedExamType;
-    public $selectedExamPart;
+
+    public $selectedExamNames = [];
+    public $selectedExamTypes = [];
+    public $selectedExamParts = [];
+    public $selectedExamModes = [];
+
+
+    // public $selectedExamName;
+    // public $selectedExamType;
+    // public $selectedExamPart;
     
     public $entries = [];
     public $newEntry = [
@@ -33,13 +40,13 @@ class Contact extends Component
         $this->entries = collect();
     }
 
-    public function updatedSelectedExamName($value)
-    {
-        $this->examTypes = ExamType::where('exam_name_id', $value)->get();
-        $this->selectedExamType = null;
-        $this->examParts = [];
-        $this->selectedExamPart = null;
-        $this->examModes = [];
+    public function updatedSelectedExamName($value){
+        // dd($value);
+        // $this->examTypes = ExamType::where('exam_name_id', $value)->get();
+        // $this->selectedExamType = null;
+        // $this->examParts = [];
+        // $this->selectedExamPart = null;
+        // $this->examModes = [];
     }
 
     public function updatedSelectedExamType($value)
@@ -97,6 +104,27 @@ class Contact extends Component
         $this->examParts = [];
         $this->examModes = [];
     }
+    public function saveExamConfiguration($examNameId)
+{
+    // Get all selected options for this exam name
+    $configuration = [
+        'exam_name_id' => $examNameId,
+        'exam_types' => $this->selectedExamTypes[$examNameId] ?? [],
+        'exam_parts' => $this->selectedExamParts[$examNameId] ?? [],
+        'exam_modes' => $this->selectedExamModes[$examNameId] ?? [],
+    ];
+    dd($configuration);
+    
+    // Save the configuration (implement your save logic here)
+    // Example:
+    // ExamConfiguration::updateOrCreate(
+    //     ['exam_name_id' => $examNameId],
+    //     ['configuration' => json_encode($configuration)]
+    // );
+    
+    // Show success message
+    session()->flash('message', 'Configuration saved successfully!');
+}
 
     public function saveAll()
     {

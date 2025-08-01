@@ -18,6 +18,8 @@ class CreateExam05DetailsTable extends Migration
             $table->string('name');
             $table->string('description')->nullable();
             
+            $table->integer('myclass_id')->unsigned()->nullable();
+            
             $table->integer('exam_name_id')->unsigned()->nullable();
             $table->integer('exam_type_id')->unsigned()->nullable();
             $table->integer('exam_part_id')->unsigned()->nullable();

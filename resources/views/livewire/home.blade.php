@@ -526,61 +526,6 @@
     </div>
 </div> --}}
 
-<div class="flex-1 p-6 overflow-y-auto max-w-4xl mx-auto">
-    <div class="bg-white rounded-lg shadow-md overflow-hidden">
-
-    <!-- Compact Table -->
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" wire:click="sortBy('id')">
-                            <div class="flex items-center">ID</div>
-                        </th>
-                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
-                            <div class="flex items-center">Name</div>
-                        </th>
-                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th scope="col" class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach($examNames as $examName)
-                    <tr class="hover:bg-gray-50">                        
-                        <td class="px-4 py-3 whitespace-nowrap">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0 h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                                    <span class="text-xs text-gray-600">{{ $examName->id }}</span>
-                                </div>
-                                <div class="ml-3">
-                                    <div class="text-sm font-medium text-gray-900"></div>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ $examName->name }}</td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                            @foreach($examTypes as $examType)
-                            <div class="flex items-center">{{ $examType->name }}</div>
-                                @foreach($examParts as $examPart)
-                                    {{ $examPart->name }}(
-                                    @foreach($examModes as $examMode)
-                                        {{ $examMode->name }},
-                                    @endforeach)<br/>
-                                @endforeach
-                             
-                                
-                            @endforeach
-                        </td>
-                        
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
 
 
 @livewire('contact')

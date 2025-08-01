@@ -19,6 +19,10 @@ class CreateMyclassSectionsTable extends Migration
             $table->string('description')->nullable();
             $table->integer('order_index')->unsigned()->nullable();
 
+            $table->integer('myclass_id')->unsigned()->nullable();
+            $table->integer('section_id')->unsigned()->nullable();
+
+
             $table->integer('school_id')->unsigned()->nullable();
             $table->integer('session_id')->unsigned()->nullable();
             $table->integer('user_id')->unsigned()->nullable();
