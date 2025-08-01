@@ -1,4 +1,6 @@
-<div class="flex h-full">
+<div>
+
+<div class="flex h-[calc(100vh_-_72px)] bg-gray-100 overflow-hidden">
     <!-- Sidebar -->
     <div class="w-64 bg-white shadow-lg border-r border-gray-200 flex flex-col">
         <!-- Logo -->
@@ -260,7 +262,7 @@
 
         <!-- Page Content -->
         <main class="flex-1 overflow-y-auto p-6">
-            <div class="max-w-7xl mx-auto">
+            <div class="max-w-8xl mx-auto">
                 @if($activeMenu === 'dashboard')
                     <!-- Dashboard Content -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -415,4 +417,174 @@
             </div>
         </main>
     </div>
+</div>
+
+
+{{-- <div class="flex-1 p-6 overflow-y-auto">
+    <div class="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-6">
+        <!-- Form Header -->
+        <div class="mb-6 border-b border-gray-200 pb-4">
+            <h2 class="text-2xl font-semibold text-gray-800">Create New Item</h2>
+            <p class="text-sm text-gray-500 mt-1">Fill in the form below to add a new item</p>
+        </div>
+
+        <!-- Form Content -->
+        <form wire:submit.prevent="submitForm">
+            <!-- Name Field -->
+            <div class="mb-6">
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <input 
+                    type="text" 
+                    id="name" 
+                    wire:model="name"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter name"
+                >
+                @error('name')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <!-- Email Field -->
+            <div class="mb-6">
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    wire:model="email"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter email"
+                >
+                @error('email')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <!-- Select Dropdown -->
+            <div class="mb-6">
+                <label for="role" class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                <select 
+                    id="role" 
+                    wire:model="role"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                >
+                    <option value="">Select a role</option>
+                    <option value="admin">Admin</option>
+                    <option value="editor">Editor</option>
+                    <option value="viewer">Viewer</option>
+                </select>
+                @error('role')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <!-- Checkbox -->
+            <div class="mb-6">
+                <div class="flex items-center">
+                    <input 
+                        id="is_active" 
+                        type="checkbox" 
+                        wire:model="is_active"
+                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    >
+                    <label for="is_active" class="ml-2 block text-sm text-gray-700">Active User</label>
+                </div>
+            </div>
+
+            <!-- Textarea -->
+            <div class="mb-6">
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea 
+                    id="description" 
+                    wire:model="description"
+                    rows="3"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter description"
+                ></textarea>
+                @error('description')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                <button 
+                    type="button" 
+                    wire:click="cancel"
+                    class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                    Cancel
+                </button>
+                <button 
+                    type="submit" 
+                    class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div> --}}
+
+<div class="flex-1 p-6 overflow-y-auto max-w-4xl mx-auto">
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+
+    <!-- Compact Table -->
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" wire:click="sortBy('id')">
+                            <div class="flex items-center">ID</div>
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
+                            <div class="flex items-center">Name</div>
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach($examNames as $examName)
+                    <tr class="hover:bg-gray-50">                        
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+                                    <span class="text-xs text-gray-600">{{ $examName->id }}</span>
+                                </div>
+                                <div class="ml-3">
+                                    <div class="text-sm font-medium text-gray-900"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ $examName->name }}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                            @foreach($examTypes as $examType)
+                            <div class="flex items-center">{{ $examType->name }}</div>
+                                @foreach($examParts as $examPart)
+                                    {{ $examPart->name }}(
+                                    @foreach($examModes as $examMode)
+                                        {{ $examMode->name }},
+                                    @endforeach)<br/>
+                                @endforeach
+                             
+                                
+                            @endforeach
+                        </td>
+                        
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+@livewire('contact')
+
+{{-- @livewire('about') --}}
+
 </div>

@@ -35,6 +35,11 @@ class Home extends Component{
 
 
     public function render(){
-        return view('livewire.home');
+        return view('livewire.home',[
+            'examNames' => \App\Models\Exam01Name::all(),
+            'examTypes' => \App\Models\Exam02Type::all(),
+            'examParts' => \App\Models\Exam03Part::all(),
+            'examModes' => \App\Models\Exam04Mode::all(),
+        ]);
     }
 }
