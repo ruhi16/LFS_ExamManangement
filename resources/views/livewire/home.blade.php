@@ -528,8 +528,9 @@
 
 
 
-@livewire('contact')
-
+{{-- @livewire('contact') --}}
+    @livewire('exam-settings-view',['classId' => 1])
+    {{-- @livewire('exam-settings') --}}
 {{-- @livewire('about') --}}
 
 </div>

@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Exam05AnsscrDist extends Model
+class SubjectType extends Model
 {
     use HasFactory;
 }

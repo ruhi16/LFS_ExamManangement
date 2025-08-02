@@ -4,9 +4,9 @@ namespace App\Http\Livewire;
 
 use Livewire\Component;
 
-class Contact extends Component
-{
-     public $examNames;
+class Contact extends Component{
+    public $examNames;
+    
     public $examTypes = [];
     public $examParts = [];
     public $examModes = [];

@@ -27,7 +27,7 @@
                             {{ $examName->name }}
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                            @if(isset($selectedExamNames[$examName->id]) && $selectedExamNames[$examName->id])
+                            {{-- @if(isset($selectedExamNames[$examName->id]) && $selectedExamNames[$examName->id]) --}}
                                 <div class="space-y-2 ml-4">
                                     @foreach($examTypes as $examType)
                                         <div>
@@ -38,7 +38,7 @@
                                                 <span class="ml-2">{{ $examType->name }}</span>
                                             </label>
                                             
-                                            @if(isset($selectedExamTypes[$examName->id][$examType->id]) && $selectedExamTypes[$examName->id][$examType->id])
+                                            {{-- @if(isset($selectedExamTypes[$examName->id][$examType->id]) && $selectedExamTypes[$examName->id][$examType->id]) --}}
                                                 <div class="space-y-2 ml-6">
                                                     @foreach($examParts as $examPart)
                                                         <div>
@@ -49,7 +49,7 @@
                                                                 <span class="ml-2">{{ $examPart->name }}</span>
                                                             </label>
                                                             
-                                                            @if(isset($selectedExamParts[$examName->id][$examType->id][$examPart->id]) && $selectedExamParts[$examName->id][$examType->id][$examPart->id])
+                                                            {{-- @if(isset($selectedExamParts[$examName->id][$examType->id][$examPart->id]) && $selectedExamParts[$examName->id][$examType->id][$examPart->id]) --}}
                                                                 <div class="space-y-2 ml-8">
                                                                     @foreach($examModes as $examMode)
                                                                         <label class="inline-flex items-center">
@@ -60,15 +60,15 @@
                                                                         </label>
                                                                     @endforeach
                                                                 </div>
-                                                            @endif
+                                                            {{-- @endif --}}
                                                         </div>
                                                     @endforeach
                                                 </div>
-                                            @endif
+                                            {{-- @endif --}}
                                         </div>
                                     @endforeach
                                 </div>
-                            @endif
+                            {{-- @endif --}}
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
                             @if(isset($selectedExamTypes[$examName->id][$examType->id]))

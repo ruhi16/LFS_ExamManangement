@@ -20,6 +20,10 @@ class Exam01Name extends Model
         // and 'id' is the local key in the related model(Session)
     }
 
-
+    public function examDetails(){
+        return $this->hasMany(Exam05Detail::class, 'exam_name_id', 'id');
+        // Assuming 'exam_name_id' is the foreign key in 
+        // and 'id' is the 
+    }
 
 }

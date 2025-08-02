@@ -41,5 +41,10 @@ class Myclass extends Model
         // 'id' is the primary key in the 'myclasses' table
     }
 
+    public function examDetails(){
+        return $this->hasMany(Exam05Detail::class,'myclass_id','id');
+        // 'myclass_id' is the foreign key in the 'exam05_details' table
+        // 'id' is the primary key in the 'myclasses' table
+    }
 
 }
