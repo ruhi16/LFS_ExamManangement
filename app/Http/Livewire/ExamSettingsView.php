@@ -25,7 +25,7 @@ class ExamSettingsView extends Component
     
     protected function loadExamConfigurations($classId)
     {
-        $this->examConfigurations = Exam05Detail::with([
+        $configurations = Exam05Detail::with([
             'examName', 
             'examType', 
             'examPart', 
@@ -39,8 +39,39 @@ class ExamSettingsView extends Component
         ->orderBy('exam_part_id')
         ->orderBy('exam_mode_id')
         ->get();
-        // ->groupBy(groupBy: 'exam_name_id');
-        // dd($this->examConfigurations);
+
+        // Organize data in matrix format: examName -> examType -> [parts with modes]
+        $this->examConfigurations = [];
+        
+        foreach ($configurations as $config) {
+            $examNameId = $config->exam_name_id;
+            $examTypeId = $config->exam_type_id;
+            
+            if (!isset($this->examConfigurations[$examNameId])) {
+                $this->examConfigurations[$examNameId] = [
+                    'examName' => $config->examName,
+                    'types' => []
+                ];
+            }
+            
+            if (!isset($this->examConfigurations[$examNameId]['types'][$examTypeId])) {
+                $this->examConfigurations[$examNameId]['types'][$examTypeId] = [
+                    'examType' => $config->examType,
+                    'parts' => []
+                ];
+            }
+            
+            $this->examConfigurations[$examNameId]['types'][$examTypeId]['parts'][] = [
+                'examPart' => $config->examPart,
+                'examMode' => $config->examMode,
+                'config' => $config
+            ];
+        }
+    }
+    
+    public function getAllExamTypes()
+    {
+        return \App\Models\Exam02Type::all();
     }
     
     public function getConfigurationSummary($classId)

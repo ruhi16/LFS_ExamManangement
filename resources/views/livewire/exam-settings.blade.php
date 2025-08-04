@@ -1,4 +1,28 @@
 <div class="flex-1 p-6 overflow-y-auto max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-semibold text-gray-900">Exam Setting Configuration</h1>
+                <p class="mt-1 text-sm text-gray-600">Manage school exam and their configurations</p>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    @if (session()->has('message'))
+        <div class="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
+            {{ session('message') }}
+        </div>
+    @endif
+
+    @if (session()->has('error'))
+        <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+            {{ session('error') }}
+        </div>
+    @endif
+
     <!-- Class Tabs -->
     <div class="border-b border-gray-200 mb-6">
         <nav class="-mb-px flex space-x-8">

@@ -1,4 +1,28 @@
 <div class="flex-1 p-6 overflow-y-auto max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-semibold text-gray-900">Exam Setting Configuration View</h1>
+                <p class="mt-1 text-sm text-gray-600">Manage school exam and their configurations view</p>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    @if (session()->has('message'))
+        <div class="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
+            {{ session('message') }}
+        </div>
+    @endif
+
+    @if (session()->has('error'))
+        <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+            {{ session('error') }}
+        </div>
+    @endif
+    
     <!-- Class Tabs -->
     <div class="border-b border-gray-200 mb-6">
         <nav class="-mb-px flex space-x-8">
@@ -44,108 +68,54 @@
             </div>
 
             @if(count($examConfigurations) > 0)
+                @php
+                    $allExamTypes = $this->getAllExamTypes();
+                @endphp
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
                                 <th scope="col"
-                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
-                                    Exam Name
-                                </th>
-                                <th scope="col"
                                     class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Configuration Details
+                                    <div class="flex items-center">Exam Name</div>
                                 </th>
-                                <th scope="col"
-                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                                    Status
-                                </th>
-                                <th scope="col"
-                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                                    Created By
-                                </th>
-                                <th scope="col"
-                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                                    Created At
-                                </th>
+                                @foreach($allExamTypes as $examType)
+                                    <th scope="col"
+                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <div class="flex items-center">{{ $examType->name }}</div>
+                                    </th>
+                                @endforeach
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach($examConfigurations as $examNameId => $configurations)
-                                @php
-                                    $firstConfig = $configurations->first();
-                                    $examName = $firstConfig->examName;
-                                @endphp
+                            @foreach($examConfigurations as $examNameId => $examData)
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        <div class="flex items-center">
-                                            {{ $examName->name ?? 'N/A' }}
-                                            <span
-                                                class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                {{ $configurations->count() }} config{{ $configurations->count() > 1 ? 's' : '' }}
-                                            </span>
-                                        </div>
+                                        {{ $examData['examName']->name ?? 'N/A' }}
                                     </td>
-
-                                    <td class="px-4 py-3 text-sm text-gray-500">
-                                        <div class="space-y-2">
-                                            
-                                            {{-- @foreach($configurations as $config)
-                                                <div class="border-l-2 border-gray-200 pl-3">
-                                                    <div class="flex flex-wrap gap-2 text-xs">
-                                                        @if($config)
-                                                            @if($config->examType)
-                                                                <span
-                                                                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                                                    Type: {{ $config->examType ? $config->examType->name : 'X' }}
-                                                                </span>
+                                    @foreach($allExamTypes as $examType)
+                                        <td class="px-4 py-3 text-sm text-gray-500">
+                                            @if(isset($examData['types'][$examType->id]))
+                                                @php
+                                                    $typeData = $examData['types'][$examType->id];
+                                                @endphp
+                                                <div class="space-y-1">
+                                                    @foreach($typeData['parts'] as $partData)
+                                                        <div class="text-sm">
+                                                            <span class="font-medium">{{ $partData['examPart']->name ?? 'N/A' }}</span>
+                                                            <span class="text-gray-400">-</span>
+                                                            <span class="text-indigo-600">{{ $partData['examMode']->name ?? 'N/A' }}</span>
+                                                            @if($partData['config']->is_finalized)
+                                                                <span class="text-green-600 ml-1">✓</span>
                                                             @endif
-                                                            @if($config->examPart)
-                                                                <span
-                                                                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                                                                    Part: {{ $config->examPart ? $config->examPart->name : 'X' }}
-                                                                </span>
-                                                            @endif
-                                                            @if($config->examMode)
-                                                                <span
-                                                                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
-                                                                    Mode: {{ $config->examMode ? $config->examMode->name : 'X' }}
-                                                                </span>
-                                                            @endif
-                                                        @endif
-                                                    </div>
-                                                    @if($config->description)
-                                                        <div class="text-xs text-gray-400 mt-1">{{ $config->description }}</div>
-                                                    @endif
+                                                        </div>
+                                                    @endforeach
                                                 </div>
-                                            @endforeach --}}
-                                        </div>
-                                    </td>
-                                    {{-- <td class="px-4 py-3 whitespace-nowrap">
-                                        @if($firstConfig->is_finalized)
-                                            <span
-                                                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                Finalized
-                                            </span>
-                                        @elseif($firstConfig->is_active)
-                                            <span
-                                                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                Active
-                                            </span>
-                                        @else
-                                            <span
-                                                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                                Inactive
-                                            </span>
-                                        @endif
-                                    </td>
-                                    
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                                        {{ $firstConfig->user->name ?? 'System' }}
-                                    </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                                        {{ $firstConfig->created_at }}
-                                    </td> --}}
+                                            @else
+                                                <span class="text-gray-400 text-sm">-</span>
+                                            @endif
+                                        </td>
+                                    @endforeach
                                 </tr>
                             @endforeach
                         </tbody>
