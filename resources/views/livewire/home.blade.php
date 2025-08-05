@@ -15,6 +15,7 @@
         <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
             @foreach($menuItems as $key => $item)
                 <div>
+                    {{-- {{ $key }}-{{ isset($item['subitems']) ? 'yes' : 'no' }} --}}
                     @if(isset($item['subitems']))
                         <!-- Menu item with submenu -->
                         <button wire:click="toggleSubmenu('{{ $key }}')"
@@ -80,6 +81,7 @@
                 </button>
             </div>
         </div>
+
     </div>
 
     <!-- Main Content -->
@@ -99,7 +101,7 @@
                                     foreach($menu['subitems'] as $subKey => $subItem) {
                                         if($subKey === $activeMenu) {
                                             $description = $subItem['description'];                                            
-                                            break 2;
+                                            break;
                                         }
                                     }
                                 } elseif($menu['label'] === $activeMenu) {
@@ -109,6 +111,7 @@
                             }
                             echo $description;
                         @endphp
+                        {{-- {{ $description }} --}}
                     </p>
                 </div>
                 <div class="flex items-center space-x-4">
@@ -136,16 +139,37 @@
         <main class="flex-1 overflow-y-auto p-6">
             
             <div class="max-w-8xl mx-auto">
-                Hari:{{ ($menuItems[$activeMenu]['component']) ?? 'XX' }}
+                {{-- Hari:{{ ($menuItems[$activeMenu]['component']) ?? 'XX' }} --}}
+                @php
+                    $component = '';
+                    foreach($menuItems as $menu) {
+                        if(isset($menu['subitems'])) {
+                            foreach($menu['subitems'] as $subKey => $subItem) {
+                                if($subKey === $activeMenu) {
+                                    $component = $subItem['component'];                                            
+                                    break;
+                                }
+                            }
+                        } elseif($menu['label'] === $activeMenu) {
+                            $component = $menu['component'];
+                            break;
+                        }
+                    }
+                    echo $component;
+                @endphp
+                {{-- @livewire($component) --}}
+
                 @if(isset($menuItems[$activeMenu]['component']))
                     <!-- Render the specified component -->
                     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-                        XX:{{ $activeMenu }}
-                        @livewire($menuItems[$activeMenu]['component'])
+                        {{-- XXx:{{ $activeMenu }} --}}
+                        {{-- @livewire($menuItems[$activeMenu]['component']) --}}
                     </div>
                 @else
                     <!-- Generic Content Area -->
                     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                        {{-- xx:{{ $activeMenu }}:{{ json_encode($menuItems['users']) }}:{{ json_encode($openSubmenus )}} --}}
+                        {{-- @livewire('myclass-comp') --}}
                         <div class="text-center">
                             <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -157,7 +181,7 @@
                                 {{ str_replace('-', ' ', $activeMenu) }} Page
                             </h3>
                             <p class="text-gray-500 mb-6">
-                                This is the {{ str_replace('-', ' ', $activeMenu) }} section. Content for this page
+                                This is the '{{ str_replace('-', ' ', $activeMenu) }}' section. Content for this page
                                 would be implemented here.
                             </p>
                             <button
@@ -165,6 +189,53 @@
                                 Get Started 
                             </button>
                         </div>
+
+                        {{-- <div class="mt-12">
+                            <h4 class="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h4>
+                            <ul class="space-y-4">
+                                <li class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-900">New Project Created</p>
+                                        <p class="text-xs text-gray-500">2 days ago</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-900">New Task Assigned</p>
+                                        <p class="text-xs text-gray-500">3 days ago</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-900">Project Deadline</p>
+                                        <p class="text-xs text-gray-500">5 days ago</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div> --}}
+
+
                     </div>
                 @endif
             </div>
