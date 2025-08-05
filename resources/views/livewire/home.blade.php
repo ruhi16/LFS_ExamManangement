@@ -13,35 +13,39 @@
 
         <!-- Navigation -->
         <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-            @foreach($menuItems as $key => $item)
+            @foreach ($menuItems as $key => $item)
                 <div>
                     {{-- {{ $key }}-{{ isset($item['subitems']) ? 'yes' : 'no' }} --}}
-                    @if(isset($item['subitems']))
+                    @if (isset($item['subitems']))
                         <!-- Menu item with submenu -->
                         <button wire:click="toggleSubmenu('{{ $key }}')"
                             class="w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors menu-item-hover
                                 {{ in_array($key, $openSubmenus) ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:text-blue-600' }}">
                             <div class="flex items-center">
                                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="{{ $item['icon'] }}" />
                                 </svg>
                                 {{ $item['label'] }}
                             </div>
                             <svg class="w-4 h-4 transition-transform {{ in_array($key, $openSubmenus) ? 'rotate-180' : '' }}"
                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
 
                         <!-- Submenu -->
                         <div class="submenu-enter {{ in_array($key, $openSubmenus) ? 'open' : '' }}">
                             <div class="ml-6 mt-2 space-y-1">
-                                @foreach($item['subitems'] as $subKey => $subItem)
+                                @foreach ($item['subitems'] as $subKey => $subItem)
                                     <button wire:click="setActiveMenu('{{ $key }}', '{{ $subKey }}')"
                                         class="w-full flex items-center px-3 py-2 text-sm rounded-lg transition-colors
                                             {{ $activeMenu === $subKey ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50' }}">
-                                        <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $subItem['icon'] }}" />
+                                        <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="{{ $subItem['icon'] }}" />
                                         </svg>
                                         {{ $subItem['label'] }}
                                     </button>
@@ -54,7 +58,8 @@
                             class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors menu-item-hover
                                 {{ $activeMenu === $key ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-600' : 'text-gray-700 hover:text-blue-600' }}">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="{{ $item['icon'] }}" />
                             </svg>
                             {{ $item['label'] }}
                         </button>
@@ -96,15 +101,15 @@
                     <p class="text-sm text-gray-500 mt-1">
                         @php
                             $description = '';
-                            foreach($menuItems as $menu) {
-                                if(isset($menu['subitems'])) {
-                                    foreach($menu['subitems'] as $subKey => $subItem) {
-                                        if($subKey === $activeMenu) {
-                                            $description = $subItem['description'];                                            
+                            foreach ($menuItems as $menu) {
+                                if (isset($menu['subitems'])) {
+                                    foreach ($menu['subitems'] as $subKey => $subItem) {
+                                        if ($subKey === $activeMenu) {
+                                            $description = $subItem['description'];
                                             break;
                                         }
                                     }
-                                } elseif($menu['label'] === $activeMenu) {
+                                } elseif ($menu['label'] === $activeMenu) {
                                     $description = $menu['description'];
                                     break;
                                 }
@@ -137,42 +142,20 @@
 
         <!-- Page Content -->
         <main class="flex-1 overflow-y-auto p-6">
-            
-            <div class="max-w-8xl mx-auto">
-                {{-- Hari:{{ ($menuItems[$activeMenu]['component']) ?? 'XX' }} --}}
-                @php
-                    $component = '';
-                    foreach($menuItems as $menu) {
-                        if(isset($menu['subitems'])) {
-                            foreach($menu['subitems'] as $subKey => $subItem) {
-                                if($subKey === $activeMenu) {
-                                    $component = $subItem['component'];                                            
-                                    break;
-                                }
-                            }
-                        } elseif($menu['label'] === $activeMenu) {
-                            $component = $menu['component'];
-                            break;
-                        }
-                    }
-                    echo $component;
-                @endphp
-                {{-- @livewire($component) --}}
 
-                @if(isset($menuItems[$activeMenu]['component']))
-                    <!-- Render the specified component -->
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-                        {{-- XXx:{{ $activeMenu }} --}}
-                        {{-- @livewire($menuItems[$activeMenu]['component']) --}}
+            <div class="max-w-8xl mx-auto">
+                @if ($currentComponent)
+                    <div wire:key="{{ $activeMenu }}-{{ $currentComponent }}" class="component-container">
+                        @livewire($currentComponent)
                     </div>
                 @else
                     <!-- Generic Content Area -->
                     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-                        {{-- xx:{{ $activeMenu }}:{{ json_encode($menuItems['users']) }}:{{ json_encode($openSubmenus )}} --}}
-                        {{-- @livewire('myclass-comp') --}}
                         <div class="text-center">
-                            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div
+                                class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
@@ -186,56 +169,9 @@
                             </p>
                             <button
                                 class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                                Get Started 
+                                Get Started
                             </button>
                         </div>
-
-                        {{-- <div class="mt-12">
-                            <h4 class="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h4>
-                            <ul class="space-y-4">
-                                <li class="flex items-center space-x-3">
-                                    <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                                        <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-900">New Project Created</p>
-                                        <p class="text-xs text-gray-500">2 days ago</p>
-                                    </div>
-                                </li>
-                                <li class="flex items-center space-x-3">
-                                    <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                                        <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-900">New Task Assigned</p>
-                                        <p class="text-xs text-gray-500">3 days ago</p>
-                                    </div>
-                                </li>
-                                <li class="flex items-center space-x-3">
-                                    <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                                        <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-900">Project Deadline</p>
-                                        <p class="text-xs text-gray-500">5 days ago</p>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div> --}}
-
-
                     </div>
                 @endif
             </div>
