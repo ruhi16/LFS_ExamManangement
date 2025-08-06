@@ -39,20 +39,18 @@ Route::group(
             App\Http\Controllers\SuperAdminController::class,
             'dashboard',
         ])->name('supAdminDash');
-
-      
     }
 );
 
 Route::group(
     ['prefix' => 'admin', 'middleware' => ['web', 'isAdmin']],
     function () {
-        Route::get('/dashboard', [ App\Http\Controllers\AdminController::class, 'dashboard'])
+        Route::get('/dashboard', [App\Http\Controllers\AdminController::class, 'dashboard'])
             ->name('adminDash');
 
-        
-        
-            
+
+
+
         Route::get('/home', Home::class)->name('home');
         Route::get('/contact', Contact::class)->name('contact');
         Route::get('/about', About::class)->name('about');
@@ -67,12 +65,12 @@ Route::group(
 Route::group(
     ['prefix' => 'office', 'middleware' => ['web', 'isOffice']],
     function () {
-        Route::get('/dashboard', [ App\Http\Controllers\OfficeController::class, 'dashboard'])
+        Route::get('/dashboard', [App\Http\Controllers\OfficeController::class, 'dashboard'])
             ->name('officeDash');
 
-        
-        
-            
+
+
+
         // Route::get('/home', Home::class)->name('home');
         // Route::get('/contact', Contact::class)->name('contact');
         // Route::get('/about', About::class)->name('about');
@@ -88,15 +86,12 @@ Route::group(
     function () {
         Route::get('/dashboard', [App\Http\Controllers\SubAdminController::class, 'dashboard'])
             ->name('subAdminDash');
-        
+
         Route::get('/admission/{myclassSection_id}', SubadminMarksEntryComponent::class)
             ->name('subadmin.marksEntry');
 
         Route::get('/marksentryentityclasswise/{myclassSection_id}/{myclassSubject_id}/{examdetail_id}', SubadminMarksEntryEntityComponent::class)
             ->name('subadmin.marksentryentity');
-    
-        
-    
     }
 );
 
@@ -113,7 +108,7 @@ Route::group(
 
 
 // Route::resource('/teachers', [TeacherController::class, 'index']);
-Route::resource('/teachers', TeacherController::class);
+// Route::resource('/teachers', TeacherController::class);
 Route::resource('/exam', ExamController::class);
 Route::resource('/students', StudentdbController::class);
 
@@ -154,16 +149,29 @@ Route::get('/dashboard', function () {
 
     // return view('dashboard');
 })->middleware(['auth'])
-//   ->middleware(['auth', 'verified'])
+    //   ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-    
+
 
 Route::get('/', function () {
     return view('welcome');
 });
 
+// Test route for FMPM component
+Route::get('/test-fmpm', function () {
+    return view('test-fmpm');
+})->name('test.fmpm');
 
+// Test route for simple FMPM component
+Route::get('/test-fmpm-simple', function () {
+    return view('test-fmpm-simple');
+})->name('test.fmpm.simple');
+
+// Test route for Student CR component
+Route::get('/test-student-cr', function () {
+    return view('test-student-cr');
+})->name('test.student.cr');
 
 Route::get('auth/google', [GoogleAuthController::class, 'redirect'])
     ->name('auth.google.login');
