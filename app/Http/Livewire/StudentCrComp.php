@@ -17,6 +17,11 @@ class StudentCrComp extends Component
     public $students = [];
     public $studentRecords = [];
 
+    // Modal properties
+    public $showModal = false;
+    public $selectedStudent = null;
+    public $selectedStudentId = null;
+
     // Debug properties
     public $debugMode = false;
 
@@ -55,6 +60,7 @@ class StudentCrComp extends Component
 
             // If no sections available, load all students for this class
             $sections = $this->getClassSectionsProperty();
+            // dd('Sections: ',$sections);
             if ($sections->isEmpty()) {
                 $this->loadStudentRecords();
                 session()->flash('message', 'No sections found for this class. Showing all students.');
@@ -81,11 +87,11 @@ class StudentCrComp extends Component
         if (!$this->selectedClassId) {
             return collect();
         }
-
+        // dd('Selected Class:', $this->selectedClassId);
         try {
             return MyclassSection::where('myclass_id', $this->selectedClassId)
                 ->where('is_active', true)
-                ->orderBy('name')
+                ->orderBy('id')
                 ->get();
         } catch (\Exception $e) {
             Log::error('Error getting class sections: ' . $e->getMessage());
@@ -105,6 +111,7 @@ class StudentCrComp extends Component
 
     protected function loadStudentRecords()
     {
+
         try {
             if (!$this->selectedClassId) {
                 return;
@@ -113,13 +120,15 @@ class StudentCrComp extends Component
             // Build query based on available data
             $query = Studentcr::with(['studentdb', 'myclass'])
                 ->where('myclass_id', $this->selectedClassId)
-                ->where('is_active', true);
-
+                // ->where('is_active', true)
+                // ->get()
+            ;
+            // dd($this->selectedSectionId);
             // Add section filter if section is selected and the column exists
             if ($this->selectedSectionId) {
                 // Try to add section filter, but handle if column doesn't exist
                 try {
-                    $query->where('myclass_section_id', $this->selectedSectionId);
+                    $query->where('section_id', $this->selectedSectionId);
                 } catch (\Exception $e) {
                     // If myclass_section_id doesn't exist, try section_id
                     try {
@@ -133,7 +142,9 @@ class StudentCrComp extends Component
             $this->studentRecords = $query->orderBy('roll_number')->get()->toArray();
 
             // Also get students from studentdb for reference
-            $this->students = Studentdb::where('is_active', true)
+            $this->students = Studentdb::with('myclass')
+                ->where('myclass_id', $this->selectedClassId)
+                // ->where('is_active', true)
                 ->orderBy('name')
                 ->get()
                 ->toArray();
@@ -227,6 +238,68 @@ class StudentCrComp extends Component
     {
         $this->debugMode = !$this->debugMode;
         session()->flash('message', 'Debug mode ' . ($this->debugMode ? 'enabled' : 'disabled'));
+    }
+
+    public function viewStudent($studentId)
+    {
+        try {
+            $this->selectedStudentId = $studentId;
+
+            // Load the complete student record with all relationships
+            $this->selectedStudent = Studentcr::with([
+                'studentdb',
+                'myclass',
+                'myclassSection',
+                'section'
+            ])
+                ->where('id', $studentId)
+                ->first();
+
+            if ($this->selectedStudent) {
+                $this->showModal = true;
+                Log::info("Viewing student record ID: {$studentId}");
+            } else {
+                session()->flash('error', 'Student record not found.');
+            }
+        } catch (\Exception $e) {
+            Log::error('Error viewing student: ' . $e->getMessage());
+            session()->flash('error', 'Error loading student details: ' . $e->getMessage());
+        }
+    }
+
+    public function closeModal()
+    {
+        $this->showModal = false;
+        $this->selectedStudent = null;
+        $this->selectedStudentId = null;
+    }
+
+    public function editStudent($studentId)
+    {
+        // Placeholder for edit functionality
+        session()->flash('message', "Edit functionality for student ID {$studentId} - Coming soon!");
+    }
+
+    public function deleteStudent($studentId)
+    {
+        try {
+            $student = Studentcr::find($studentId);
+            if ($student) {
+                // Soft delete by setting is_active to false
+                $student->update(['is_active' => false]);
+
+                // Reload the student records
+                $this->loadStudentRecords();
+
+                session()->flash('message', 'Student record deactivated successfully!');
+                Log::info("Deactivated student record ID: {$studentId}");
+            } else {
+                session()->flash('error', 'Student record not found.');
+            }
+        } catch (\Exception $e) {
+            Log::error('Error deleting student: ' . $e->getMessage());
+            session()->flash('error', 'Error deleting student: ' . $e->getMessage());
+        }
     }
 
     public function render()

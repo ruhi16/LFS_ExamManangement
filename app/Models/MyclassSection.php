@@ -9,7 +9,7 @@ class MyclassSection extends Model
 {
     use HasFactory;
     protected $guarded = ['id'];
-    protected $table = 'myclasssections';
+    protected $table = 'myclass_sections';
 
 
     public function section(){
@@ -23,4 +23,7 @@ class MyclassSection extends Model
         // 'myclass_id' is the foreign key in the 'myclass_sections' tablet
         // 'id' is the primary key in the 'myclasses' table
     }
+
+    
+
 }
