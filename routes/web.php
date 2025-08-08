@@ -173,6 +173,11 @@ Route::get('/test-student-cr', function () {
     return view('test-student-cr');
 })->name('test.student.cr');
 
+// Test route for Answer Script Distribution component
+Route::get('/test-answer-script-distribution', function () {
+    return view('test-answer-script-distribution');
+})->name('test.answer.script.distribution');
+
 Route::get('auth/google', [GoogleAuthController::class, 'redirect'])
     ->name('auth.google.login');
 

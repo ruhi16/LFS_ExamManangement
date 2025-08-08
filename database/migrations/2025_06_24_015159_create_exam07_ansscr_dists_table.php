@@ -19,6 +19,7 @@ class CreateExam07AnsscrDistsTable extends Migration
             $table->string('description')->nullable();
             
             $table->integer('exam_detail_id')->unsigned()->nullable();
+            $table->integer('myclass_section_id')->unsigned()->nullable();
             $table->integer('exam_class_subject_id')->unsigned()->nullable();
             $table->integer('teacher_id')->unsigned()->nullable();
 

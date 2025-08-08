@@ -82,8 +82,8 @@ class StudentCrComp extends Component
         }
     }
 
-    public function getClassSectionsProperty()
-    {
+    public function getClassSectionsProperty(){
+
         if (!$this->selectedClassId) {
             return collect();
         }
@@ -99,8 +99,7 @@ class StudentCrComp extends Component
         }
     }
 
-    protected function loadClassSections()
-    {
+    protected function loadClassSections(){
         $sections = $this->getClassSectionsProperty();
         if ($sections->isEmpty()) {
             Log::info("No sections found for class ID: {$this->selectedClassId}");
