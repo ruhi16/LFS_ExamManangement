@@ -88,6 +88,30 @@ class Home extends Component
                     'component' => 'answer-script-distribution-comp',
                     'description' => 'Assign teachers to evaluate answer scripts for different exam types and parts.'
                 ],
+                'marks-entry' => [
+                    'label' => 'Marks Entry',
+                    'icon' => 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
+                    'component' => 'marks-entry-comp',
+                    'description' => 'Enter marks for students across different exam types and parts.'
+                ],
+                'logs-viewer' => [
+                    'label' => 'System Logs',
+                    'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+                    'component' => 'logs-viewer-comp',
+                    'description' => 'Monitor and analyze application logs for debugging and system health.'
+                ],
+                'class-exam-subject' => [
+                    'label' => 'Class Exam Subjects',
+                    'icon' => 'M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2H9z M9 5a2 2 0 012-2h2a2 2 0 012 2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
+                    'component' => 'class-exam-subject-comp',
+                    'description' => 'Configure which subjects are available for each class, exam, and exam type combination.'
+                ],
+                'mark-register' => [
+                    'label' => 'Mark Register',
+                    'icon' => 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+                    'component' => 'mark-register-comp',
+                    'description' => 'View comprehensive class-wise mark register with all student marks across exam types and parts.'
+                ],
                 'user-roles' => [
                     'label' => 'User Roles',
                     'icon' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',

@@ -178,6 +178,33 @@ Route::get('/test-answer-script-distribution', function () {
     return view('test-answer-script-distribution');
 })->name('test.answer.script.distribution');
 
+// Marks Entry routes
+Route::get('/marks-entry', App\Http\Livewire\MarksEntryComp::class)
+    ->name('marks-entry');
+
+Route::get('/marks-entry/detail/{examDetailId}/{subjectId}/{sectionId}', App\Http\Livewire\MarksEntryDetailComp::class)
+    ->name('marks-entry.detail');
+
+// Test route for Marks Entry component
+Route::get('/test-marks-entry', function () {
+    return view('test-marks-entry');
+})->name('test.marks.entry');
+
+// Test route for Logs Viewer component
+Route::get('/test-logs-viewer', function () {
+    return view('test-logs-viewer');
+})->name('test.logs.viewer');
+
+// Test route for Class Exam Subject component
+Route::get('/test-class-exam-subject', function () {
+    return view('test-class-exam-subject');
+})->name('test.class.exam.subject');
+
+// Test route for Mark Register component
+Route::get('/test-mark-register', function () {
+    return view('test-mark-register');
+})->name('test.mark.register');
+
 Route::get('auth/google', [GoogleAuthController::class, 'redirect'])
     ->name('auth.google.login');
 

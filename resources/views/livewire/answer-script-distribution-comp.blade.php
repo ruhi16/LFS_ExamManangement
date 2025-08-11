@@ -42,7 +42,7 @@
             </div>
             <div class="text-xs text-yellow-700">
                 Selected Class: {{ $selectedClassId ?? 'None' }} |
-                Selected Exam: {{ $selectedExamNameId ?? 'None' }} |
+                Selected Exam for Class: {{ $classes->where('id', $selectedClassId)->first()->name ?? 'Unknown Class' }}
                 Sections: {{ count($classSections) }} |
                 Subjects: {{ count($classSubjects) }} |
                 Distributions: {{ count($distributions) }}
@@ -62,7 +62,7 @@
         @if($selectedClassId)
             <div class="mb-3 p-2 bg-blue-50 border-l-4 border-blue-400">
                 <span class="text-blue-800 font-medium">
-                    Selected: {{ $classes->where('id', $selectedClassId)->first()->name ?? 'Unknown Class' }}
+                    Selected Class: {{ $classes->where('id', $selectedClassId)->first()->name ?? 'Unknown Class' }}
                 </span>
             </div>
         @endif
@@ -83,7 +83,7 @@
     <!-- Exam Name Selection -->
     @if($selectedClassId && count($examNames) > 0)
         <div class="mb-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-3">Select Exam <span class="text-blue-500">{{ $selectedClassId }}</span></h3>
+            <h3 class="text-lg font-medium text-gray-900 mb-3">Select Exam for Class: <span class="text-blue-500">{{ $classes->where('id', $selectedClassId)->first()->name ?? 'Unknown Class' }}</span></h3>
             <div class="flex flex-wrap gap-2">
                 @foreach($examNames as $examName)
                     <button wire:click="selectExamName({{ $examName->id }})"
@@ -111,14 +111,14 @@
                             <thead class="bg-gray-50">
                                 <tr>
                                     <th scope="col"
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10">
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-800 uppercase tracking-wider sticky left-0 bg-gray-50 z-10">
                                         Subject
                                     </th>
-                                    @foreach($classSections as $section)
+                                    @foreach($classSections->sortBy('id') as $section)
                                         <th scope="col"
                                             class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-300">
-                                            <div class="font-semibold text-gray-900">{{ $section->name }}</div>
-                                            <div class="text-xs text-gray-400 mt-1">Section</div>
+                                            <div class="font-semibold text-gray-900">Section {{ $section->section->name ?? 'X'}}</div>
+                                            {{-- <div class="text-xs text-gray-400 mt-1">Section</div> --}}
                                         </th>
                                     @endforeach
                                 </tr>

@@ -8,4 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 class Exam10MarksEntry extends Model
 {
     use HasFactory;
+    protected $guarded = ['id'];
+
+
+
+
+    
 }

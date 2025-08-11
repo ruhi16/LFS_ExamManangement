@@ -76,38 +76,45 @@ class ExamSettingsFmpmComp extends Component
     protected function loadExamConfigurations($classId)
     {
         try {
-            // Get all subjects for this class
+            // Get only subjects that exist in Exam06ClassSubject for this class
+            $configuredSubjectIds = Exam06ClassSubject::where('myclass_id', $classId)
+                ->distinct()
+                ->pluck('subject_id')
+                ->toArray();
+
+            if (empty($configuredSubjectIds)) {
+                Log::info("No configured subjects found in Exam06ClassSubject for class ID: {$classId}");
+                session()->flash('error', 'No subjects are configured for exams in this class. Please configure subjects first in Class Exam Subjects.');
+                return;
+            }
+
+            // Get only the subjects that are configured in Exam06ClassSubject
             $classSubjects = MyclassSubject::with('subject')
                 ->where('myclass_id', $classId)
+                ->whereIn('subject_id', $configuredSubjectIds)
                 ->where('is_active', true)
                 ->orderBy('order_index', 'asc')
-                // ->orderBy('name', 'asc')
                 ->get();
 
             if ($classSubjects->isEmpty()) {
-                Log::info("No subjects found for class ID: {$classId}");
-                return; // No subjects for this class
+                Log::info("No active subjects found for configured subject IDs in class ID: {$classId}");
+                return;
             }
 
             // Get active exam configurations from Exam05Detail for this class
             $activeExamConfigs = Exam05Detail::where('myclass_id', $classId)
                 ->where('is_active', true)
                 ->get()
-                ->keyBy(function ($item) {
-                    return "{$item->exam_name_id}_{$item->exam_type_id}_{$item->exam_part_id}";
-                });
+                ->keyBy(fn($item) => "{$item->exam_name_id}_{$item->exam_type_id}_{$item->exam_part_id}");
             // dd($activeExamConfigs);
 
             // Get existing Exam06ClassSubject configurations with exam detail relationship
             $existingConfigs = Exam06ClassSubject::with('examDetail')
                 ->where('myclass_id', $classId)
                 ->get()
-                ->keyBy(function ($item) {
-                    if ($item->examDetail) {
-                        return "{$item->subject_id}_{$item->examDetail->exam_name_id}_{$item->examDetail->exam_type_id}_{$item->examDetail->exam_part_id}";
-                    }
-                    return null;
-                })
+                ->keyBy(fn($item) => $item->examDetail ?
+                    "{$item->subject_id}_{$item->examDetail->exam_name_id}_{$item->examDetail->exam_type_id}_{$item->examDetail->exam_part_id}" :
+                    null)
                 ->filter(); // Remove null keys
             // dd("Class:". $classId .":". $activeExamConfigs->count() .":". $existingConfigs );
             Log::info("Found " . $classSubjects->count() . " subjects and " . $activeExamConfigs->count() . " active exam configs");
@@ -120,35 +127,25 @@ class ExamSettingsFmpmComp extends Component
                     'class_subject_name' => $classSubject->name
                 ];
 
-                // Only load data for combinations that exist in Exam05Detail
+                // Only load data for combinations that exist in both Exam05Detail AND Exam06ClassSubject
                 foreach ($this->getAllExamNames() as $examName) {
                     foreach ($this->getAllExamTypes() as $examType) {
                         foreach ($this->getAllExamParts() as $examPart) {
                             $examConfigKey = "{$examName->id}_{$examType->id}_{$examPart->id}";
                             $flatKey = "{$subjectId}_{$examName->id}_{$examType->id}_{$examPart->id}";
 
-                            // Only process if this combination exists in Exam05Detail
-                            if (isset($activeExamConfigs[$examConfigKey])) {
+                            // Only process if this combination exists in BOTH Exam05Detail AND Exam06ClassSubject
+                            if (isset($activeExamConfigs[$examConfigKey]) && isset($existingConfigs[$flatKey])) {
                                 $this->enabledConfigs[$flatKey] = true;
 
-                                if (isset($existingConfigs[$flatKey])) {
-                                    $config = $existingConfigs[$flatKey];
-                                    $this->fullMarks[$flatKey] = $config->full_marks ?? '';
-                                    $this->passMarks[$flatKey] = $config->pass_marks ?? '';
-                                    $this->timeInMinutes[$flatKey] = $config->time_in_minutes ?? '';
-                                    $this->configIds[$flatKey] = $config->id;
-                                } else {
-                                    $this->fullMarks[$flatKey] = '';
-                                    $this->passMarks[$flatKey] = '';
-                                    $this->timeInMinutes[$flatKey] = '';
-                                    $this->configIds[$flatKey] = null;
-                                }
+                                $config = $existingConfigs[$flatKey];
+                                $this->fullMarks[$flatKey] = $config->full_marks ?? '';
+                                $this->passMarks[$flatKey] = $config->pass_marks ?? '';
+                                $this->timeInMinutes[$flatKey] = $config->time_in_minutes ?? '';
+                                $this->configIds[$flatKey] = $config->id;
                             } else {
+                                // Skip combinations that don't exist in Exam06ClassSubject
                                 $this->enabledConfigs[$flatKey] = false;
-                                $this->fullMarks[$flatKey] = '';
-                                $this->passMarks[$flatKey] = '';
-                                $this->timeInMinutes[$flatKey] = '';
-                                $this->configIds[$flatKey] = null;
                             }
                         }
                     }
@@ -212,7 +209,7 @@ class ExamSettingsFmpmComp extends Component
             }
 
             if ($passMarks >= $fullMarks) {
-                session()->flash('error', 'Pass Marks (' . $passMarks . ') must be less than Full Marks (' . $fullMarks . ').');
+                session()->flash('error', "Pass Marks ({$passMarks}) must be less than Full Marks ({$fullMarks}).");
                 return;
             }
 
@@ -364,9 +361,7 @@ class ExamSettingsFmpmComp extends Component
             return Exam05Detail::where('myclass_id', $this->selectedClassId)
                 ->where('is_active', true)
                 ->get()
-                ->keyBy(function ($item) {
-                    return "{$item->exam_name_id}_{$item->exam_type_id}_{$item->exam_part_id}";
-                });
+                ->keyBy(fn($item) => "{$item->exam_name_id}_{$item->exam_type_id}_{$item->exam_part_id}");
         } catch (\Exception $e) {
             Log::error('Error getting active exam configurations: ' . $e->getMessage());
             return collect();
@@ -376,7 +371,7 @@ class ExamSettingsFmpmComp extends Component
     public function isConfigurationEnabled($examNameId, $examTypeId, $examPartId)
     {
         $activeConfigs = $this->getActiveExamConfigurations();
-        $key = $examNameId . '_' . $examTypeId . '_' . $examPartId;
+        $key = "{$examNameId}_{$examTypeId}_{$examPartId}";
         return $activeConfigs->has($key);
     }
 
@@ -410,7 +405,7 @@ class ExamSettingsFmpmComp extends Component
             ];
 
             $config = Exam06ClassSubject::create($testData);
-            session()->flash('message', 'Test save successful! Created ID: ' . $config->id);
+            session()->flash('message', "Test save successful! Created ID: {$config->id}");
 
             // Clean up test data
             $config->delete();
@@ -436,6 +431,36 @@ class ExamSettingsFmpmComp extends Component
         $timeInMinutes = $this->timeInMinutes[$flatKey] ?? '';
 
         return !empty($fullMarks) || !empty($passMarks) || !empty($timeInMinutes);
+    }
+
+    public function hasAnyDataForExamCombination($examNameId, $examTypeId, $examPartId)
+    {
+        if (!is_array($this->examConfigurations)) {
+            return false;
+        }
+
+        $activeConfigs = $this->getActiveExamConfigurations();
+        $configKey = "{$examNameId}_{$examTypeId}_{$examPartId}";
+
+        // First check if this exam combination is enabled
+        if (!isset($activeConfigs[$configKey])) {
+            return false;
+        }
+
+        // Check if any subject has data or existing config for this combination
+        foreach (array_keys($this->examConfigurations) as $subjectId) {
+            $flatKey = "{$subjectId}_{$examNameId}_{$examTypeId}_{$examPartId}";
+
+            // Check if has data or existing config
+            if (
+                $this->hasData($subjectId, $examNameId, $examTypeId, $examPartId) ||
+                isset($this->configIds[$flatKey])
+            ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function testClick()

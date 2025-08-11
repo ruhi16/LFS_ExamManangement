@@ -100,25 +100,50 @@
                                     Subject
                                 </th>
                                 @foreach($examNames as $examName)
-                                    <th scope="col"
-                                        class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-300">
-                                        <div class="min-w-0">{{ $examName->name }}</div>
-                                        <div class="grid grid-cols-{{ count($examTypes) }} gap-0 mt-1">
-                                            @foreach($examTypes as $examType)
-                                                <div class="text-center border-r border-gray-200 last:border-r-0">
-                                                    <div class="text-xs font-medium text-gray-600 mb-1">{{ $examType->name }}</div>
-                                                    <div class="grid grid-cols-{{ count($examParts) }} gap-0">
-                                                        @foreach($examParts as $examPart)
-                                                            <div
-                                                                class="text-xs text-gray-500 px-1 border-r border-gray-100 last:border-r-0">
-                                                                {{ $examPart->name }}
-                                                            </div>
-                                                        @endforeach
+                                    @php
+                                        $examHasData = false;
+                                        $examTypesWithData = [];
+                                        
+                                        // Check which exam types have data for this exam name
+                                        foreach($examTypes as $examType) {
+                                            $examTypeHasData = false;
+                                            $examPartsWithData = [];
+                                            
+                                            foreach($examParts as $examPart) {
+                                                if($this->hasAnyDataForExamCombination($examName->id, $examType->id, $examPart->id)) {
+                                                    $examPartsWithData[] = $examPart;
+                                                    $examTypeHasData = true;
+                                                    $examHasData = true;
+                                                }
+                                            }
+                                            
+                                            if($examTypeHasData) {
+                                                $examTypesWithData[] = ['type' => $examType, 'parts' => $examPartsWithData];
+                                            }
+                                        }
+                                    @endphp
+                                    
+                                    @if($examHasData)
+                                        <th scope="col"
+                                            class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-300">
+                                            <div class="min-w-0">{{ $examName->name }}</div>
+                                            <div class="grid grid-cols-{{ count($examTypesWithData) }} gap-0 mt-1">
+                                                @foreach($examTypesWithData as $examTypeData)
+                                                    <div class="text-center border-r border-gray-200 last:border-r-0">
+                                                        <div class="text-xs font-medium text-gray-600 mb-1">{{ $examTypeData['type']->name }}</div>
+                                                        <div class="grid grid-cols-{{ count($examTypeData['parts']) }} gap-0">
+                                                            @foreach($examTypeData['parts'] as $examPart)
+                                                                <div
+                                                                    class="text-xs text-gray-500 px-1 border-r border-gray-100 last:border-r-0">
+                                                                    {{ $examPart->name }}
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    </th>
+                                                @endforeach
+                                            </div>
+                                        </th>
+                                    @endif
                                 @endforeach
                             </tr>
                         </thead>
@@ -134,87 +159,93 @@
                                             </div>
                                         </td>
                                         @foreach($examNames as $examName)
-                                            <td class="px-2 py-3 text-sm text-gray-500 border-l border-gray-300">
-                                                <div class="grid grid-cols-{{ count($examTypes) }} gap-1">
-                                                    @foreach($examTypes as $examType)
-                                                        <div class="border-r border-gray-200 last:border-r-0 pr-1">
-                                                            <div class="grid grid-cols-{{ count($examParts) }} gap-1">
-                                                                @foreach($examParts as $examPart)
-                                                                    @php
-                                                                        $flatKey = "{$subjectId}_{$examName->id}_{$examType->id}_{$examPart->id}";
-                                                                        $configKey = "{$examName->id}_{$examType->id}_{$examPart->id}";
-                                                                        $isEnabled = isset($activeExamConfigs[$configKey]);
-                                                                        $fullMarksValue = $fullMarks[$flatKey] ?? '';
-                                                                        $passMarksValue = $passMarks[$flatKey] ?? '';
-                                                                        $timeValue = $timeInMinutes[$flatKey] ?? '';
-                                                                        $configId = $configIds[$flatKey] ?? null;
-                                                                    @endphp
-                                                                    <div
-                                                                        class="border border-gray-100 p-1 min-w-0 {{ $isEnabled ? 'bg-white' : 'bg-gray-50' }}">
-                                                                        @if($isEnabled)
-                                                                            <!-- Full Marks -->
-                                                                            <input wire:model="fullMarks.{{ $flatKey }}" type="number" placeholder="FM"
-                                                                                min="1" max="1000" value="{{ $fullMarksValue }}"
-                                                                                class="w-full text-xs border-gray-300 rounded px-1 py-0.5 mb-1 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                                            @php
+                                                $examHasData = false;
+                                                $examTypesWithData = [];
+                                                
+                                                // Check which exam types have data for this exam name
+                                                foreach($examTypes as $examType) {
+                                                    $examTypeHasData = false;
+                                                    $examPartsWithData = [];
+                                                    
+                                                    foreach($examParts as $examPart) {
+                                                        if($this->hasAnyDataForExamCombination($examName->id, $examType->id, $examPart->id)) {
+                                                            $examPartsWithData[] = $examPart;
+                                                            $examTypeHasData = true;
+                                                            $examHasData = true;
+                                                        }
+                                                    }
+                                                    
+                                                    if($examTypeHasData) {
+                                                        $examTypesWithData[] = ['type' => $examType, 'parts' => $examPartsWithData];
+                                                    }
+                                                }
+                                            @endphp
+                                            
+                                            @if($examHasData)
+                                                <td class="px-2 py-3 text-sm text-gray-500 border-l border-gray-300">
+                                                    <div class="grid grid-cols-{{ count($examTypesWithData) }} gap-1">
+                                                        @foreach($examTypesWithData as $examTypeData)
+                                                            <div class="border-r border-gray-200 last:border-r-0 pr-1">
+                                                                <div class="grid grid-cols-{{ count($examTypeData['parts']) }} gap-1">
+                                                                    @foreach($examTypeData['parts'] as $examPart)
+                                                                        @php
+                                                                            $flatKey = "{$subjectId}_{$examName->id}_{$examTypeData['type']->id}_{$examPart->id}";
+                                                                            $configKey = "{$examName->id}_{$examTypeData['type']->id}_{$examPart->id}";
+                                                                            $isEnabled = isset($activeExamConfigs[$configKey]);
+                                                                            $fullMarksValue = $fullMarks[$flatKey] ?? '';
+                                                                            $passMarksValue = $passMarks[$flatKey] ?? '';
+                                                                            $timeValue = $timeInMinutes[$flatKey] ?? '';
+                                                                            $configId = $configIds[$flatKey] ?? null;
+                                                                            $hasData = $this->hasData($subjectId, $examName->id, $examTypeData['type']->id, $examPart->id);
+                                                                        @endphp
+                                                                        
+                                                                        {{-- Only show cells that are enabled AND have data OR have a delete button (configId exists) --}}
+                                                                        @if($isEnabled && ($hasData || $configId))
+                                                                            <div class="border border-gray-100 p-1 min-w-0 bg-white">
+                                                                                <!-- Full Marks -->
+                                                                                <input wire:model="fullMarks.{{ $flatKey }}" type="number" placeholder="FM"
+                                                                                    min="1" max="1000" value="{{ $fullMarksValue }}"
+                                                                                    class="w-full text-xs border-gray-300 rounded px-1 py-0.5 mb-1 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
 
-                                                                            <!-- Pass Marks -->
-                                                                            <input wire:model="passMarks.{{ $flatKey }}" type="number" placeholder="PM"
-                                                                                min="1" max="1000" value="{{ $passMarksValue }}"
-                                                                                class="w-full text-xs border-gray-300 rounded px-1 py-0.5 mb-1 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                                                                                <!-- Pass Marks -->
+                                                                                <input wire:model="passMarks.{{ $flatKey }}" type="number" placeholder="PM"
+                                                                                    min="1" max="1000" value="{{ $passMarksValue }}"
+                                                                                    class="w-full text-xs border-gray-300 rounded px-1 py-0.5 mb-1 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
 
-                                                                            <!-- Time in Minutes -->
-                                                                            <input wire:model="timeInMinutes.{{ $flatKey }}" type="number"
-                                                                                placeholder="Time" min="1" max="600" value="{{ $timeValue }}"
-                                                                                class="w-full text-xs border-gray-300 rounded px-1 py-0.5 mb-1 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                                                                                <!-- Time in Minutes -->
+                                                                                <input wire:model="timeInMinutes.{{ $flatKey }}" type="number"
+                                                                                    placeholder="Time" min="1" max="600" value="{{ $timeValue }}"
+                                                                                    class="w-full text-xs border-gray-300 rounded px-1 py-0.5 mb-1 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
 
-                                                                            <!-- Save Button at bottom of input fields -->
-                                                                            @if($this->hasData($subjectId, $examName->id, $examType->id, $examPart->id))
-                                                                                <!-- Debug info -->
-                                                                                <div class="text-xs text-gray-500 mb-1">
-                                                                                    Params:
-                                                                                    {{ $subjectId }}-{{ $examName->id }}-{{ $examType->id }}-{{ $examPart->id }}
-                                                                                </div>
-                                                                                <button
-                                                                                    wire:click="saveConfiguration({{ $subjectId }}, {{ $examName->id }}, {{ $examType->id }}, {{ $examPart->id }})"
-                                                                                    type="button"
-                                                                                    class="w-full bg-green-600 hover:bg-green-700 text-white px-1 py-0.5 rounded text-xs mb-1">
-                                                                                    {{ $configId ? 'Update' : 'Save' }}
-                                                                                </button>
-                                                                                <!-- Test button with hardcoded values -->
-                                                                                <button wire:click="saveConfiguration(1, 1, 1, 1)" type="button"
-                                                                                    class="w-full bg-blue-600 hover:bg-blue-700 text-white px-1 py-0.5 rounded text-xs mb-1">
-                                                                                    Test Save
-                                                                                </button>
-                                                                            @else
-                                                                                <button type="button" disabled
-                                                                                    class="w-full bg-gray-300 text-gray-500 px-1 py-0.5 rounded text-xs mb-1 cursor-not-allowed">
-                                                                                    Enter Data
-                                                                                </button>
-                                                                            @endif
+                                                                                <!-- Save Button -->
+                                                                                @if($hasData)
+                                                                                    <button
+                                                                                        wire:click="saveConfiguration({{ $subjectId }}, {{ $examName->id }}, {{ $examTypeData['type']->id }}, {{ $examPart->id }})"
+                                                                                        type="button"
+                                                                                        class="w-full bg-green-600 hover:bg-green-700 text-white px-1 py-0.5 rounded text-xs mb-1">
+                                                                                        {{ $configId ? 'Update' : 'Save' }}
+                                                                                    </button>
+                                                                                @endif
 
-                                                                            <!-- Delete Button (if config exists) -->
-                                                                            @if($configId)
-                                                                                <button
-                                                                                    wire:click="deleteConfiguration({{ $subjectId }}, {{ $examName->id }}, {{ $examType->id }}, {{ $examPart->id }})"
-                                                                                    onclick="return confirm('Delete this configuration?')"
-                                                                                    class="w-full bg-red-600 hover:bg-red-700 text-white px-1 py-0.5 rounded text-xs">
-                                                                                    Delete
-                                                                                </button>
-                                                                            @endif
-                                                                        @else
-                                                                            <!-- Disabled state -->
-                                                                            <div class="w-full text-xs text-gray-400 text-center py-2">
-                                                                                <div class="text-xs">Not</div>
-                                                                                <div class="text-xs">Configured</div>
+                                                                                <!-- Delete Button (if config exists) -->
+                                                                                @if($configId)
+                                                                                    <button
+                                                                                        wire:click="deleteConfiguration({{ $subjectId }}, {{ $examName->id }}, {{ $examTypeData['type']->id }}, {{ $examPart->id }})"
+                                                                                        onclick="return confirm('Delete this configuration?')"
+                                                                                        class="w-full bg-red-600 hover:bg-red-700 text-white px-1 py-0.5 rounded text-xs">
+                                                                                        Delete
+                                                                                    </button>
+                                                                                @endif
                                                                             </div>
                                                                         @endif
-                                                                    </div>
-                                                                @endforeach
+                                                                    @endforeach
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    @endforeach
-                                                </div>
-                                            </td>
+                                                        @endforeach
+                                                    </div>
+                                                </td>
+                                            @endif
                                         @endforeach
                                     </tr>
                                 @endforeach

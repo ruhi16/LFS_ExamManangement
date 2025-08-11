@@ -19,6 +19,8 @@ class CreateExam10MarksEntriesTable extends Migration
             
             $table->integer('exam_detail_id')->unsigned()->nullable();
             $table->integer('exam_class_subject_id')->unsigned()->nullable();
+            $table->integer('myclass_section_id')->unsigned()->nullable();
+            
                         
             $table->decimal('exam_marks', 8, 2)->unsigned()->nullable();
                        
