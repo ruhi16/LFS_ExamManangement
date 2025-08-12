@@ -10,7 +10,7 @@ class MyclassSubject extends Model
     use HasFactory;
 
     protected $table = "myclass_subjects";
-    
+
     protected $fillable = [
         'name',
         'description',
@@ -27,30 +27,33 @@ class MyclassSubject extends Model
         'status',
         'remarks'
     ];
-    
+
     protected $casts = [
         'is_optional' => 'boolean',
         'is_active' => 'boolean',
         'is_finalized' => 'boolean',
         'order_index' => 'integer',
     ];
-    
+
     // Relationships
-    public function myclass(){
+    public function myclass()
+    {
         return $this->belongsTo(\App\Models\Myclass::class, 'myclass_id', 'id');
     }
-    
-    public function subject(){
+
+    public function subject()
+    {
         return $this->belongsTo(\App\Models\Subject::class, 'subject_id', 'id');
     }
 
-    
-    public function user(){
+
+    public function user()
+    {
         return $this->belongsTo(\App\Models\User::class, 'user_id', 'id');
     }
-    
-    public function approvedBy(){
-        return $this->belongsTo(\App\Models\User::class, 'approved_by', 'id');
 
+    public function approvedBy()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'approved_by', 'id');
     }
 }

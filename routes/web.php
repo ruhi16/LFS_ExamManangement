@@ -205,6 +205,26 @@ Route::get('/test-mark-register', function () {
     return view('test-mark-register');
 })->name('test.mark.register');
 
+// Test route for Myclass Subject component
+Route::get('/test-myclass-subject', function () {
+    return view('test-myclass-subject');
+})->name('test.myclass.subject');
+
+// Test route for Myclass component
+Route::get('/test-myclass', function () {
+    return view('test-myclass');
+})->name('test.myclass');
+
+// Test route for Section component
+Route::get('/test-section', function () {
+    return view('test-section');
+})->name('test.section');
+
+// Test route for Myclass Section component
+Route::get('/test-myclass-section', function () {
+    return view('test-myclass-section');
+})->name('test.myclass.section');
+
 Route::get('auth/google', [GoogleAuthController::class, 'redirect'])
     ->name('auth.google.login');
 

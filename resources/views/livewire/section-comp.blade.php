@@ -3,8 +3,8 @@
     <div class="mb-6">
         <div class="flex justify-between items-center">
             <div>
-                <h1 class="text-2xl font-semibold text-gray-900">Classes Management</h1>
-                <p class="mt-1 text-sm text-gray-600">Manage school classes with ordering and configuration</p>
+                <h1 class="text-2xl font-semibold text-gray-900">Sections Management</h1>
+                <p class="mt-1 text-sm text-gray-600">Manage school sections with capacity and configuration</p>
             </div>
             <div class="flex space-x-2">
                 <button wire:click="refreshData" 
@@ -13,7 +13,7 @@
                 </button>
                 <button wire:click="showAddForm" 
                     class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium">
-                    Add Class
+                    Add Section
                 </button>
             </div>
         </div>
@@ -37,7 +37,7 @@
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-medium text-gray-900">
-                    {{ $editingId ? 'Edit Class' : 'Add New Class' }}
+                    {{ $editingId ? 'Edit Section' : 'Add New Section' }}
                 </h3>
                 <button wire:click="hideAddForm" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -46,27 +46,28 @@
                 </button>
             </div>
 
-            <form wire:submit.prevent="saveClass">
+            <form wire:submit.prevent="saveSection">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Class Name -->
+                    <!-- Section Name -->
                     <div>
                         <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
-                            Class Name <span class="text-red-500">*</span>
+                            Section Name <span class="text-red-500">*</span>
                         </label>
                         <input type="text" wire:model="name" id="name" 
                             class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                            placeholder="e.g., Grade 10, Class XII">
+                            placeholder="e.g., A, B, Alpha, Beta">
                         @error('name') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
 
-                    <!-- Order Index -->
+                    <!-- Section Code -->
                     <div>
-                        <label for="orderIndex" class="block text-sm font-medium text-gray-700 mb-2">
-                            Order Index <span class="text-red-500">*</span>
+                        <label for="code" class="block text-sm font-medium text-gray-700 mb-2">
+                            Section Code
                         </label>
-                        <input type="number" wire:model="orderIndex" id="orderIndex" min="1"
-                            class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                        @error('orderIndex') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        <input type="text" wire:model="code" id="code" 
+                            class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="e.g., A, B, AL, BT">
+                        @error('code') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
 
                     <!-- Description -->
@@ -76,26 +77,32 @@
                         </label>
                         <textarea wire:model="description" id="description" rows="3"
                             class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                            placeholder="Brief description of the class"></textarea>
+                            placeholder="Brief description of the section"></textarea>
                         @error('description') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
 
-                    <!-- Status -->
+                    <!-- Capacity -->
                     <div>
-                        <label for="status" class="block text-sm font-medium text-gray-700 mb-2">
-                            Status <span class="text-red-500">*</span>
+                        <label for="capacity" class="block text-sm font-medium text-gray-700 mb-2">
+                            Capacity
                         </label>
-                        <select wire:model="status" id="status" 
-                            class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                            <option value="pending">Pending</option>
-                        </select>
-                        @error('status') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        <input type="number" wire:model="capacity" id="capacity" min="1" max="200"
+                            class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="Maximum students">
+                        @error('capacity') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
+
+                    <!-- Is Active -->
+                    <div class="flex items-center">
+                        <input type="checkbox" wire:model="isActive" id="isActive" 
+                            class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                        <label for="isActive" class="ml-2 block text-sm text-gray-700">
+                            Active Section
+                        </label>
                     </div>
 
                     <!-- Remarks -->
-                    <div>
+                    <div class="md:col-span-2">
                         <label for="remarks" class="block text-sm font-medium text-gray-700 mb-2">
                             Remarks
                         </label>
@@ -120,28 +127,28 @@
         </div>
     @endif
 
-    <!-- Classes Table -->
+    <!-- Sections Table -->
     <div class="bg-white rounded-lg shadow-md overflow-hidden">
         <div class="p-4 border-b border-gray-200">
-            <h3 class="text-lg font-medium text-gray-900">All Classes</h3>
+            <h3 class="text-lg font-medium text-gray-900">All Sections</h3>
             <p class="text-sm text-gray-600 mt-1">
-                Total Classes: {{ count($classes) }}
+                Total Sections: {{ count($sections) }}
             </p>
         </div>
 
-        @if(count($classes) > 0)
+        @if(count($sections) > 0)
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Order
-                            </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Class Name
+                                Section
                             </th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Description
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Capacity
                             </th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Status
@@ -158,72 +165,47 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        @foreach($classes as $class)
+                        @foreach($sections as $section)
                             <tr class="hover:bg-gray-50">
                                 <td class="px-4 py-3 text-sm text-gray-900">
-                                    <div class="flex items-center space-x-1">
-                                        <span class="font-medium">{{ $class['order_index'] }}</span>
-                                        <div class="flex flex-col space-y-1">
-                                            @if($class['order_index'] > 1)
-                                                <button wire:click="moveUp({{ $class['id'] }})" 
-                                                    class="text-blue-600 hover:text-blue-800">
-                                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd"></path>
-                                                    </svg>
-                                                </button>
-                                            @endif
-                                            @if($class['order_index'] < count($classes))
-                                                <button wire:click="moveDown({{ $class['id'] }})" 
-                                                    class="text-blue-600 hover:text-blue-800">
-                                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                                                    </svg>
-                                                </button>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-4 py-3 text-sm text-gray-900">
-                                    <div class="font-medium">{{ $class['name'] }}</div>
+                                    <div class="font-medium">{{ $section['name'] }}</div>
+                                    @if($section['code'])
+                                        <div class="text-xs text-gray-500">Code: {{ $section['code'] }}</div>
+                                    @endif
                                 </td>
                                 <td class="px-4 py-3 text-sm text-gray-500">
-                                    {{ $class['description'] ?: 'No description' }}
+                                    {{ $section['description'] ?: 'No description' }}
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-500">
+                                    {{ $section['capacity'] ?: 'Not set' }}
                                 </td>
                                 <td class="px-4 py-3 text-sm">
-                                    <div class="flex flex-col space-y-1">
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium 
-                                            {{ $class['is_active'] ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                            {{ $class['is_active'] ? 'Active' : 'Inactive' }}
-                                        </span>
-                                        @if($class['is_finalized'])
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                                Finalized
-                                            </span>
-                                        @endif
-                                    </div>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium 
+                                        {{ $section['is_active'] ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                        {{ $section['is_active'] ? 'Active' : 'Inactive' }}
+                                    </span>
                                 </td>
                                 <td class="px-4 py-3 text-sm text-gray-500">
                                     <div class="space-y-1">
-                                        <div>Sections: {{ $class['sections_count'] }}</div>
-                                        <div>Subjects: {{ $class['subjects_count'] }}</div>
-                                        <div>Students: {{ $class['students_count'] }}</div>
+                                        <div>Classes: {{ $section['classes_count'] }}</div>
+                                        <div>Students: {{ $section['students_count'] }}</div>
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 text-sm text-gray-500">
-                                    <div>{{ $class['created_at'] }}</div>
+                                    <div>{{ $section['created_at'] }}</div>
                                 </td>
                                 <td class="px-4 py-3 text-sm text-center">
                                     <div class="flex justify-center space-x-2">
-                                        <button wire:click="editClass({{ $class['id'] }})" 
+                                        <button wire:click="editSection({{ $section['id'] }})" 
                                             class="text-indigo-600 hover:text-indigo-900">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                             </svg>
                                         </button>
                                         
-                                        <button wire:click="toggleStatus({{ $class['id'] }})" 
-                                            class="{{ $class['is_active'] ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900' }}">
-                                            @if($class['is_active'])
+                                        <button wire:click="toggleStatus({{ $section['id'] }})" 
+                                            class="{{ $section['is_active'] ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900' }}">
+                                            @if($section['is_active'])
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                                 </svg>
@@ -233,19 +215,9 @@
                                                 </svg>
                                             @endif
                                         </button>
-
-                                        @if(!$class['is_finalized'])
-                                            <button wire:click="finalizeClass({{ $class['id'] }})" 
-                                                class="text-blue-600 hover:text-blue-900"
-                                                title="Finalize">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                </svg>
-                                            </button>
-                                        @endif
                                         
-                                        <button wire:click="deleteClass({{ $class['id'] }})" 
-                                            onclick="return confirm('Are you sure you want to delete this class?')"
+                                        <button wire:click="deleteSection({{ $section['id'] }})" 
+                                            onclick="return confirm('Are you sure you want to delete this section?')"
                                             class="text-red-600 hover:text-red-900">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -260,11 +232,11 @@
             </div>
         @else
             <div class="p-6 text-center text-gray-500">
-                <div class="text-lg font-medium mb-2">No classes found</div>
-                <div class="text-sm">No classes have been created yet.</div>
+                <div class="text-lg font-medium mb-2">No sections found</div>
+                <div class="text-sm">No sections have been created yet.</div>
                 <button wire:click="showAddForm" 
                     class="mt-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium">
-                    Add First Class
+                    Add First Section
                 </button>
             </div>
         @endif

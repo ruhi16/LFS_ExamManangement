@@ -4,193 +4,273 @@ namespace App\Http\Livewire;
 
 use Livewire\Component;
 use App\Models\Myclass;
-use Livewire\WithPagination;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class MyclassComp extends Component
 {
-    use WithPagination;
+    public $classes = [];
 
     // Form properties
+    public $showAddForm = false;
+    public $editingId = null;
     public $name = '';
     public $description = '';
-    public $order_index = '';
-    public $school_id = '';
-    public $session_id = '';
-    public $is_active = true;
-    public $is_finalized = false;
-    public $status = '';
+    public $orderIndex = 1;
+    public $status = 'active';
     public $remarks = '';
 
-    // Component state
-    public $showModal = false;
-    public $editingId = null;
-    public $confirmingDeletion = false;
-    public $deletingId = null;
-    public $search = '';
-
-
-
     protected $rules = [
-        'name' => 'required|string|max:255',
+        'name' => 'required|string|max:255|unique:myclasses,name',
         'description' => 'nullable|string|max:500',
-        'order_index' => 'nullable|integer|min:0',
-        'school_id' => 'nullable|integer',
-        'session_id' => 'nullable|integer',
-        'is_active' => 'boolean',
-        'is_finalized' => 'boolean',
-        'status' => 'nullable|string|max:100',
-        'remarks' => 'nullable|string|max:500',
+        'orderIndex' => 'required|integer|min:1',
+        'status' => 'required|in:active,inactive,pending',
+        'remarks' => 'nullable|string|max:255'
     ];
 
     protected $messages = [
         'name.required' => 'Class name is required.',
-        'name.max' => 'Class name cannot exceed 255 characters.',
-        'description.max' => 'Description cannot exceed 500 characters.',
-        'order_index.integer' => 'Order index must be a number.',
-        'order_index.min' => 'Order index must be 0 or greater.',
+        'name.unique' => 'This class name already exists.',
+        'orderIndex.required' => 'Order index is required.',
+        'orderIndex.min' => 'Order index must be at least 1.'
     ];
 
     public function mount()
     {
+        $this->loadClasses();
+    }
+
+    protected function loadClasses()
+    {
+        $this->classes = Myclass::orderBy('order_index')
+            ->get()
+            ->map(function ($class) {
+                return [
+                    'id' => $class->id,
+                    'name' => $class->name,
+                    'description' => $class->description,
+                    'order_index' => $class->order_index,
+                    'is_active' => $class->is_active,
+                    'is_finalized' => $class->is_finalized,
+                    'status' => $class->status,
+                    'remarks' => $class->remarks,
+                    'created_at' => $class->created_at,
+                    'sections_count' => $class->myclass_sections()->count(),
+                    'subjects_count' => $class->myclassSubjects()->count(),
+                    'students_count' => $class->studentcrs()->count()
+                ];
+            })
+            ->toArray();
+    }
+
+    public function showAddForm()
+    {
+        $this->resetForm();
+        $this->showAddForm = true;
+        $this->orderIndex = count($this->classes) + 1;
+    }
+
+    public function hideAddForm()
+    {
+        $this->showAddForm = false;
         $this->resetForm();
     }
 
-    public function updatingSearch()
+    public function editClass($id)
     {
-        $this->resetPage();
+        $class = collect($this->classes)->firstWhere('id', $id);
+
+        if (!$class) {
+            session()->flash('error', 'Class not found.');
+            return;
+        }
+
+        $this->editingId = $id;
+        $this->name = $class['name'];
+        $this->description = $class['description'];
+        $this->orderIndex = $class['order_index'];
+        $this->status = $class['status'];
+        $this->remarks = $class['remarks'];
+        $this->showAddForm = true;
     }
 
-    public function resetForm()
+    public function saveClass()
     {
-        $this->name = '';
-        $this->description = '';
-        $this->order_index = '';
-        $this->school_id = '';
-        $this->session_id = '';
-        $this->is_active = true;
-        $this->is_finalized = false;
-        $this->status = '';
-        $this->remarks = '';
-        $this->editingId = null;
-        $this->resetValidation();
-    }
+        // Update validation rule for editing
+        if ($this->editingId) {
+            $this->rules['name'] = 'required|string|max:255|unique:myclasses,name,' . $this->editingId;
+        }
 
-    public function openModal()
-    {
-        $this->resetForm();
-        $this->showModal = true;
-    }
-
-    public function closeModal()
-    {
-        $this->showModal = false;
-        $this->resetForm();
-    }
-
-    public function save()
-    {
         $this->validate();
 
-        $data = [
-            'name' => $this->name,
-            'description' => $this->description,
-            'order_index' => $this->order_index ?: null,
-            'school_id' => $this->school_id ?: null,
-            'session_id' => $this->session_id ?: null,
-            'is_active' => $this->is_active,
-            'is_finalized' => $this->is_finalized,
-            'status' => $this->status,
-            'remarks' => $this->remarks,
-            'user_id' => auth()->id(),
-        ];
+        try {
+            DB::beginTransaction();
 
-        if ($this->editingId) {
-            $myclass = Myclass::findOrFail($this->editingId);
-            $myclass->update($data);
-            session()->flash('message', 'Class updated successfully!');
-        } else {
-            Myclass::create($data);
-            session()->flash('message', 'Class created successfully!');
-        }
+            $data = [
+                'name' => $this->name,
+                'description' => $this->description,
+                'order_index' => $this->orderIndex,
+                'status' => $this->status,
+                'remarks' => $this->remarks,
+                'is_active' => $this->status === 'active',
+                'user_id' => auth()->id(),
+                'session_id' => session('current_session_id', 1),
+                'school_id' => session('current_school_id', 1),
+            ];
 
-        $this->closeModal();
-    }
-
-    public function edit($id)
-    {
-        $myclass = Myclass::findOrFail($id);
-        
-        $this->editingId = $id;
-        $this->name = $myclass->name;
-        $this->description = $myclass->description;
-        $this->order_index = $myclass->order_index;
-        $this->school_id = $myclass->school_id;
-        $this->session_id = $myclass->session_id;
-        $this->is_active = $myclass->is_active;
-        $this->is_finalized = $myclass->is_finalized;
-        $this->status = $myclass->status;
-        $this->remarks = $myclass->remarks;
-        
-        $this->showModal = true;
-    }
-
-    public function confirmDelete($id)
-    {
-        $this->deletingId = $id;
-        $this->confirmingDeletion = true;
-    }
-
-    public function delete()
-    {
-        if ($this->deletingId) {
-            $myclass = Myclass::findOrFail($this->deletingId);
-            
-            // Check if class has related records
-            $hasStudents = $myclass->studentdb()->exists() || $myclass->studentcrs()->exists();
-            $hasSections = $myclass->myclass_sections()->exists();
-            $hasExams = $myclass->examDetails()->exists();
-            
-            if ($hasStudents || $hasSections || $hasExams) {
-                session()->flash('error', 'Cannot delete class. It has related students, sections, or exam configurations.');
+            if ($this->editingId) {
+                // Update existing
+                $class = Myclass::findOrFail($this->editingId);
+                $class->update($data);
+                session()->flash('message', 'Class updated successfully!');
             } else {
-                $myclass->delete();
-                session()->flash('message', 'Class deleted successfully!');
+                // Create new
+                Myclass::create($data);
+                session()->flash('message', 'Class created successfully!');
             }
+
+            DB::commit();
+
+            $this->loadClasses();
+            $this->hideAddForm();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error saving class: ' . $e->getMessage());
+            session()->flash('error', 'Error saving class: ' . $e->getMessage());
         }
-        
-        $this->confirmingDeletion = false;
-        $this->deletingId = null;
     }
 
-    public function cancelDelete()
+    public function deleteClass($id)
     {
-        $this->confirmingDeletion = false;
-        $this->deletingId = null;
+        try {
+            DB::beginTransaction();
+
+            $class = Myclass::findOrFail($id);
+
+            // Check if class has related data
+            if (
+                $class->myclass_sections()->count() > 0 ||
+                $class->myclassSubjects()->count() > 0 ||
+                $class->studentcrs()->count() > 0
+            ) {
+                session()->flash('error', 'Cannot delete class with existing sections, subjects, or students.');
+                return;
+            }
+
+            $class->delete();
+
+            DB::commit();
+
+            session()->flash('message', 'Class deleted successfully!');
+            $this->loadClasses();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error deleting class: ' . $e->getMessage());
+            session()->flash('error', 'Error deleting class: ' . $e->getMessage());
+        }
     }
 
     public function toggleStatus($id)
     {
-        $myclass = Myclass::findOrFail($id);
-        $myclass->update(['is_active' => !$myclass->is_active]);
-        
-        $status = $myclass->is_active ? 'activated' : 'deactivated';
-        session()->flash('message', "Class {$status} successfully!");
+        try {
+            $class = Myclass::findOrFail($id);
+            $class->update([
+                'is_active' => !$class->is_active,
+                'status' => $class->is_active ? 'inactive' : 'active'
+            ]);
+
+            session()->flash('message', 'Status updated successfully!');
+            $this->loadClasses();
+        } catch (\Exception $e) {
+            Log::error('Error toggling status: ' . $e->getMessage());
+            session()->flash('error', 'Error updating status: ' . $e->getMessage());
+        }
+    }
+
+    public function finalizeClass($id)
+    {
+        try {
+            $class = Myclass::findOrFail($id);
+            $class->update([
+                'is_finalized' => true,
+                'approved_by' => auth()->id()
+            ]);
+
+            session()->flash('message', 'Class finalized successfully!');
+            $this->loadClasses();
+        } catch (\Exception $e) {
+            Log::error('Error finalizing class: ' . $e->getMessage());
+            session()->flash('error', 'Error finalizing class: ' . $e->getMessage());
+        }
+    }
+
+    public function moveUp($id)
+    {
+        $this->reorderClass($id, 'up');
+    }
+
+    public function moveDown($id)
+    {
+        $this->reorderClass($id, 'down');
+    }
+
+    protected function reorderClass($id, $direction)
+    {
+        try {
+            DB::beginTransaction();
+
+            $class = Myclass::findOrFail($id);
+            $currentOrder = $class->order_index;
+
+            if ($direction === 'up' && $currentOrder > 1) {
+                $swapWith = Myclass::where('order_index', $currentOrder - 1)->first();
+
+                if ($swapWith) {
+                    $class->update(['order_index' => $currentOrder - 1]);
+                    $swapWith->update(['order_index' => $currentOrder]);
+                }
+            } elseif ($direction === 'down') {
+                $swapWith = Myclass::where('order_index', $currentOrder + 1)->first();
+
+                if ($swapWith) {
+                    $class->update(['order_index' => $currentOrder + 1]);
+                    $swapWith->update(['order_index' => $currentOrder]);
+                }
+            }
+
+            DB::commit();
+            $this->loadClasses();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error reordering class: ' . $e->getMessage());
+            session()->flash('error', 'Error reordering class: ' . $e->getMessage());
+        }
+    }
+
+    protected function resetForm()
+    {
+        $this->editingId = null;
+        $this->name = '';
+        $this->description = '';
+        $this->orderIndex = 1;
+        $this->status = 'active';
+        $this->remarks = '';
+        $this->resetErrorBag();
+    }
+
+    public function refreshData()
+    {
+        try {
+            $this->loadClasses();
+            session()->flash('message', 'Data refreshed successfully!');
+        } catch (\Exception $e) {
+            Log::error('Error refreshing data: ' . $e->getMessage());
+            session()->flash('error', 'Error refreshing data: ' . $e->getMessage());
+        }
     }
 
     public function render()
     {
-        $myclasses = Myclass::query()
-            ->when($this->search, function ($query) {
-                $query->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('description', 'like', '%' . $this->search . '%')
-                      ->orWhere('status', 'like', '%' . $this->search . '%');
-            })
-            ->orderBy('id', 'asc')
-            ->orderBy('name', 'asc')
-            ->paginate(10);
-
-        return view('livewire.myclass-comp', [
-            'myclasses' => $myclasses,
-        ]);
+        return view('livewire.myclass-comp');
     }
 }

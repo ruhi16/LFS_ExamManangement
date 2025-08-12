@@ -3,253 +3,343 @@
 namespace App\Http\Livewire;
 
 use Livewire\Component;
-use App\Models\MyclassSubject;
 use App\Models\Myclass;
 use App\Models\Subject;
-use Livewire\WithPagination;
+use App\Models\MyclassSubject;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class MyclassSubjectComp extends Component
 {
-    use WithPagination;
+    public $selectedClassId = null;
+    public $classes;
+    public $subjects = [];
+    public $availableSubjects = [];
+    public $classSubjects = [];
 
     // Form properties
+    public $showAddForm = false;
+    public $editingId = null;
     public $name = '';
     public $description = '';
-    public $order_index = '';
-    public $is_optional = false;
-    public $myclass_id = '';
-    public $subject_id = '';
-    public $school_id = '';
-    public $session_id = '';
-    public $is_active = true;
-    public $is_finalized = false;
-    public $status = '';
+    public $selectedSubjectId = null;
+    public $orderIndex = 1;
+    public $isOptional = false;
+    public $status = 'active';
     public $remarks = '';
-
-    // Component state
-    public $showModal = false;
-    public $editingId = null;
-    public $confirmingDeletion = false;
-    public $deletingId = null;
-    public $search = '';
-    public $filterClass = '';
-    public $filterSubject = '';
-
-
 
     protected $rules = [
         'name' => 'required|string|max:255',
         'description' => 'nullable|string|max:500',
-        'order_index' => 'nullable|integer|min:0',
-        'is_optional' => 'boolean',
-        'myclass_id' => 'required|integer|exists:myclasses,id',
-        'subject_id' => 'required|integer|exists:subjects,id',
-        'school_id' => 'nullable|integer',
-        'session_id' => 'nullable|integer',
-        'is_active' => 'boolean',
-        'is_finalized' => 'boolean',
-        'status' => 'nullable|string|max:100',
-        'remarks' => 'nullable|string|max:500',
+        'selectedSubjectId' => 'required|exists:subjects,id',
+        'orderIndex' => 'required|integer|min:1',
+        'isOptional' => 'boolean',
+        'status' => 'required|in:active,inactive,pending',
+        'remarks' => 'nullable|string|max:255'
     ];
 
     protected $messages = [
-        'name.required' => 'Subject name is required.',
-        'name.max' => 'Subject name cannot exceed 255 characters.',
-        'myclass_id.required' => 'Class selection is required.',
-        'myclass_id.exists' => 'Selected class does not exist.',
-        'subject_id.required' => 'Subject selection is required.',
-        'subject_id.exists' => 'Selected subject does not exist.',
-        'description.max' => 'Description cannot exceed 500 characters.',
-        'order_index.integer' => 'Order index must be a number.',
-        'order_index.min' => 'Order index must be 0 or greater.',
+        'name.required' => 'Class subject name is required.',
+        'selectedSubjectId.required' => 'Please select a subject.',
+        'selectedSubjectId.exists' => 'Selected subject is invalid.',
+        'orderIndex.required' => 'Order index is required.',
+        'orderIndex.min' => 'Order index must be at least 1.'
     ];
 
     public function mount()
     {
+        $this->classes = Myclass::where('is_active', true)->orderBy('id')->get();
+        $this->subjects = Subject::where('is_active', true)->orderBy('name')->get();
+    }
+
+    public function selectClass($classId)
+    {
+        try {
+            $this->selectedClassId = $classId;
+            $this->loadClassSubjects();
+            $this->loadAvailableSubjects();
+            $this->resetForm();
+        } catch (\Exception $e) {
+            Log::error('Error selecting class: ' . $e->getMessage());
+            session()->flash('error', 'Error loading class data: ' . $e->getMessage());
+        }
+    }
+
+    protected function loadClassSubjects()
+    {
+        if (!$this->selectedClassId) {
+            $this->classSubjects = [];
+            return;
+        }
+
+        $this->classSubjects = MyclassSubject::where('myclass_id', $this->selectedClassId)
+            ->with(['subject', 'user', 'approvedBy'])
+            ->orderBy('order_index')
+            ->get()
+            ->map(function ($classSubject) {
+                return [
+                    'id' => $classSubject->id,
+                    'name' => $classSubject->name,
+                    'description' => $classSubject->description,
+                    'subject_name' => $classSubject->subject->name ?? 'Unknown',
+                    'subject_code' => $classSubject->subject->code ?? '',
+                    'order_index' => $classSubject->order_index,
+                    'is_optional' => $classSubject->is_optional,
+                    'is_active' => $classSubject->is_active,
+                    'is_finalized' => $classSubject->is_finalized,
+                    'status' => $classSubject->status,
+                    'remarks' => $classSubject->remarks,
+                    'created_by' => $classSubject->user->name ?? 'Unknown',
+                    'approved_by' => $classSubject->approvedBy->name ?? null,
+                    'created_at' => $classSubject->created_at,
+                    'subject_id' => $classSubject->subject_id
+                ];
+            })
+            ->toArray();
+    }
+
+    protected function loadAvailableSubjects()
+    {
+        if (!$this->selectedClassId) {
+            $this->availableSubjects = [];
+            return;
+        }
+
+        // Get subjects that are not already assigned to this class
+        $assignedSubjectIds = MyclassSubject::where('myclass_id', $this->selectedClassId)
+            ->pluck('subject_id')
+            ->toArray();
+
+        $this->availableSubjects = Subject::where('is_active', true)
+            ->whereNotIn('id', $assignedSubjectIds)
+            ->orderBy('name')
+            ->get()
+            ->toArray();
+    }
+
+    public function showAddForm()
+    {
+        if (!$this->selectedClassId) {
+            session()->flash('error', 'Please select a class first.');
+            return;
+        }
+
+        $this->resetForm();
+        $this->showAddForm = true;
+        $this->orderIndex = count($this->classSubjects) + 1;
+    }
+
+    public function hideAddForm()
+    {
+        $this->showAddForm = false;
         $this->resetForm();
     }
 
-    public function updatingSearch()
+    public function editClassSubject($id)
     {
-        $this->resetPage();
+        $classSubject = collect($this->classSubjects)->firstWhere('id', $id);
+
+        if (!$classSubject) {
+            session()->flash('error', 'Class subject not found.');
+            return;
+        }
+
+        $this->editingId = $id;
+        $this->name = $classSubject['name'];
+        $this->description = $classSubject['description'];
+        $this->selectedSubjectId = $classSubject['subject_id'];
+        $this->orderIndex = $classSubject['order_index'];
+        $this->isOptional = $classSubject['is_optional'];
+        $this->status = $classSubject['status'];
+        $this->remarks = $classSubject['remarks'];
+        $this->showAddForm = true;
     }
 
-    public function updatingFilterClass()
-    {
-        $this->resetPage();
-    }
-
-    public function updatingFilterSubject()
-    {
-        $this->resetPage();
-    }
-
-    public function resetForm()
-    {
-        $this->name = '';
-        $this->description = '';
-        $this->order_index = '';
-        $this->is_optional = false;
-        $this->myclass_id = '';
-        $this->subject_id = '';
-        $this->school_id = '';
-        $this->session_id = '';
-        $this->is_active = true;
-        $this->is_finalized = false;
-        $this->status = '';
-        $this->remarks = '';
-        $this->editingId = null;
-        $this->resetValidation();
-    }
-
-    public function openModal()
-    {
-        $this->resetForm();
-        $this->showModal = true;
-    }
-
-    public function closeModal()
-    {
-        $this->showModal = false;
-        $this->resetForm();
-    }
-
-    public function save()
+    public function saveClassSubject()
     {
         $this->validate();
 
-        $data = [
-            'name' => $this->name,
-            'description' => $this->description,
-            'order_index' => $this->order_index ?: null,
-            'is_optional' => $this->is_optional,
-            'myclass_id' => $this->myclass_id,
-            'subject_id' => $this->subject_id,
-            'school_id' => $this->school_id ?: null,
-            'session_id' => $this->session_id ?: null,
-            'is_active' => $this->is_active,
-            'is_finalized' => $this->is_finalized,
-            'status' => $this->status,
-            'remarks' => $this->remarks,
-            'user_id' => auth()->id(),
-        ];
+        try {
+            DB::beginTransaction();
 
-        if ($this->editingId) {
-            $myclassSubject = MyclassSubject::findOrFail($this->editingId);
-            $myclassSubject->update($data);
-            session()->flash('message', 'Class Subject updated successfully!');
-        } else {
-            // Check for duplicate class-subject combination
-            $exists = MyclassSubject::where('myclass_id', $this->myclass_id)
-                                   ->where('subject_id', $this->subject_id)
-                                   ->exists();
-            
-            if ($exists) {
-                session()->flash('error', 'This subject is already assigned to the selected class.');
-                return;
+            $data = [
+                'name' => $this->name,
+                'description' => $this->description,
+                'myclass_id' => $this->selectedClassId,
+                'subject_id' => $this->selectedSubjectId,
+                'order_index' => $this->orderIndex,
+                'is_optional' => $this->isOptional,
+                'status' => $this->status,
+                'remarks' => $this->remarks,
+                'is_active' => $this->status === 'active',
+                'user_id' => auth()->id(),
+                'session_id' => session('current_session_id', 1),
+                'school_id' => session('current_school_id', 1),
+            ];
+
+            if ($this->editingId) {
+                // Update existing
+                $classSubject = MyclassSubject::findOrFail($this->editingId);
+                $classSubject->update($data);
+                session()->flash('message', 'Class subject updated successfully!');
+            } else {
+                // Check for duplicate subject in the same class
+                $exists = MyclassSubject::where('myclass_id', $this->selectedClassId)
+                    ->where('subject_id', $this->selectedSubjectId)
+                    ->exists();
+
+                if ($exists) {
+                    session()->flash('error', 'This subject is already assigned to the selected class.');
+                    return;
+                }
+
+                // Create new
+                MyclassSubject::create($data);
+                session()->flash('message', 'Class subject added successfully!');
             }
 
-            MyclassSubject::create($data);
-            session()->flash('message', 'Class Subject created successfully!');
+            DB::commit();
+
+            $this->loadClassSubjects();
+            $this->loadAvailableSubjects();
+            $this->hideAddForm();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error saving class subject: ' . $e->getMessage());
+            session()->flash('error', 'Error saving class subject: ' . $e->getMessage());
         }
-
-        $this->closeModal();
     }
 
-    public function edit($id)
+    public function deleteClassSubject($id)
     {
-        $myclassSubject = MyclassSubject::findOrFail($id);
-        
-        $this->editingId = $id;
-        $this->name = $myclassSubject->name;
-        $this->description = $myclassSubject->description;
-        $this->order_index = $myclassSubject->order_index;
-        $this->is_optional = $myclassSubject->is_optional;
-        $this->myclass_id = $myclassSubject->myclass_id;
-        $this->subject_id = $myclassSubject->subject_id;
-        $this->school_id = $myclassSubject->school_id;
-        $this->session_id = $myclassSubject->session_id;
-        $this->is_active = $myclassSubject->is_active;
-        $this->is_finalized = $myclassSubject->is_finalized;
-        $this->status = $myclassSubject->status;
-        $this->remarks = $myclassSubject->remarks;
-        
-        $this->showModal = true;
-    }
+        try {
+            DB::beginTransaction();
 
-    public function confirmDelete($id)
-    {
-        $this->deletingId = $id;
-        $this->confirmingDeletion = true;
-    }
+            $classSubject = MyclassSubject::findOrFail($id);
+            $classSubject->delete();
 
-    public function delete()
-    {
-        if ($this->deletingId) {
-            $myclassSubject = MyclassSubject::findOrFail($this->deletingId);
-            $myclassSubject->delete();
-            session()->flash('message', 'Class Subject deleted successfully!');
+            DB::commit();
+
+            session()->flash('message', 'Class subject deleted successfully!');
+            $this->loadClassSubjects();
+            $this->loadAvailableSubjects();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error deleting class subject: ' . $e->getMessage());
+            session()->flash('error', 'Error deleting class subject: ' . $e->getMessage());
         }
-        
-        $this->confirmingDeletion = false;
-        $this->deletingId = null;
-    }
-
-    public function cancelDelete()
-    {
-        $this->confirmingDeletion = false;
-        $this->deletingId = null;
     }
 
     public function toggleStatus($id)
     {
-        $myclassSubject = MyclassSubject::findOrFail($id);
-        $myclassSubject->update(['is_active' => !$myclassSubject->is_active]);
-        
-        $status = $myclassSubject->is_active ? 'activated' : 'deactivated';
-        session()->flash('message', "Class Subject {$status} successfully!");
+        try {
+            $classSubject = MyclassSubject::findOrFail($id);
+            $classSubject->update([
+                'is_active' => !$classSubject->is_active,
+                'status' => $classSubject->is_active ? 'inactive' : 'active'
+            ]);
+
+            session()->flash('message', 'Status updated successfully!');
+            $this->loadClassSubjects();
+        } catch (\Exception $e) {
+            Log::error('Error toggling status: ' . $e->getMessage());
+            session()->flash('error', 'Error updating status: ' . $e->getMessage());
+        }
     }
 
-    public function toggleOptional($id)
+    public function finalizeClassSubject($id)
     {
-        $myclassSubject = MyclassSubject::findOrFail($id);
-        $myclassSubject->update(['is_optional' => !$myclassSubject->is_optional]);
-        
-        $type = $myclassSubject->is_optional ? 'optional' : 'mandatory';
-        session()->flash('message', "Subject marked as {$type} successfully!");
+        try {
+            $classSubject = MyclassSubject::findOrFail($id);
+            $classSubject->update([
+                'is_finalized' => true,
+                'approved_by' => auth()->id()
+            ]);
+
+            session()->flash('message', 'Class subject finalized successfully!');
+            $this->loadClassSubjects();
+        } catch (\Exception $e) {
+            Log::error('Error finalizing class subject: ' . $e->getMessage());
+            session()->flash('error', 'Error finalizing class subject: ' . $e->getMessage());
+        }
+    }
+
+    public function moveUp($id)
+    {
+        $this->reorderClassSubject($id, 'up');
+    }
+
+    public function moveDown($id)
+    {
+        $this->reorderClassSubject($id, 'down');
+    }
+
+    protected function reorderClassSubject($id, $direction)
+    {
+        try {
+            DB::beginTransaction();
+
+            $classSubject = MyclassSubject::findOrFail($id);
+            $currentOrder = $classSubject->order_index;
+
+            if ($direction === 'up' && $currentOrder > 1) {
+                $swapWith = MyclassSubject::where('myclass_id', $this->selectedClassId)
+                    ->where('order_index', $currentOrder - 1)
+                    ->first();
+
+                if ($swapWith) {
+                    $classSubject->update(['order_index' => $currentOrder - 1]);
+                    $swapWith->update(['order_index' => $currentOrder]);
+                }
+            } elseif ($direction === 'down') {
+                $swapWith = MyclassSubject::where('myclass_id', $this->selectedClassId)
+                    ->where('order_index', $currentOrder + 1)
+                    ->first();
+
+                if ($swapWith) {
+                    $classSubject->update(['order_index' => $currentOrder + 1]);
+                    $swapWith->update(['order_index' => $currentOrder]);
+                }
+            }
+
+            DB::commit();
+            $this->loadClassSubjects();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error reordering class subject: ' . $e->getMessage());
+            session()->flash('error', 'Error reordering class subject: ' . $e->getMessage());
+        }
+    }
+
+    protected function resetForm()
+    {
+        $this->editingId = null;
+        $this->name = '';
+        $this->description = '';
+        $this->selectedSubjectId = null;
+        $this->orderIndex = 1;
+        $this->isOptional = false;
+        $this->status = 'active';
+        $this->remarks = '';
+        $this->resetErrorBag();
+    }
+
+    public function refreshData()
+    {
+        try {
+            if ($this->selectedClassId) {
+                $this->loadClassSubjects();
+                $this->loadAvailableSubjects();
+            }
+            session()->flash('message', 'Data refreshed successfully!');
+        } catch (\Exception $e) {
+            Log::error('Error refreshing data: ' . $e->getMessage());
+            session()->flash('error', 'Error refreshing data: ' . $e->getMessage());
+        }
     }
 
     public function render()
     {
-        $myclassSubjects = MyclassSubject::with(['myclass', 'subject'])
-            ->when($this->search, function ($query) {
-                $query->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('description', 'like', '%' . $this->search . '%')
-                      ->orWhere('status', 'like', '%' . $this->search . '%')
-                      ->orWhereHas('myclass', function ($q) {
-                          $q->where('name', 'like', '%' . $this->search . '%');
-                      })
-                      ->orWhereHas('subject', function ($q) {
-                          $q->where('name', 'like', '%' . $this->search . '%');
-                      });
-            })
-            ->when($this->filterClass, function ($query) {
-                $query->where('myclass_id', $this->filterClass);
-            })
-            ->when($this->filterSubject, function ($query) {
-                $query->where('subject_id', $this->filterSubject);
-            })
-            ->orderBy('id', 'asc')
-            ->orderBy('name', 'asc')
-            ->paginate(10);
-
-        $myclasses = Myclass::where('is_active', true)->orderBy('name')->get();
-        $subjects = Subject::orderBy('name')->get();
-
-        return view('livewire.myclass-subject-comp', [
-            'myclassSubjects' => $myclassSubjects,
-            'myclasses' => $myclasses,
-            'subjects' => $subjects
-        ]);
+        return view('livewire.myclass-subject-comp');
     }
 }
