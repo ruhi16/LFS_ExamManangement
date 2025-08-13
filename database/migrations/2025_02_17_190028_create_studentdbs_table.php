@@ -14,17 +14,17 @@ class CreateStudentdbsTable extends Migration
     public function up()
     {
         Schema::create('studentdbs', function (Blueprint $table) {
-            $table->increments('id'); 
+            $table->increments('id');
             $table->string('studentid')->nullable();
             $table->string('uuid_auto')->nullable();
-            
+
             $table->unsignedinteger('admBookNo')->nullable();
             $table->unsignedinteger('admSlNo')->nullable();
             $table->date('admDate')->nullable();
 
             $table->string('prCls')->nullable();
             $table->string('prSch')->nullable();
-            
+
 
             $table->string('name');
             $table->string('adhaar')->nullable();
@@ -44,7 +44,7 @@ class CreateStudentdbsTable extends Migration
             $table->string('state')->nullable();
             $table->string('mobl1')->nullable();
             $table->string('mobl2')->nullable();
-            
+
             $table->string('ssex')->nullable();
             $table->string('blood_grp')->nullable();
             $table->string('phch')->nullable();
@@ -68,7 +68,7 @@ class CreateStudentdbsTable extends Migration
             $table->integer('ensection_id')->nullable();
             $table->integer('ensession_id')->nullable();
             $table->string('enreason')->nullable();
-            
+
             $table->string('img_ref_profile')->nullable();
             $table->string('img_ref_brthcrt')->nullable();
             $table->string('img_ref_adhaar')->nullable();

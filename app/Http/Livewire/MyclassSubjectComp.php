@@ -72,8 +72,8 @@ class MyclassSubjectComp extends Component
             return;
         }
 
-        $this->classSubjects = MyclassSubject::where('myclass_id', $this->selectedClassId)
-            ->with(['subject', 'user', 'approvedBy'])
+        $allClassSubjects = MyclassSubject::where('myclass_id', $this->selectedClassId)
+            ->with(['subject.subjectType', 'user', 'approvedBy'])
             ->orderBy('order_index')
             ->get()
             ->map(function ($classSubject) {
@@ -83,6 +83,7 @@ class MyclassSubjectComp extends Component
                     'description' => $classSubject->description,
                     'subject_name' => $classSubject->subject->name ?? 'Unknown',
                     'subject_code' => $classSubject->subject->code ?? '',
+                    'subject_type_name' => $classSubject->subject->subjectType->name ?? 'No Type',
                     'order_index' => $classSubject->order_index,
                     'is_optional' => $classSubject->is_optional,
                     'is_active' => $classSubject->is_active,
@@ -94,8 +95,20 @@ class MyclassSubjectComp extends Component
                     'created_at' => $classSubject->created_at,
                     'subject_id' => $classSubject->subject_id
                 ];
-            })
-            ->toArray();
+            });
+
+        // Group subjects by type: Summative first, then Formative, then others
+        $this->classSubjects = [
+            'summative' => $allClassSubjects->filter(function ($subject) {
+                return strtolower($subject['subject_type_name']) === 'summative';
+            })->values()->toArray(),
+            'formative' => $allClassSubjects->filter(function ($subject) {
+                return strtolower($subject['subject_type_name']) === 'formative';
+            })->values()->toArray(),
+            'others' => $allClassSubjects->filter(function ($subject) {
+                return !in_array(strtolower($subject['subject_type_name']), ['summative', 'formative']);
+            })->values()->toArray()
+        ];
     }
 
     protected function loadAvailableSubjects()
@@ -110,10 +123,18 @@ class MyclassSubjectComp extends Component
             ->pluck('subject_id')
             ->toArray();
 
-        $this->availableSubjects = Subject::where('is_active', true)
+        $this->availableSubjects = Subject::with('subjectType')
+            ->where('is_active', true)
             ->whereNotIn('id', $assignedSubjectIds)
             ->orderBy('name')
             ->get()
+            ->map(function ($subject) {
+                return [
+                    'id' => $subject->id,
+                    'name' => $subject->name,
+                    'code' => $subject->code
+                ];
+            })
             ->toArray();
     }
 
@@ -126,7 +147,8 @@ class MyclassSubjectComp extends Component
 
         $this->resetForm();
         $this->showAddForm = true;
-        $this->orderIndex = count($this->classSubjects) + 1;
+        $totalSubjects = count($this->classSubjects['summative']) + count($this->classSubjects['formative']) + count($this->classSubjects['others']);
+        $this->orderIndex = $totalSubjects + 1;
     }
 
     public function hideAddForm()
@@ -137,7 +159,15 @@ class MyclassSubjectComp extends Component
 
     public function editClassSubject($id)
     {
-        $classSubject = collect($this->classSubjects)->firstWhere('id', $id);
+        // Find subject across all groups
+        $classSubject = null;
+        foreach (['summative', 'formative', 'others'] as $group) {
+            $found = collect($this->classSubjects[$group])->firstWhere('id', $id);
+            if ($found) {
+                $classSubject = $found;
+                break;
+            }
+        }
 
         if (!$classSubject) {
             session()->flash('error', 'Class subject not found.');

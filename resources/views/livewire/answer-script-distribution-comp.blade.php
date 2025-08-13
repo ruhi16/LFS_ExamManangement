@@ -24,6 +24,21 @@
         </div>
     @endif
 
+    @if (session()->has('warning'))
+        <div class="mb-4 bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-md">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm">{{ session('warning') }}</p>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <!-- Debug Panel -->
     @if($debugMode)
         <div class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
@@ -134,39 +149,98 @@
                                         @foreach($classSections as $section)
                                             <td class="px-4 py-4 text-center border-l border-gray-300">
                                                 <div class="space-y-2">
-                                                    @foreach($examParts as $examPart)
-                                                        @php
-                                                            $key = "{$subject->subject_id}_{$examType->id}_{$examPart->id}_{$section->section_id}";
-                                                            $distribution = $distributions[$key] ?? null;
-                                                            $teacherName = null;
-                                                            if ($distribution) {
-                                                                $teacher = $distribution->teacher ?? $distribution->user ?? null;
-                                                                $teacherName = $teacher ? ($teacher->name ?? 'Unknown Teacher') : 'No Teacher Assigned';
-                                                            }
-                                                        @endphp
+                                                    @php
+                                                        // Get configured combinations for this subject
+                                                        $subjectCombinations = $configuredCombinations->get($subject->subject_id, collect());
+                                                        // Filter combinations for current exam type
+                                                        $typePartCombinations = $subjectCombinations->where('exam_type_id', $examType->id);
+                                                    @endphp
+                                                    
+                                                    @if($typePartCombinations->isNotEmpty())
+                                                        @foreach($typePartCombinations as $combination)
+                                                            @php
+                                                                $examPart = $examParts->where('id', $combination->exam_part_id)->first();
+                                                                if (!$examPart) continue;
+                                                                
+                                                                $key = "{$subject->subject_id}_{$examType->id}_{$combination->exam_part_id}_{$section->section_id}";
+                                                                $distribution = $distributions[$key] ?? null;
+                                                                $teacherName = null;
+                                                                if ($distribution) {
+                                                                    $teacher = $distribution->teacher ?? $distribution->user ?? null;
+                                                                    $teacherName = $teacher ? ($teacher->name ?? 'Unknown Teacher') : 'No Teacher Assigned';
+                                                                }
+                                                            @endphp
 
-                                                        <div class="relative">
-                                                            @if($distribution)
-                                                                <div class="bg-green-50 border border-green-300 rounded p-2">
-                                                                    <div class="text-xs font-medium text-green-800">{{ $examPart->name }}</div>
-                                                                    <div class="text-xs text-green-900 truncate" title="{{ $teacherName }}">{{ $teacherName }}</div>
-                                                                    <div class="flex mt-1 space-x-1">
-                                                                        <button wire:click="openModal({{ $subject->subject_id }}, {{ $examType->id }}, {{ $examPart->id }}, {{ $section->section_id }})"
-                                                                            class="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">Edit</button>
-                                                                        <button wire:click="removeAssignment({{ $subject->subject_id }}, {{ $examType->id }}, {{ $examPart->id }}, {{ $section->section_id }})"
-                                                                            onclick="return confirm('Remove teacher?')"
-                                                                            class="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">×</button>
+                                                            <div class="relative">
+                                                                @if($distribution)
+                                                                    <div class="bg-green-50 border border-green-300 rounded p-2">
+                                                                        <div class="text-xs font-medium text-green-800">{{ $examPart->name }}</div>
+                                                                        <div class="text-xs text-green-900 truncate" title="{{ $teacherName }}">{{ $teacherName }}</div>
+                                                                        <div class="text-xs text-gray-600 mt-1">
+                                                                            FM: {{ $combination->full_marks }} | PM: {{ $combination->pass_marks }} | Time: {{ $combination->time_in_minutes }}min
+                                                                        </div>
+                                                                        <div class="flex mt-1 space-x-1">
+                                                                            <button wire:click="openModal({{ $subject->subject_id }}, {{ $examType->id }}, {{ $combination->exam_part_id }}, {{ $section->section_id }})"
+                                                                                class="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">Edit</button>
+                                                                            <button wire:click="removeAssignment({{ $subject->subject_id }}, {{ $examType->id }}, {{ $combination->exam_part_id }}, {{ $section->section_id }})"
+                                                                                onclick="return confirm('Remove teacher?')"
+                                                                                class="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">×</button>
+                                                                        </div>
                                                                     </div>
-                                                                </div>
-                                                            @else
-                                                                <button wire:click="openModal({{ $subject->subject_id }}, {{ $examType->id }}, {{ $examPart->id }}, {{ $section->section_id }})"
-                                                                    class="w-full bg-gray-100 border border-gray-300 rounded p-2 hover:bg-gray-200">
-                                                                    <div class="text-xs font-medium text-gray-600">{{ $examPart->name }}</div>
-                                                                    <div class="text-xs text-gray-400">Not Assigned</div>
-                                                                </button>
-                                                            @endif
-                                                        </div>
-                                                    @endforeach
+                                                                @else
+                                                                    <button wire:click="openModal({{ $subject->subject_id }}, {{ $examType->id }}, {{ $combination->exam_part_id }}, {{ $section->section_id }})"
+                                                                        class="w-full bg-gray-100 border border-gray-300 rounded p-2 hover:bg-gray-200">
+                                                                        <div class="text-xs font-medium text-gray-600">{{ $examPart->name }}</div>
+                                                                        <div class="text-xs text-gray-400">Not Assigned</div>
+                                                                        <div class="text-xs text-gray-500 mt-1">
+                                                                            FM: {{ $combination->full_marks }} | PM: {{ $combination->pass_marks }}
+                                                                        </div>
+                                                                    </button>
+                                                                @endif
+                                                            </div>
+                                                        @endforeach
+                                                    @else
+                                                        {{-- Fallback: Show all exam parts if no configurations found --}}
+                                                        @foreach($examParts as $examPart)
+                                                            @php
+                                                                $key = "{$subject->subject_id}_{$examType->id}_{$examPart->id}_{$section->section_id}";
+                                                                $distribution = $distributions[$key] ?? null;
+                                                                $teacherName = null;
+                                                                if ($distribution) {
+                                                                    $teacher = $distribution->teacher ?? $distribution->user ?? null;
+                                                                    $teacherName = $teacher ? ($teacher->name ?? 'Unknown Teacher') : 'No Teacher Assigned';
+                                                                }
+                                                            @endphp
+
+                                                            <div class="relative">
+                                                                @if($distribution)
+                                                                    <div class="bg-green-50 border border-green-300 rounded p-2">
+                                                                        <div class="text-xs font-medium text-green-800">{{ $examPart->name }}</div>
+                                                                        <div class="text-xs text-green-900 truncate" title="{{ $teacherName }}">{{ $teacherName }}</div>
+                                                                        <div class="text-xs text-orange-600 mt-1">
+                                                                            ⚠️ Not configured in Class Exam Subject
+                                                                        </div>
+                                                                        <div class="flex mt-1 space-x-1">
+                                                                            <button wire:click="openModal({{ $subject->subject_id }}, {{ $examType->id }}, {{ $examPart->id }}, {{ $section->section_id }})"
+                                                                                class="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">Edit</button>
+                                                                            <button wire:click="removeAssignment({{ $subject->subject_id }}, {{ $examType->id }}, {{ $examPart->id }}, {{ $section->section_id }})"
+                                                                                onclick="return confirm('Remove teacher?')"
+                                                                                class="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">×</button>
+                                                                        </div>
+                                                                    </div>
+                                                                @else
+                                                                    <button wire:click="openModal({{ $subject->subject_id }}, {{ $examType->id }}, {{ $examPart->id }}, {{ $section->section_id }})"
+                                                                        class="w-full bg-orange-50 border border-orange-300 rounded p-2 hover:bg-orange-100">
+                                                                        <div class="text-xs font-medium text-orange-600">{{ $examPart->name }}</div>
+                                                                        <div class="text-xs text-orange-400">Not Configured</div>
+                                                                        <div class="text-xs text-orange-500 mt-1">
+                                                                            Configure in Class Exam Subject first
+                                                                        </div>
+                                                                    </button>
+                                                                @endif
+                                                            </div>
+                                                        @endforeach
+                                                    @endif
                                                 </div>
                                             </td>
                                         @endforeach

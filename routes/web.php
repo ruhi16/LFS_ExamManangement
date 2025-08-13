@@ -225,6 +225,16 @@ Route::get('/test-myclass-section', function () {
     return view('test-myclass-section');
 })->name('test.myclass.section');
 
+// Test route for Subject Type component
+Route::get('/test-subject-type', function () {
+    return view('test-subject-type');
+})->name('test.subject.type');
+
+// Test route for Subject component
+Route::get('/test-subject', function () {
+    return view('test-subject');
+})->name('test.subject');
+
 Route::get('auth/google', [GoogleAuthController::class, 'redirect'])
     ->name('auth.google.login');
 
@@ -236,4 +246,25 @@ Route::get('auth/google/callback', [GoogleAuthController::class, 'callbackGoogle
 require __DIR__ . '/auth.php';
 
 
-// Route::any('{any}', [UserController::class,'index'])->where('any', '^(?!api).*$');
+// Route::any('{any}', [UserController::class,'index'])->where('any', '^(?!api).*$');/
+// Test route for Student Database component
+Route::get('/test-student-db', function () {
+    return view('test-student-db');
+})->name('test.student.db');
+// Test route for Dashboard component
+Route::get('/test-dashboard', function () {
+    return view('test-dashboard');
+})->name('test.dashboard');
+// Test route for Session component
+Route::get('/test-session', function () {
+    return view('test-session');
+})->name('test.session');
+// Test route for Teacher component
+Route::get('/test-teacher', function () {
+    return view('test-teacher');
+})->name('test.teacher');
+
+// Test route for Subject Teacher component
+Route::get('/test-subject-teacher', function () {
+    return view('test-subject-teacher');
+})->name('test.subject.teacher');

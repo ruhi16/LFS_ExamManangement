@@ -86,7 +86,28 @@ class AnswerScriptDistributionComp extends Component
     protected function loadExamTypes()
     {
         try {
-            $this->examTypes = Exam02Type::orderBy('name')->get();
+            // Only load exam types that are configured in Exam06ClassSubject for the selected class and exam
+            if ($this->selectedClassId && $this->selectedExamNameId) {
+                $configuredTypeIds = Exam06ClassSubject::where('myclass_id', $this->selectedClassId)
+                    ->where('exam_name_id', $this->selectedExamNameId)
+                    ->where('is_active', true)
+                    ->distinct()
+                    ->pluck('exam_type_id');
+
+                Log::info("Found " . $configuredTypeIds->count() . " configured exam types for class {$this->selectedClassId}, exam {$this->selectedExamNameId}");
+
+                if ($configuredTypeIds->isNotEmpty()) {
+                    $this->examTypes = Exam02Type::whereIn('id', $configuredTypeIds)
+                        ->orderBy('name')
+                        ->get();
+                } else {
+                    // If no configured types found, load all exam types as fallback
+                    $this->examTypes = Exam02Type::orderBy('name')->get();
+                    Log::warning("No configured exam types found, loading all exam types as fallback");
+                }
+            } else {
+                $this->examTypes = collect();
+            }
         } catch (\Exception $e) {
             Log::error('Error loading exam types: ' . $e->getMessage());
             $this->examTypes = collect();
@@ -96,7 +117,28 @@ class AnswerScriptDistributionComp extends Component
     protected function loadExamParts()
     {
         try {
-            $this->examParts = Exam03Part::orderBy('name')->get();
+            // Only load exam parts that are configured in Exam06ClassSubject for the selected class and exam
+            if ($this->selectedClassId && $this->selectedExamNameId) {
+                $configuredPartIds = Exam06ClassSubject::where('myclass_id', $this->selectedClassId)
+                    ->where('exam_name_id', $this->selectedExamNameId)
+                    ->where('is_active', true)
+                    ->distinct()
+                    ->pluck('exam_part_id');
+
+                Log::info("Found " . $configuredPartIds->count() . " configured exam parts for class {$this->selectedClassId}, exam {$this->selectedExamNameId}");
+
+                if ($configuredPartIds->isNotEmpty()) {
+                    $this->examParts = Exam03Part::whereIn('id', $configuredPartIds)
+                        ->orderBy('name')
+                        ->get();
+                } else {
+                    // If no configured parts found, load all exam parts as fallback
+                    $this->examParts = Exam03Part::orderBy('name')->get();
+                    Log::warning("No configured exam parts found, loading all exam parts as fallback");
+                }
+            } else {
+                $this->examParts = collect();
+            }
         } catch (\Exception $e) {
             Log::error('Error loading exam parts: ' . $e->getMessage());
             $this->examParts = collect();
@@ -133,6 +175,9 @@ class AnswerScriptDistributionComp extends Component
             $this->selectedExamNameId = null;
             $this->resetData();
             $this->loadClassData();
+            // Clear exam types and parts until an exam is selected
+            $this->examTypes = collect();
+            $this->examParts = collect();
         } catch (\Exception $e) {
             Log::error('Error selecting class: ' . $e->getMessage());
             session()->flash('error', 'Error loading class data: ' . $e->getMessage());
@@ -143,6 +188,10 @@ class AnswerScriptDistributionComp extends Component
     {
         try {
             $this->selectedExamNameId = $examNameId;
+            // Reload exam types, parts, and subjects based on the selected exam and class
+            $this->loadExamTypes();
+            $this->loadExamParts();
+            $this->loadClassData(); // This will now filter subjects based on Exam06ClassSubject
             $this->loadDistributions();
         } catch (\Exception $e) {
             Log::error('Error selecting exam name: ' . $e->getMessage());
@@ -170,14 +219,58 @@ class AnswerScriptDistributionComp extends Component
                 ->orderBy('name')
                 ->get();
 
-            // Load class subjects
-            $this->classSubjects = MyclassSubject::with('subject')
-                ->where('myclass_id', $this->selectedClassId)
-                ->where('is_active', true)
-                ->orderBy('order_index')
-                ->get();
+            // Load class subjects - check if exam configurations exist
+            if ($this->selectedExamNameId) {
+                // First check if there are any configurations for this class and exam
+                $configuredSubjectIds = Exam06ClassSubject::where('myclass_id', $this->selectedClassId)
+                    ->where('exam_name_id', $this->selectedExamNameId)
+                    ->where('is_active', true)
+                    ->distinct()
+                    ->pluck('subject_id');
+
+                Log::info("Found " . $configuredSubjectIds->count() . " configured subjects for class {$this->selectedClassId}, exam {$this->selectedExamNameId}");
+
+                if ($configuredSubjectIds->isNotEmpty()) {
+                    // Use configured subjects only
+                    $this->classSubjects = MyclassSubject::with('subject')
+                        ->where('myclass_id', $this->selectedClassId)
+                        ->whereIn('subject_id', $configuredSubjectIds)
+                        ->where('is_active', true)
+                        ->orderBy('order_index')
+                        ->get();
+                } else {
+                    // No configurations found, show all class subjects with a warning
+                    $this->classSubjects = MyclassSubject::with('subject')
+                        ->where('myclass_id', $this->selectedClassId)
+                        ->where('is_active', true)
+                        ->orderBy('order_index')
+                        ->get();
+
+                    if ($this->classSubjects->isNotEmpty()) {
+                        session()->flash('warning', 'No exam configurations found for this class and exam. Showing all class subjects. Please configure exams in Class Exam Subject first.');
+                    }
+                }
+            } else {
+                // If no exam selected, load all class subjects
+                $this->classSubjects = MyclassSubject::with('subject')
+                    ->where('myclass_id', $this->selectedClassId)
+                    ->where('is_active', true)
+                    ->orderBy('order_index')
+                    ->get();
+            }
 
             Log::info("Loaded " . $this->classSections->count() . " sections and " . $this->classSubjects->count() . " subjects for class {$this->selectedClassId}");
+
+            // Additional debug info
+            if ($this->classSections->isEmpty()) {
+                Log::warning("No sections found for class {$this->selectedClassId}. Check MyclassSection table.");
+                session()->flash('warning', 'No sections found for this class. Please configure class sections first.');
+            }
+
+            if ($this->classSubjects->isEmpty()) {
+                Log::warning("No subjects found for class {$this->selectedClassId}. Check MyclassSubject table.");
+                session()->flash('warning', 'No subjects found for this class. Please configure class subjects first.');
+            }
         } catch (\Exception $e) {
             Log::error('Error loading class data: ' . $e->getMessage());
             session()->flash('error', 'Error loading class data: ' . $e->getMessage());
@@ -448,7 +541,24 @@ class AnswerScriptDistributionComp extends Component
             $classCount = Myclass::where('is_active', true)->count();
             $teacherCount = $this->teachers->count();
 
-            session()->flash('message', "Test Data Load: Distributions={$distributionCount}, Classes={$classCount}, Teachers={$teacherCount}");
+            // Check specific data for selected class
+            $classSectionCount = 0;
+            $classSubjectCount = 0;
+            $examConfigCount = 0;
+
+            if ($this->selectedClassId) {
+                $classSectionCount = MyclassSection::where('myclass_id', $this->selectedClassId)->where('is_active', true)->count();
+                $classSubjectCount = MyclassSubject::where('myclass_id', $this->selectedClassId)->where('is_active', true)->count();
+
+                if ($this->selectedExamNameId) {
+                    $examConfigCount = Exam06ClassSubject::where('myclass_id', $this->selectedClassId)
+                        ->where('exam_name_id', $this->selectedExamNameId)
+                        ->where('is_active', true)
+                        ->count();
+                }
+            }
+
+            session()->flash('message', "Test Data Load: Distributions={$distributionCount}, Classes={$classCount}, Teachers={$teacherCount}, ClassSections={$classSectionCount}, ClassSubjects={$classSubjectCount}, ExamConfigs={$examConfigCount}");
         } catch (\Exception $e) {
             Log::error('Test data load failed: ' . $e->getMessage());
             session()->flash('error', 'Test data load failed: ' . $e->getMessage());
@@ -467,6 +577,8 @@ class AnswerScriptDistributionComp extends Component
             if ($this->selectedClassId) {
                 $this->loadClassData();
                 if ($this->selectedExamNameId) {
+                    $this->loadExamTypes();
+                    $this->loadExamParts();
                     $this->loadDistributions();
                 }
                 session()->flash('message', 'Data refreshed successfully!');
@@ -479,10 +591,60 @@ class AnswerScriptDistributionComp extends Component
         }
     }
 
+    /**
+     * Check if a specific subject-examtype-exampart combination is configured
+     */
+    public function isConfiguredCombination($subjectId, $examTypeId, $examPartId)
+    {
+        if (!$this->selectedClassId || !$this->selectedExamNameId) {
+            return false;
+        }
+
+        try {
+            return Exam06ClassSubject::where('myclass_id', $this->selectedClassId)
+                ->where('exam_name_id', $this->selectedExamNameId)
+                ->where('subject_id', $subjectId)
+                ->where('exam_type_id', $examTypeId)
+                ->where('exam_part_id', $examPartId)
+                ->where('is_active', true)
+                ->exists();
+        } catch (\Exception $e) {
+            Log::error('Error checking configured combination: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Get all configured combinations for the selected class and exam
+     */
+    public function getConfiguredCombinations()
+    {
+        if (!$this->selectedClassId || !$this->selectedExamNameId) {
+            return collect();
+        }
+
+        try {
+            $combinations = Exam06ClassSubject::where('myclass_id', $this->selectedClassId)
+                ->where('exam_name_id', $this->selectedExamNameId)
+                ->where('is_active', true)
+                ->select('subject_id', 'exam_type_id', 'exam_part_id', 'full_marks', 'pass_marks', 'time_in_minutes')
+                ->get()
+                ->groupBy('subject_id');
+
+            Log::info("Found " . $combinations->count() . " subject groups with configured combinations");
+
+            return $combinations;
+        } catch (\Exception $e) {
+            Log::error('Error getting configured combinations: ' . $e->getMessage());
+            return collect();
+        }
+    }
+
     public function render()
     {
         return view('livewire.answer-script-distribution-comp', [
-            'classes' => $this->getClassesProperty()
+            'classes' => $this->getClassesProperty(),
+            'configuredCombinations' => $this->getConfiguredCombinations()
         ]);
     }
 }

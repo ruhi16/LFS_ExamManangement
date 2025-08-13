@@ -48,7 +48,7 @@ class MyclassSectionComp extends Component
 
                 // Get available sections for this class
                 $assignedSectionIds = MyclassSection::where('myclass_id', $class->id)->pluck('section_id')->toArray();
-                $availableSections = $this->sections->whereNotIn('id', $assignedSectionIds);
+                $availableSections = $this->sections->whereNotIn('id', $assignedSectionIds)->values();
 
                 return [
                     'id' => $class->id,
