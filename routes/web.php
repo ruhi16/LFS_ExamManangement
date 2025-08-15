@@ -264,7 +264,37 @@ Route::get('/test-teacher', function () {
     return view('test-teacher');
 })->name('test.teacher');
 
+// Test route for Teacher Modal component
+Route::get('/test-teacher-modal', function () {
+    return view('test-teacher-modal');
+})->name('test.teacher.modal');
+
 // Test route for Subject Teacher component
 Route::get('/test-subject-teacher', function () {
     return view('test-subject-teacher');
 })->name('test.subject.teacher');
+
+// Test route for User Role component
+Route::get('/test-user-role', function () {
+    return view('test-user-role');
+})->name('test.user.role');
+
+// Simple Modal Test
+Route::get('/test-modal-simple', function () {
+    return view('test-modal-simple');
+})->name('test.modal.simple');
+
+// Main Test Dashboard
+Route::get('/test-dashboard-main', function () {
+    return view('test-dashboard', [
+        'totalComponents' => 20,
+        'basicComponents' => 6,
+        'examComponents' => 5,
+        'otherComponents' => 9
+    ]);
+})->name('test.dashboard.main');
+
+// Test Index Page
+Route::get('/test-index', function () {
+    return view('test-index');
+})->name('test.index');

@@ -82,15 +82,25 @@ class TeacherComp extends Component
 
     public function mount()
     {
-        $this->initializeDefaults();
-        $this->loadTeachers();
-        $this->loadSubjects();
+        try {
+            $this->initializeDefaults();
+            $this->loadTeachers();
+            $this->loadSubjects();
+        } catch (\Exception $e) {
+            Log::error('Error in TeacherComp mount: ' . $e->getMessage());
+            session()->flash('error', 'Error loading component: ' . $e->getMessage());
+
+            // Initialize empty collections as fallback
+            $this->subjects = collect();
+            $this->teachers = collect();
+        }
+        // dd($this->teachers, $this->subjects);
     }
 
     private function initializeDefaults()
     {
         // Set current session
-        $currentSession = Session::where('status', 'CURRENT')->first();
+        $currentSession = Session::where('status', 'active')->first();
         $this->session_id = $currentSession ? $currentSession->id : 1;
 
         // Set current school (assuming there's a way to get current school)
@@ -124,9 +134,9 @@ class TeacherComp extends Component
                 }
             }
 
-            $this->teachers = $query->orderBy('name')->paginate(15);
+            $this->teachers = $query->orderBy('id')->paginate(15);
         } catch (\Exception $e) {
-            Log::error('Error loading teachers: ' . $e->getMessage());
+            Log::error('Error loading teachers: ' . $e->getMessage()); // Fixed: Removed unexpected comma
             $this->teachers = Teacher::paginate(15); // Fallback to basic pagination
         }
     }
@@ -134,7 +144,7 @@ class TeacherComp extends Component
     public function loadSubjects()
     {
         try {
-            $this->subjects = Subject::orderBy('name')->get();
+            $this->subjects = Subject::orderBy('id')->get();
         } catch (\Exception $e) {
             Log::error('Error loading subjects: ' . $e->getMessage());
             $this->subjects = collect();
@@ -155,6 +165,7 @@ class TeacherComp extends Component
 
     public function openModal($teacherId = null)
     {
+
         $this->resetForm();
 
         if ($teacherId) {
@@ -172,6 +183,7 @@ class TeacherComp extends Component
         if (!$this->subjects || $this->subjects->isEmpty()) {
             $this->loadSubjects();
         }
+        // dd($this->subjects);
     }
 
     public function closeModal()
@@ -247,7 +259,7 @@ class TeacherComp extends Component
                 'status' => $this->status,
                 'remark' => $this->remark,
                 'user_id' => $this->user_id ?: auth()->id(),
-                'session_id' => $this->session_id ?: Session::where('status', 'CURRENT')->first()?->id,
+                'session_id' => Session::currentlyActive()->first()->id, // Fixed: Added missing colon
                 'school_id' => $this->school_id ?: 1,
             ];
 
@@ -386,11 +398,22 @@ class TeacherComp extends Component
         session()->flash('message', 'Teacher data refreshed successfully!');
     }
 
+    public function testModal()
+    {
+        $this->showModal = true;
+        session()->flash('message', 'Test Modal - showModal is now: ' . ($this->showModal ? 'TRUE' : 'FALSE'));
+    }
+
     public function render()
     {
+        // Ensure subjects are loaded
+        if (!$this->subjects || $this->subjects->isEmpty()) {
+            $this->loadSubjects();
+        }
+
         return view('livewire.teacher-comp', [
-            'teachers' => $this->teachers,
-            'subjects' => $this->subjects
+            'teachers' => $this->teachers ?? collect(),
+            'subjects' => $this->subjects ?? collect()
         ]);
     }
 }

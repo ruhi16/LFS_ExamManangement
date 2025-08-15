@@ -1,4 +1,14 @@
 <div class="p-6">
+    <!-- Debug Panel -->
+    <div class="mb-4 p-3 bg-yellow-100 border border-yellow-400 rounded text-sm">
+        <strong>🐛 DEBUG:</strong>
+        showModal = <span
+            class="font-bold {{ $showModal ? 'text-green-600' : 'text-red-600' }}">{{ $showModal ? 'TRUE' : 'FALSE' }}</span>,
+        editMode = {{ $editMode ? 'true' : 'false' }},
+        subjects = {{ $subjects ? $subjects->count() : 'NULL' }},
+        teachers = {{ $teachers ? $teachers->count() : 'NULL' }}
+    </div>
+
     <!-- Header -->
     <div class="flex justify-between items-center mb-6">
         <div>
@@ -9,6 +19,14 @@
             <button wire:click="refreshData"
                 class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
                 <i class="fas fa-sync-alt mr-2"></i>Refresh
+            </button>
+            <button wire:click="$set('showModal', true)"
+                class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+                Force
+            </button>
+            <button wire:click="testModal"
+                class="px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
+                Test
             </button>
             <button wire:click="openModal"
                 class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
@@ -258,15 +276,15 @@
 
 <!-- Modal -->
 @if($showModal)
-    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+    <div class="fixed inset-0 bg-red-500 bg-opacity-75 flex items-center justify-center p-4" style="z-index: 9999;">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border-4 border-blue-500">
             <!-- Modal Header -->
-            <div class="flex justify-between items-center p-6 border-b border-gray-200">
+            <div class="flex justify-between items-center p-6 border-b border-gray-200 bg-blue-100">
                 <h3 class="text-xl font-semibold text-gray-900">
-                    {{ $editMode ? 'Edit Teacher' : 'Add New Teacher' }}
+                    🎯 MODAL IS WORKING! {{ $editMode ? 'Edit Teacher' : 'Add New Teacher' }}
                 </h3>
-                <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times text-xl"></i>
+                <button wire:click="closeModal" class="text-red-600 hover:text-red-800 text-2xl font-bold">
+                    ✕
                 </button>
             </div>
 
@@ -364,9 +382,13 @@
                         <select wire:model="main_subject_id"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             <option value="">Select Subject</option>
-                            @foreach($subjects as $subject)
-                                <option value="{{ $subject->id }}">{{ $subject->name }}</option>
-                            @endforeach
+                            @if($subjects && $subjects->count() > 0)
+                                @foreach($subjects as $subject)
+                                    <option value="{{ $subject->id }}">{{ $subject->name }}</option>
+                                @endforeach
+                            @else
+                                <option value="" disabled>No subjects available</option>
+                            @endif
                         </select>
                         @error('main_subject_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>

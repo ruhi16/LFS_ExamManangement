@@ -25,7 +25,10 @@ class Session extends Model
     private static $table_type = "Basic";
 
 
-
+    public function scopeCurrentlyActive($query)
+    {
+        return $query->where('status', 'Active');
+    }
 
 
     public function school()

@@ -27,6 +27,7 @@ class User extends Authenticatable //implements MustVerifyEmail
         'google_id',
         'isRequested',
         'role_id',
+        'status',
         'teacher_id',
         'studentdb_id',
     ];
@@ -51,18 +52,20 @@ class User extends Authenticatable //implements MustVerifyEmail
     ];
 
 
-    
-    public function teacher() {
+
+    public function teacher()
+    {
         return $this->hasOne(Teacher::class, 'user_id', 'id');
         // 'user_id' is the foreign key of the User model
         // 'id' is the primary key of the Teacher model
     }
-    public function role(){
-        return $this->belongsTo(Role::class, 'role_id', 'id');   
-        
+    public function role()
+    {
+        return $this->belongsTo(Role::class, 'role_id', 'id');
     }
 
-    public function studentdb(){
+    public function studentdb()
+    {
         return $this->belongsTo(Studentdb::class, 'studentdb_id', 'id');
         // 'studentdb_id' is the foreign key of the User model
         // 'id' is the primary key of the Studentdb model
