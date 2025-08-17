@@ -12,8 +12,8 @@ use App\Models\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 
-class TeacherComp extends Component
-{
+class TeacherComp extends Component{
+
     use WithFileUploads, WithPagination;
 
     // Modal properties
@@ -134,7 +134,7 @@ class TeacherComp extends Component
                 }
             }
 
-            $this->teachers = $query->orderBy('id')->paginate(15);
+            $this->teachers = $query->orderBy('id')->paginate(10);
         } catch (\Exception $e) {
             Log::error('Error loading teachers: ' . $e->getMessage()); // Fixed: Removed unexpected comma
             $this->teachers = Teacher::paginate(15); // Fallback to basic pagination

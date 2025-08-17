@@ -17,10 +17,9 @@ class School extends Model
     private static $table_type = "Basic";
 
 
-    public static function getTableType()
-    {
-        return self::$table_type;
-    }
+    // public static function getTableType(){
+    //     return self::$table_type;
+    // }
 
     public function scopeExclude($query, $value = array()){
         $columns = $this->getConnection()->getSchemaBuilder()->getColumnListing($this->getTable());
@@ -28,14 +27,14 @@ class School extends Model
     }
 
 
-    protected static function boot(){
+    // protected static function boot(){
 
-        parent::boot();
+    //     parent::boot();
 
-        static::addGlobalScope('session_id', function (Builder $builder) {
-            $builder->where(self::getTableName() . '.session_id', Session::where('status', 'CURRENT')->first()->id);
-        });
-    }
+    //     static::addGlobalScope('session_id', function (Builder $builder) {
+    //         $builder->where(self::getTableName() . '.session_id', Session::where('status', 'CURRENT')->first()->id);
+    //     });
+    // }
 
     // ============================== end =====================================
 
@@ -68,30 +67,30 @@ class School extends Model
     }
 
     public function exam(){
-        return $this->hasMany(Exam::class);
+        return $this->hasMany(Exam01Name::class);
     }
     
     public function exammodes(){
-        return $this->hasMany(Exammode::class);
+        return $this->hasMany(Exam04mode::class);
     }
 
 
     public function examtypes(){
-        return $this->hasMany(Examtype::class);
+        return $this->hasMany(Exam02type::class);
     }
     
     
     public function examdetails(){
-        return $this->hasMany(Examdetails::class);
+        return $this->hasMany(Exam05detail::class);
     }
 
     public function Answerscriptdistribution(){
-        return $this->hasMany(Answerscriptdistribution::class, 'subject_id', 'id');
+        return $this->hasMany(Exam07AnsscrDist::class, 'subject_id', 'id');
     }
 
 
     public function marksentries(){
-        return $this->hasMany(Marksentry::class, 'school_id', 'id');        
+        return $this->hasMany(Exam10MarksEntry::class, 'school_id', 'id');        
     }
     
 

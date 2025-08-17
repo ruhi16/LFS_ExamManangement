@@ -39,15 +39,24 @@
             </div>
 
             <!-- Quick Session Switcher -->
-            @if($sessions->where('status', '!=', 'active')->count() > 0)
+            @php 
+            // $sessions->where('status', '!=', 'active')->count()
+                $activeSessionCount = count(array_filter($sessions, function ($session) {
+                    return $session['status'] !== 'active';
+                }));
+                $sessions = collect($sessions)->map(function ($item) {
+                    return new Session($item);
+                });
+            @endphp
+            @if($activeSessionCount > 0)
                 <div class="mt-3 pt-3 border-t border-gray-100">
                     <div class="relative">
                         <select wire:change="setActiveSession($event.target.value)"
                             class="w-full text-xs border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500">
                             <option value="">Switch Session...</option>
-                            @foreach($sessions->where('status', '!=', 'active') as $session)
+                            {{-- @foreach($sessions->where('status', '!=', 'active') as $session)
                                 <option value="{{ $session->id }}">{{ $session->name }}</option>
-                            @endforeach
+                            @endforeach --}}
                         </select>
                     </div>
                 </div>
@@ -65,283 +74,298 @@
         @endif
     </div>
 @else
-    <!-- Full Settings Page Mode -->
-    <div class="p-6">
+
+    <div class="flex-1 p-6 overflow-y-auto max-w-full mx-auto">
         <!-- Header -->
-        <div class="flex justify-between items-center mb-6">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-900">Session Management</h1>
-                <p class="text-gray-600 mt-1">Manage academic sessions and set active session</p>
-            </div>
-            <div class="flex space-x-3">
-                <button wire:click="testConnection"
-                    class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
-                    <i class="fas fa-database mr-2"></i>Test DB
-                </button>
-                <button wire:click="refreshData"
-                    class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
-                    <i class="fas fa-sync-alt mr-2"></i>Refresh
-                </button>
-                <button wire:click="openModal"
-                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                    <i class="fas fa-plus mr-2"></i>Add Session
-                </button>
+        <div class="mb-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-semibold text-gray-900">Sessions Management</h1>
+                    <p class="mt-1 text-sm text-gray-600">Manage academic sessions and their configurations</p>
+                </div>
+                <div class="flex space-x-2">
+                    <button wire:click="refreshData"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                        Refresh Data
+                    </button>
+                    <button wire:click="showAddModal"
+                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                        Add Session
+                    </button>
+                </div>
             </div>
         </div>
 
         <!-- Flash Messages -->
         @if (session()->has('message'))
-            <div class="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
-                <div class="flex">
-                    <i class="fas fa-check-circle mr-2 mt-0.5"></i>
-                    {{ session('message') }}
-                </div>
-            </div>
+        <div class="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
+            {{ session('message') }}
+        </div>
         @endif
 
         @if (session()->has('error'))
-            <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-                <div class="flex">
-                    <i class="fas fa-exclamation-circle mr-2 mt-0.5"></i>
-                    {{ session('error') }}
-                </div>
-            </div>
-        @endif
-
-        <!-- Debug Info -->
-        <div class="mb-4 bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-md text-sm">
-            <strong>Debug:</strong>
-            Sessions: {{ $sessions ? $sessions->count() : 'null' }} |
-            Active Session: {{ $activeSession ? $activeSession->name : 'none' }} |
-            Widget Mode: {{ $showWidget ? 'yes' : 'no' }}
+        <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+            {{ session('error') }}
         </div>
-
-        <!-- Active Session Card -->
-        @if($activeSession)
-            <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-lg text-white p-6 mb-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h2 class="text-xl font-bold">{{ $activeSession->name }}</h2>
-                        <p class="text-blue-100 mt-1">{{ $this->getSessionDuration($activeSession) }}</p>
-                        @if($activeSession->details)
-                            <p class="text-blue-100 text-sm mt-2">{{ $activeSession->details }}</p>
-                        @endif
-                    </div>
-                    <div class="text-right">
-                        <div class="bg-blue-400 bg-opacity-30 rounded-full p-3 mb-2">
-                            <i class="fas fa-calendar-check text-2xl"></i>
-                        </div>
-                        <span class="text-sm font-medium">Active Session</span>
-                    </div>
-                </div>
-            </div>
         @endif
 
         <!-- Sessions Table -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900">All Sessions
-                    <span class="text-sm text-gray-500">
-                        ({{ $sessions ? $sessions->count() : 0 }} found)
-                    </span>
-                </h3>
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="p-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">All Sessions</h3>
+                <p class="text-sm text-gray-600 mt-1">
+                    Total Sessions: {{ count($sessions) }} |
+                    Active: {{ count(array_filter($sessions, fn($s) => $s['status'] === 'Active')) }} |
+                    Inactive: {{ count(array_filter($sessions, fn($s) => $s['status'] === 'Inactive')) }}
+                </p>
             </div>
 
-            @if($sessions && $sessions->count() > 0)
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Session Details
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Duration
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Status
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Actions
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach($sessions as $session)
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div>
-                                            <div class="text-sm font-medium text-gray-900 flex items-center">
-                                                {{ $session->name }}
-                                                @if($session->status === 'active')
-                                                    <i class="fas fa-star text-yellow-500 ml-2" title="Active Session"></i>
-                                                @endif
-                                                @if($this->isSessionCurrent($session))
-                                                    <i class="fas fa-clock text-green-500 ml-2" title="Current Period"></i>
-                                                @endif
-                                            </div>
-                                            @if($session->details)
-                                                <div class="text-sm text-gray-500">{{ $session->details }}</div>
-                                            @endif
-                                            @if($session->remark)
-                                                <div class="text-xs text-gray-400 mt-1">{{ $session->remark }}</div>
-                                            @endif
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">
-                                            <div>{{ \Carbon\Carbon::parse($session->stdate)->format('d M Y') }}</div>
-                                            <div class="text-gray-500">to
-                                                {{ \Carbon\Carbon::parse($session->entdate)->format('d M Y') }}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span
-                                            class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $this->getSessionStatusColor($session->status) }}">
-                                            {{ ucfirst($session->status) }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <div class="flex space-x-2">
-                                            @if($session->status !== 'active')
-                                                <button wire:click="setActiveSession({{ $session->id }})"
-                                                    class="text-green-600 hover:text-green-900 transition-colors" title="Set as Active">
-                                                    <i class="fas fa-check-circle"></i>
-                                                </button>
-                                            @endif
-                                            <button wire:click="openModal({{ $session->id }})"
-                                                class="text-blue-600 hover:text-blue-900 transition-colors" title="Edit Session">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button wire:click="delete({{ $session->id }})"
-                                                onclick="return confirm('Are you sure you want to delete this session?')"
-                                                class="text-red-600 hover:text-red-900 transition-colors" title="Delete Session">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
+            @if(count($sessions) > 0)
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Session
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Duration
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                School
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Status
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Related Data
+                            </th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach($sessions as $session)
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3 text-sm text-gray-900">
+                                <div class="font-medium">{{ $session['name'] }}</div>
+                                @if($session['details'])
+                                <div class="text-xs text-gray-500 mt-1">{{ $session['details'] }}</div>
+                                @endif
+                                @if($session['remark'])
+                                <div class="text-xs text-gray-400 mt-1">{{ $session['remark'] }}</div>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-500">
+                                <div class="text-xs text-gray-400">to</div>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-500">
+                                {{ $session['school_name'] }}
+                            </td>
+                            <td class="px-4 py-3 text-sm">
+                                <span
+                                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $session['status'] === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                    {{ $session['status'] }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-500">
+                                <div class="grid grid-cols-2 gap-1 text-xs">
+                                    <div>Classes: {{ $session['myclasses_count'] }}</div>
+                                    <div>Sections: {{ $session['sections_count'] }}</div>
+                                    <div>Subjects: {{ $session['subjects_count'] }}</div>
+                                    <div>Students: {{ $session['studentdbs_count'] }}</div>
+                                    <div>Records: {{ $session['studentcrs_count'] }}</div>
+                                    <div>Exams: {{ $session['exams_count'] }}</div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-center">
+                                <div class="flex justify-center space-x-2">
+                                    <button wire:click="editSession({{ $session['id'] }})"
+                                        class="text-blue-600 hover:text-blue-900">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                    <button wire:click="toggleStatus({{ $session['id'] }})"
+                                        class="text-yellow-600 hover:text-yellow-900">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                    <button wire:click="deleteSession({{ $session['id'] }})"
+                                        class="text-red-600 hover:text-red-900"
+                                        onclick="return confirm('Are you sure you want to delete this session?')">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
             @else
-                <div class="text-center py-12">
-                    <div class="text-gray-400 mb-4">
-                        <i class="fas fa-calendar-times text-6xl"></i>
-                    </div>
-                    <h3 class="text-lg font-medium text-gray-900 mb-2">No Sessions Found</h3>
-                    <p class="text-gray-600 mb-4">Get started by creating your first academic session.</p>
-                    <button wire:click="openModal"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                        <i class="fas fa-plus mr-2"></i>Create Session
+            <div class="p-8 text-center">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">No sessions</h3>
+                <p class="mt-1 text-sm text-gray-500">Get started by creating a new session.</p>
+                <div class="mt-6">
+                    <button wire:click="showAddModal"
+                        class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                        <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Add Session
                     </button>
                 </div>
+            </div>
             @endif
         </div>
-    </div>
-@endif
 
-<!-- Modal -->
-@if($showModal)
-    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <!-- Modal Header -->
-            <div class="flex justify-between items-center p-6 border-b border-gray-200">
-                <h3 class="text-xl font-semibold text-gray-900">
-                    {{ $editMode ? 'Edit Session' : 'Create New Session' }}
-                </h3>
-                <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-
-            <!-- Modal Body -->
-            <div class="p-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Session Name -->
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Session Name *</label>
-                        <input type="text" wire:model="name"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="e.g., Academic Year 2024-25">
-                        @error('name') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+        <!-- Modal -->
+        @if($showModal)
+        <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" id="modal">
+            <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+                <div class="mt-3">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium text-gray-900">
+                            {{ $editingId ? 'Edit Session' : 'Add New Session' }}
+                        </h3>
+                        <button wire:click="hideModal" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
                     </div>
 
-                    <!-- Start Date -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Start Date *</label>
-                        <input type="date" wire:model="stdate"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        @error('stdate') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
+                    <form wire:submit.prevent="saveSession">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Session Name -->
+                            <div class="col-span-2">
+                                <label for="name" class="block text-sm font-medium text-gray-700">Session Name *</label>
+                                <input type="text" wire:model="name" id="name"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                @error('name') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
 
-                    <!-- End Date -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">End Date *</label>
-                        <input type="date" wire:model="entdate"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        @error('entdate') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
+                            <!-- Details -->
+                            <div class="col-span-2">
+                                <label for="details" class="block text-sm font-medium text-gray-700">Details</label>
+                                <textarea wire:model="details" id="details" rows="2"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                                @error('details') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
 
-                    <!-- Status -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Status *</label>
-                        <select wire:model="status"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                            <option value="completed">Completed</option>
-                            <option value="upcoming">Upcoming</option>
-                        </select>
-                        @error('status') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
+                            <!-- Start Date -->
+                            <div>
+                                <label for="stdate" class="block text-sm font-medium text-gray-700">Start Date *</label>
+                                <input type="date" wire:model="stdate" id="stdate"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                @error('stdate') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
 
-                    <!-- Previous Session -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Previous Session</label>
-                        <select wire:model="prev_session_id"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <option value="">Select Previous Session</option>
-                            @foreach($availableSessions as $session)
-                                <option value="{{ $session->id }}">{{ $session->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('prev_session_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
+                            <!-- End Date -->
+                            <div>
+                                <label for="entdate" class="block text-sm font-medium text-gray-700">End Date *</label>
+                                <input type="date" wire:model="entdate" id="entdate"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                @error('entdate') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
 
-                    <!-- Details -->
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Details</label>
-                        <textarea wire:model="details" rows="3"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Session description or additional details..."></textarea>
-                        @error('details') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
+                            <!-- Status -->
+                            <div>
+                                <label for="status" class="block text-sm font-medium text-gray-700">Status *</label>
+                                <select wire:model="status" id="status"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="Active">Active</option>
+                                    <option value="Inactive">Inactive</option>
+                                </select>
+                                @error('status') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
 
-                    <!-- Remarks -->
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Remarks</label>
-                        <textarea wire:model="remark" rows="2"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Any additional remarks..."></textarea>
-                        @error('remark') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
+                            <!-- School -->
+                            <div>
+                                <label for="schoolId" class="block text-sm font-medium text-gray-700">School</label>
+                                <select wire:model="schoolId" id="schoolId"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="">Select School</option>
+                                    @foreach($schools as $school)
+                                    <option value="{{ $school['id'] }}">{{ $school['name'] }}</option>
+                                    @endforeach
+                                </select>
+                                @error('schoolId') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
+
+                            <!-- Previous Session -->
+                            <div>
+                                <label for="prevSessionId" class="block text-sm font-medium text-gray-700">Previous
+                                    Session</label>
+                                <select wire:model="prevSessionId" id="prevSessionId"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="">Select Previous Session</option>
+                                    @foreach($sessions as $session)
+                                    @if($session['id'] != $editingId)
+                                    <option value="{{ $session['id'] }}">{{ $session['name'] }}</option>
+                                    @endif
+                                    @endforeach
+                                </select>
+                                @error('prevSessionId') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
+
+                            <!-- Next Session -->
+                            <div>
+                                <label for="nextSessionId" class="block text-sm font-medium text-gray-700">Next
+                                    Session</label>
+                                <select wire:model="nextSessionId" id="nextSessionId"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="">Select Next Session</option>
+                                    @foreach($sessions as $session)
+                                    @if($session['id'] != $editingId)
+                                    <option value="{{ $session['id'] }}">{{ $session['name'] }}</option>
+                                    @endif
+                                    @endforeach
+                                </select>
+                                @error('nextSessionId') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
+
+                            <!-- Remark -->
+                            <div class="col-span-2">
+                                <label for="remark" class="block text-sm font-medium text-gray-700">Remark</label>
+                                <input type="text" wire:model="remark" id="remark"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                @error('remark') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end space-x-3 mt-6">
+                            <button type="button" wire:click="hideModal"
+                                class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md text-sm font-medium">
+                                Cancel
+                            </button>
+                            <button type="submit"
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                                {{ $editingId ? 'Update' : 'Create' }} Session
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
-
-            <!-- Modal Footer -->
-            <div class="flex justify-end items-center p-6 border-t border-gray-200 space-x-3">
-                <button wire:click="closeModal"
-                    class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">
-                    Cancel
-                </button>
-                <button wire:click="save"
-                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                    <i class="fas fa-save mr-2"></i>{{ $editMode ? 'Update' : 'Create' }} Session
-                </button>
-            </div>
         </div>
+        @endif
     </div>
+
 @endif

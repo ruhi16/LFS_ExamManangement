@@ -1,27 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
+<x-livewire-layout title="Section Component Test">
+    <div class="container mx-auto py-8 px-4">
+        <div class="bg-white rounded-lg shadow-lg">
+            <div class="p-6 border-b border-gray-200">
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">
+                    <i class="fas fa-layer-group text-green-500 mr-3"></i>
+                    Section Component Test
+                </h1>
+                <p class="text-gray-600">Testing school sections management with capacity and configuration</p>
+                <div class="mt-3 inline-flex items-center px-3 py-1 bg-green-100 border border-green-400 rounded-lg">
+                    <i class="fas fa-cube text-green-600 mr-2"></i>
+                    <span class="text-green-800 text-sm font-medium">Basic Component</span>
+                </div>
+            </div>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Section Component</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @livewireStyles
-</head>
-
-<body class="bg-gray-100">
-    <div class="min-h-screen">
-        <div class="bg-white shadow-sm border-b border-gray-200 p-4">
-            <h1 class="text-2xl font-bold text-gray-900">Test Section Component</h1>
-            <p class="text-gray-600">Testing the SectionComp Livewire component</p>
-        </div>
-
-        <div class="container mx-auto">
             @livewire('section-comp')
         </div>
     </div>
-
-    @livewireScripts
-</body>
-
-</html>
+</x-livewire-layout>

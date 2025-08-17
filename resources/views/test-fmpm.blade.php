@@ -1,20 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
+<x-livewire-layout title="FMPM Settings Component Test">
+    <div class="container mx-auto py-8 px-4">
+        <div class="bg-white rounded-lg shadow-lg">
+            <div class="p-6 border-b border-gray-200">
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">
+                    <i class="fas fa-calculator text-green-500 mr-3"></i>
+                    FMPM Settings Component Test
+                </h1>
+                <p class="text-gray-600">Testing full marks, pass marks, and time allocation configuration for exams</p>
+                <div class="mt-3 inline-flex items-center px-3 py-1 bg-green-100 border border-green-400 rounded-lg">
+                    <i class="fas fa-clipboard-check text-green-600 mr-2"></i>
+                    <span class="text-green-800 text-sm font-medium">Exam Component</span>
+                </div>
+            </div>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test FMPM Component</title>
-    @livewireStyles
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-
-<body class="bg-gray-100">
-    <div class="min-h-screen">
-        @livewire('exam-settings-fmpm-comp')
+            @livewire('exam-settings-fmpm-comp')
+        </div>
     </div>
-
-    @livewireScripts
-</body>
-
-</html>
+</x-livewire-layout>

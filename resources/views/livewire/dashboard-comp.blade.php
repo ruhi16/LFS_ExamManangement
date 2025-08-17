@@ -244,156 +244,157 @@
                     </div>
                 @endif
         </div>
-
-        <!-- Class-wise Student Distribution -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div class="p-4 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                    <i class="fas fa-chart-bar text-indigo-500 mr-2"></i>Class-wise Student Distribution
-                </h3>
-            </div>
-            <div class="p-4">
-                <div class="space-y-3">
-                    @foreach($class_wise_stats as $class)
-                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                            <div class="flex items-center">
-                                <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
-                                    <span class="text-indigo-600 font-semibold text-sm">{{ $class->order }}</span>
-                                </div>
-                                <div>
-                                    <div class="font-medium text-gray-900">{{ $class->name }}</div>
-                                    <div class="text-sm text-gray-500">{{ $class->myclass_sections->count() }} sections
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-lg font-bold text-indigo-600">{{ $class->students_count }}</div>
-                                <div class="text-sm text-gray-500">students</div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
     </div>
 
-    <!-- Right Column - Activity & Performance -->
-    <div class="space-y-6">
-
-        <!-- Recent Activity -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div class="p-4 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                    <i class="fas fa-clock text-blue-500 mr-2"></i>Recent Activity
-                </h3>
-            </div>
-            <div class="p-4">
-                <div class="space-y-4">
-                    <div>
-                        <h4 class="font-medium text-gray-900 mb-2">Latest Students</h4>
-                        <div class="space-y-2">
-                            @foreach($recent_activity['recent_students'] as $student)
-                                <div class="flex items-center text-sm">
-                                    <div class="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
-                                    <span class="text-gray-900">{{ $student->name }}</span>
-                                    <span class="text-gray-500 ml-auto">{{ $student->created_at->diffForHumans() }}</span>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <!-- Class-wise Student Distribution -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="p-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                <i class="fas fa-chart-bar text-indigo-500 mr-2"></i>Class-wise Student Distribution
+            </h3>
         </div>
-
-        <!-- Exam Progress -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div class="p-4 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                    <i class="fas fa-tasks text-purple-500 mr-2"></i>Exam Progress
-                </h3>
-            </div>
-            <div class="p-4">
-                <div class="space-y-4">
-                    @foreach($exam_progress->take(5) as $progress)
-                        <div class="space-y-2">
-                            <div class="flex justify-between items-center">
-                                <div class="text-sm font-medium text-gray-900">
-                                    Exam ID: {{ $progress['exam']->id ?? 'N/A' }}
-                                </div>
-                                <div class="text-sm text-gray-500">{{ $progress['progress'] }}%</div>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div class="bg-{{ $progress['status'] == 'completed' ? 'green' : ($progress['status'] == 'in_progress' ? 'blue' : 'gray') }}-500 h-2 rounded-full"
-                                    style="width: {{ $progress['progress'] }}%"></div>
-                            </div>
-                            <div class="text-xs text-gray-500">
-                                {{ $progress['marks_entered'] }}/{{ $progress['total_students'] }} marks entered
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-
-        <!-- Top Performers -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div class="p-4 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                    <i class="fas fa-trophy text-yellow-500 mr-2"></i>Top Performers
-                </h3>
-            </div>
-            <div class="p-4">
-                <div class="space-y-3">
-                    @foreach($top_performers->take(5) as $index => $performer)
+        <div class="p-4">
+            <div class="space-y-3">
+                @foreach($class_wise_stats as $class)
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <div class="flex items-center">
-                            <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center mr-3">
-                                <span class="text-yellow-600 font-bold text-sm">{{ $index + 1 }}</span>
+                            <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
+                                <span class="text-indigo-600 font-semibold text-sm">{{ $class->order }}</span>
                             </div>
-                            <div class="flex-1">
-                                <div class="font-medium text-gray-900">{{ $performer->student->name ?? 'N/A' }}</div>
-                                <div class="text-sm text-gray-500">Avg: {{ number_format($performer->avg_marks, 2) }}%
+                            <div>
+                                <div class="font-medium text-gray-900">{{ $class->name }}</div>
+                                <div class="text-sm text-gray-500">{{ $class->myclass_sections->count() }} sections
                                 </div>
                             </div>
                         </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-
-        <!-- System Statistics -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div class="flex items-center justify-between p-4 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                    <i class="fas fa-cogs text-gray-500 mr-2"></i>System Statistics
-                </h3>
-                <button wire:click="toggleDetails('system')" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-{{ $showDetails['system'] ? 'chevron-up' : 'chevron-down' }}"></i>
-                </button>
-            </div>
-            @if($showDetails['system'])
-                <div class="p-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="text-center p-3 bg-gray-50 rounded-lg">
-                            <div class="text-2xl font-bold text-gray-600">{{ $system_stats['total_users'] }}</div>
-                            <div class="text-sm text-gray-600">Total Users</div>
-                        </div>
-                        <div class="text-center p-3 bg-blue-50 rounded-lg">
-                            <div class="text-2xl font-bold text-blue-600">{{ $system_stats['active_users'] }}</div>
-                            <div class="text-sm text-gray-600">Active Users</div>
-                        </div>
-                        <div class="text-center p-3 bg-green-50 rounded-lg">
-                            <div class="text-2xl font-bold text-green-600">{{ $system_stats['total_teachers'] }}</div>
-                            <div class="text-sm text-gray-600">Teachers</div>
-                        </div>
-                        <div class="text-center p-3 bg-purple-50 rounded-lg">
-                            <div class="text-2xl font-bold text-purple-600">{{ $system_stats['admin_users'] }}</div>
-                            <div class="text-sm text-gray-600">Admins</div>
+                        <div class="text-right">
+                            <div class="text-lg font-bold text-indigo-600">{{ $class->students_count }}</div>
+                            <div class="text-sm text-gray-500">students</div>
                         </div>
                     </div>
-                </div>
-            @endif
+                @endforeach
+            </div>
         </div>
     </div>
+</div>
+
+<!-- Right Column - Activity & Performance -->
+<div class="space-y-6">
+
+    <!-- Recent Activity -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="p-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                <i class="fas fa-clock text-blue-500 mr-2"></i>Recent Activity
+            </h3>
+        </div>
+        <div class="p-4">
+            <div class="space-y-4">
+                <div>
+                    <h4 class="font-medium text-gray-900 mb-2">Latest Students</h4>
+                    <div class="space-y-2">
+                        @foreach($recent_activity['recent_students'] as $student)
+                            <div class="flex items-center text-sm">
+                                <div class="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                                <span class="text-gray-900">{{ $student->name }}</span>
+                                <span class="text-gray-500 ml-auto">{{ $student->created_at->diffForHumans() }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exam Progress -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="p-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                <i class="fas fa-tasks text-purple-500 mr-2"></i>Exam Progress
+            </h3>
+        </div>
+        <div class="p-4">
+            <div class="space-y-4">
+                @foreach($exam_progress->take(5) as $progress)
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <div class="text-sm font-medium text-gray-900">
+                                Exam ID: {{ $progress['exam']->id ?? 'N/A' }}
+                            </div>
+                            <div class="text-sm text-gray-500">{{ $progress['progress'] }}%</div>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-{{ $progress['status'] == 'completed' ? 'green' : ($progress['status'] == 'in_progress' ? 'blue' : 'gray') }}-500 h-2 rounded-full"
+                                style="width: {{ $progress['progress'] }}%"></div>
+                        </div>
+                        <div class="text-xs text-gray-500">
+                            {{ $progress['marks_entered'] }}/{{ $progress['total_students'] }} marks entered
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Performers -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="p-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                <i class="fas fa-trophy text-yellow-500 mr-2"></i>Top Performers
+            </h3>
+        </div>
+        <div class="p-4">
+            <div class="space-y-3">
+                @foreach($top_performers->take(5) as $index => $performer)
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center mr-3">
+                            <span class="text-yellow-600 font-bold text-sm">{{ $index + 1 }}</span>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-medium text-gray-900">{{ $performer->student->name ?? 'N/A' }}</div>
+                            <div class="text-sm text-gray-500">Avg: {{ number_format($performer->avg_marks, 2) }}%
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
+    <!-- System Statistics -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="flex items-center justify-between p-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                <i class="fas fa-cogs text-gray-500 mr-2"></i>System Statistics
+            </h3>
+            <button wire:click="toggleDetails('system')" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-{{ $showDetails['system'] ? 'chevron-up' : 'chevron-down' }}"></i>
+            </button>
+        </div>
+        @if($showDetails['system'])
+            <div class="p-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="text-center p-3 bg-gray-50 rounded-lg">
+                        <div class="text-2xl font-bold text-gray-600">{{ $system_stats['total_users'] }}</div>
+                        <div class="text-sm text-gray-600">Total Users</div>
+                    </div>
+                    <div class="text-center p-3 bg-blue-50 rounded-lg">
+                        <div class="text-2xl font-bold text-blue-600">{{ $system_stats['active_users'] }}</div>
+                        <div class="text-sm text-gray-600">Active Users</div>
+                    </div>
+                    <div class="text-center p-3 bg-green-50 rounded-lg">
+                        <div class="text-2xl font-bold text-green-600">{{ $system_stats['total_teachers'] }}</div>
+                        <div class="text-sm text-gray-600">Teachers</div>
+                    </div>
+                    <div class="text-center p-3 bg-purple-50 rounded-lg">
+                        <div class="text-2xl font-bold text-purple-600">{{ $system_stats['admin_users'] }}</div>
+                        <div class="text-sm text-gray-600">Admins</div>
+                    </div>
+                </div>
+            </div>
+        @endif
+    </div>
+</div>
 </div>
 
 <!-- Flash Messages -->
@@ -405,22 +406,21 @@
         </div>
     </div>
 @endif
-</div>
 
 <script>
     // Auto-hide flash messages
-    setTimeout(funct ion() {
+    setTimeout(function () {
         const messages = document.querySelectorAll('[class*="fixed top-4 right-4"]');
-        messages.forEach(func tion(message) {
+        messages.forEach(function (message) {
             message.style.opacity = '0';
-            setTimeout(fun ction () {
-            message.remove();
-        }, 300);
-    });
+            setTimeout(function () {
+                message.remove();
+            }, 300);
+        });
     }, 3000);
 
     // Auto-refresh data every 30 seconds
-    setInterval(fu nction() {
+    setInterval(function () {
         @this.call('refreshData');
     }, 30000);
 </script>

@@ -118,8 +118,7 @@
             </div>
 
            
-            <div class="mt-3 space-y-1">                
-
+            <div class="mt-3 space-y-1">
                 <x-responsive-nav-link :href="route('dashboard')"
                     {{-- onclick="event.preventDefault(); this.closest('form').submit();" --}}
                     >

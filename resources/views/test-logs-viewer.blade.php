@@ -1,31 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Logs Viewer Component</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @livewireStyles
-</head>
-
-<body class="bg-gray-100">
-    <div class="min-h-screen">
-        <div class="bg-white shadow">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center py-6">
-                    <h1 class="text-2xl font-bold text-gray-900">Test Logs Viewer Component</h1>
-                    <a href="/" class="text-indigo-600 hover:text-indigo-500">← Back to Home</a>
+<x-livewire-layout title="Logs Viewer Component Test">
+    <div class="container mx-auto py-8 px-4">
+        <div class="bg-white rounded-lg shadow-lg">
+            <div class="p-6 border-b border-gray-200">
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">
+                    <i class="fas fa-file-code text-gray-500 mr-3"></i>
+                    Logs Viewer Component Test
+                </h1>
+                <p class="text-gray-600">Testing system logs monitoring and analysis for debugging and system health</p>
+                <div class="mt-3 inline-flex items-center px-3 py-1 bg-gray-100 border border-gray-400 rounded-lg">
+                    <i class="fas fa-cog text-gray-600 mr-2"></i>
+                    <span class="text-gray-800 text-sm font-medium">System Component</span>
                 </div>
             </div>
-        </div>
 
-        <div class="max-w-7xl mx-auto py-6">
             @livewire('logs-viewer-comp')
         </div>
     </div>
-
-    @livewireScripts
-</body>
-
-</html>
+</x-livewire-layout>
