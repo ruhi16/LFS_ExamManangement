@@ -139,31 +139,38 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-
-                                @foreach($classSubjects as $subject)
+                                @php 
+                                    $examDetailId = $examDetails->where('exam_type_id', $examType->id)->first()->id;
+                                @endphp
+                                {{-- {{ dd($classSubjects )}} --}}
+                                @foreach($classSubjects->where('exam_detail_id', $examDetailId) as $subject)
                                     <tr class="hover:bg-gray-50">
                                         <td
                                             class="px-6 py-4 text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200">
                                             <div class="font-semibold">{{ $subject->subject->name ?? 'Unknown Subject' }}</div>
-                                            {{-- <div class="text-xs text-gray-500">{{ $subject ?? 'XX' }}</div> --}}
+                                            <div class="text-xs text-gray-500">{{ $subject->exam_detail_id ?? 'XX' }}</div>
                                         </td>
                                         @foreach($classSections as $section)
                                             <td class="px-4 py-4 text-center border-l border-gray-300">
                                                 <div class="space-y-2">
                                                     @php
                                                         // Get configured combinations for this subject
-                                                        // dd($configuredCombinations);
                                                         $subjectCombinations = $configuredCombinations->get($subject->subject_id, collect());
-                                                        // dd($subjectCombinations);
                                                         // Filter combinations for current exam type
-                                                        $typePartCombinations = $subjectCombinations->where('exam_type_id', $examType->id);
-                                                        // dd($typePartCombinations);
+                                                        $typePartCombinations = $subjectCombinations->where('exam_detail_id', $examDetailId);
                                                     @endphp
-                                                    xx 
-                                                    {{ $examDetails }}
+                                                    
+                                                    
                                                     @if($typePartCombinations->isNotEmpty())
-                                                        yy
+                                                        yy 
+                                                        {{-- {{ ($typePartCombinations) }} --}}
                                                         @foreach($typePartCombinations as $combination)
+                                                        {{-- {{ ($combination) }} --}}
+                                                        Hello
+                                                        Subject: {{ $subject->subject_id }}, 
+                                                        Exam Type: {{ $examType->id }}, 
+                                                        Exam Part: {{ $combination->exam_part_id }}, 
+                                                        Section: {{ $section->section_id }}
                                                             @php
                                                                 $examPart = $examParts->where('id', $combination->exam_part_id)->first();
                                                                 if (!$examPart) continue;
@@ -176,6 +183,7 @@
                                                                     $teacherName = $teacher ? ($teacher->name ?? 'Unknown Teacher') : 'No Teacher Assigned';
                                                                 }
                                                             @endphp
+                                                            
 
                                                             <div class="relative">
                                                                 @if($distribution)

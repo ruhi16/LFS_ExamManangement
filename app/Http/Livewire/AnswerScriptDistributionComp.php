@@ -80,9 +80,11 @@ class AnswerScriptDistributionComp extends Component{
     }
     protected function loadExamDetails()
     {
-        dd('hello');
+        // dd('hello');
         try {
             $this->examDetails = Exam05Detail::where('myclass_id', $this->selectedClassId)
+                ->where('exam_name_id', $this->selectedExamNameId)
+                ->where('is_active', true)
                 ->orderBy('id')
                 ->get();
         } catch (\Exception $e) {
@@ -202,8 +204,8 @@ class AnswerScriptDistributionComp extends Component{
         }
     }
 
-    public function selectExamName($examNameId)
-    {
+    public function selectExamName($examNameId){
+
         try {
             $this->selectedExamNameId = $examNameId;
 
@@ -212,6 +214,8 @@ class AnswerScriptDistributionComp extends Component{
             $this->loadExamTypes();
             $this->loadExamParts();
             $this->loadClassData(); // This will now filter subjects based on Exam06ClassSubject
+            $this->loadExamDetails();
+
             $this->loadDistributions();
         } catch (\Exception $e) {
             Log::error('Error selecting exam name: ' . $e->getMessage());
