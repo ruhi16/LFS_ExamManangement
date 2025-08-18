@@ -152,14 +152,11 @@
                                                     @php
                                                         // Get configured combinations for this subject
                                                         $subjectCombinations = $configuredCombinations->get($subject->subject_id, collect());
-                                                        // dd($subjectCombinations);
                                                         // Filter combinations for current exam type
                                                         $typePartCombinations = $subjectCombinations->where('exam_type_id', $examType->id);
-                                                        // dd($typePartCombinations);
                                                     @endphp
-                                                    xx
+                                                    
                                                     @if($typePartCombinations->isNotEmpty())
-                                                        yy
                                                         @foreach($typePartCombinations as $combination)
                                                             @php
                                                                 $examPart = $examParts->where('id', $combination->exam_part_id)->first();
@@ -203,7 +200,7 @@
                                                             </div>
                                                         @endforeach
                                                     @else
-                                                        zz{{-- Fallback: Show all exam parts if no configurations found --}}
+                                                        {{-- Fallback: Show all exam parts if no configurations found --}}
                                                         @foreach($examParts as $examPart)
                                                             @php
                                                                 $key = "{$subject->subject_id}_{$examType->id}_{$examPart->id}_{$section->section_id}";

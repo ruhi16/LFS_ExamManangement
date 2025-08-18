@@ -219,14 +219,14 @@ class AnswerScriptDistributionComp extends Component{
             // Load class sections
             $this->classSections = MyclassSection::where('myclass_id', $this->selectedClassId)
                 ->where('is_active', true)
-                ->orderBy('id')
+                ->orderBy('name')
                 ->get();
 
             // Load class subjects - check if exam configurations exist
             if ($this->selectedExamNameId) {
                 // First check if there are any configurations for this class and exam
                 $configuredSubjectIds = Exam06ClassSubject::where('myclass_id', $this->selectedClassId)
-                    // ->where('exam_name_id', $this->selectedExamNameId)
+                    ->where('exam_name_id', $this->selectedExamNameId)
                     ->where('is_active', true)
                     ->distinct()
                     ->pluck('subject_id');
@@ -640,16 +640,12 @@ class AnswerScriptDistributionComp extends Component{
                 ->where('is_active', true)
                 ->pluck('id');
 
-            // dd($examDetails);
-
             $combinations = Exam06ClassSubject::whereIn('exam_detail_id', $examDetails)
                 ->where('myclass_id', $this->selectedClassId)
                 ->where('is_active', true)
-                // ->select('subject_id', 'exam_type_id', 'exam_part_id', 'full_marks', 'pass_marks', 'time_in_minutes')
+                ->select('subject_id', 'exam_type_id', 'exam_part_id', 'full_marks', 'pass_marks', 'time_in_minutes')
                 ->get()
                 ->groupBy('subject_id');
-                ;
-            // dd($combinations);
 
                 // ->select('subject_id', 'exam_type_id', 'exam_part_id', 'full_marks', 'pass_marks', 'time_in_minutes')
                 // ->get()
@@ -674,7 +670,6 @@ class AnswerScriptDistributionComp extends Component{
 
     public function render()
     {
-        // dd($this->getConfiguredCombinations());
         return view('livewire.answer-script-distribution-comp', [
             'classes' => $this->getClassesProperty(),
             'configuredCombinations' => $this->getConfiguredCombinations()

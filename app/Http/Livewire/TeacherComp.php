@@ -86,6 +86,8 @@ class TeacherComp extends Component{
             $this->initializeDefaults();
             $this->loadTeachers();
             $this->loadSubjects();
+
+
         } catch (\Exception $e) {
             Log::error('Error in TeacherComp mount: ' . $e->getMessage());
             session()->flash('error', 'Error loading component: ' . $e->getMessage());
@@ -100,7 +102,7 @@ class TeacherComp extends Component{
     private function initializeDefaults()
     {
         // Set current session
-        $currentSession = Session::where('status', 'active')->first();
+        $currentSession = Session::currentlyActive()->first();      //Session::where('status', 'active')->first();
         $this->session_id = $currentSession ? $currentSession->id : 1;
 
         // Set current school (assuming there's a way to get current school)
@@ -108,12 +110,15 @@ class TeacherComp extends Component{
 
         // Set current user
         $this->user_id = auth()->id() ?? 1;
+
+        // dd($this->session_id, $this->school_id, $this->user_id);
     }
 
     public function loadTeachers()
     {
         try {
             $query = Teacher::with(['subject']);
+            // dd($this->selectedCategory);
 
             if ($this->selectedCategory) {
                 $categoryDesignations = $this->teacherCategories[$this->selectedCategory] ?? [];
@@ -121,7 +126,7 @@ class TeacherComp extends Component{
                     $query->whereIn('desig', $categoryDesignations);
                 }
             }
-
+            // dd($this->searchTerm);
             if ($this->searchTerm) {
                 $searchTerm = trim($this->searchTerm);
                 if (!empty($searchTerm)) {
@@ -135,6 +140,8 @@ class TeacherComp extends Component{
             }
 
             $this->teachers = $query->orderBy('id')->paginate(10);
+            // dd($this->teachers);
+
         } catch (\Exception $e) {
             Log::error('Error loading teachers: ' . $e->getMessage()); // Fixed: Removed unexpected comma
             $this->teachers = Teacher::paginate(15); // Fallback to basic pagination
@@ -183,7 +190,7 @@ class TeacherComp extends Component{
         if (!$this->subjects || $this->subjects->isEmpty()) {
             $this->loadSubjects();
         }
-        // dd($this->subjects);
+        // dd($this->teachers, $this->showModal);
     }
 
     public function closeModal()

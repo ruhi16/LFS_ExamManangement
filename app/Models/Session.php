@@ -29,7 +29,7 @@ class Session extends Model
 
     public function scopeCurrentlyActive($query)
     {
-        return $query->where('status', 'Active');
+        return $query->where('status', 'active');
     }
 
 

@@ -34,7 +34,7 @@
             </button>
         </div>
     </div>
-
+    {{-- {{ dd($teachers, $this->showModal) }} --}}
     <!-- Flash Messages -->
     @if (session()->has('message'))
         <div class="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
@@ -54,6 +54,7 @@
         </div>
     @endif
 
+    {{-- {{dd($this->teachers);}} --}}
     <!-- Filters Section -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -121,7 +122,8 @@
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0 h-12 w-12">
                                             @if($teacher->img_ref)
-                                                <img src="{{ asset('storage/' . $teacher->img_ref) }}" alt="{{ $teacher->name }}"
+                                                {{-- {{asset('storage/' . $teacher->img_ref)}} --}}
+                                                <img src="{{ asset('storage/student-profiles/' . $teacher->img_ref) }}" alt="{{ $teacher->name }}"
                                                     class="h-12 w-12 rounded-full object-cover border-2 border-gray-200"
                                                     onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                                 <div
@@ -252,6 +254,7 @@
                         @endforeach
                     </tbody>
                 </table>
+                {{ $showModal ? 'Yes' : 'No' }}
             </div>
 
             <!-- Pagination -->
@@ -263,6 +266,7 @@
                 <div class="text-gray-400 mb-4">
                     <i class="fas fa-chalkboard-teacher text-6xl"></i>
                 </div>
+                {{ json_encode($teachers) }}
                 <h3 class="text-lg font-medium text-gray-900 mb-2">No Teachers Found</h3>
                 <p class="text-gray-600 mb-4">Get started by adding your first teacher.</p>
                 <button wire:click="openModal"
@@ -276,6 +280,7 @@
 
 <!-- Modal -->
 @if($showModal)
+    dd('Hello')
     <div class="fixed inset-0 bg-red-500 bg-opacity-75 flex items-center justify-center p-4" style="z-index: 9999;">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border-4 border-blue-500">
             <!-- Modal Header -->
