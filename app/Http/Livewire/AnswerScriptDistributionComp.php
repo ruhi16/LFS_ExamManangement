@@ -24,6 +24,7 @@ class AnswerScriptDistributionComp extends Component{
     public $examNames;
     public $examTypes;
     public $examParts;
+    public $examDetails;
     public $classSections;
     public $classSubjects;
     public $distributions;
@@ -47,6 +48,7 @@ class AnswerScriptDistributionComp extends Component{
             $this->examNames = collect();
             $this->examTypes = collect();
             $this->examParts = collect();
+            $this->examDetails = collect();
 
             $this->classSections = collect();
             $this->classSubjects = collect();
@@ -58,6 +60,7 @@ class AnswerScriptDistributionComp extends Component{
             $this->loadExamNames();
             $this->loadExamTypes();
             $this->loadExamParts();
+            // $this->loadExamDetails();
             $this->loadTeachers();
             // dd($this->teachers);
         } catch (\Exception $e) {
@@ -73,6 +76,18 @@ class AnswerScriptDistributionComp extends Component{
         } catch (\Exception $e) {
             Log::error('Error getting classes: ' . $e->getMessage());
             return collect();
+        }
+    }
+    protected function loadExamDetails()
+    {
+        dd('hello');
+        try {
+            $this->examDetails = Exam05Detail::where('myclass_id', $this->selectedClassId)
+                ->orderBy('id')
+                ->get();
+        } catch (\Exception $e) {
+            Log::error('Error loading exam names: ' . $e->getMessage());
+            $this->examDetails = collect();
         }
     }
 
@@ -191,6 +206,8 @@ class AnswerScriptDistributionComp extends Component{
     {
         try {
             $this->selectedExamNameId = $examNameId;
+
+
             // Reload exam types, parts, and subjects based on the selected exam and class
             $this->loadExamTypes();
             $this->loadExamParts();
@@ -216,6 +233,14 @@ class AnswerScriptDistributionComp extends Component{
         }
 
         try {
+            // Load examDetailids
+            $examDetailIds = Exam05Detail::where('myclass_id', $this->selectedClassId)
+                ->where('exam_name_id', $this->selectedExamNameId)                
+                ->where('is_active', true)
+                ->pluck('id');
+            // dd($examDetailIds);
+
+
             // Load class sections
             $this->classSections = MyclassSection::where('myclass_id', $this->selectedClassId)
                 ->where('is_active', true)
@@ -225,26 +250,31 @@ class AnswerScriptDistributionComp extends Component{
             // Load class subjects - check if exam configurations exist
             if ($this->selectedExamNameId) {
                 // First check if there are any configurations for this class and exam
-                $configuredSubjectIds = Exam06ClassSubject::where('myclass_id', $this->selectedClassId)
+                $configuredSubjectIds = MyclassSubject::with('subject')
+                    ->where('myclass_id', $this->selectedClassId)
+                    // ::where('myclass_id', $this->selectedClassId)
                     // ->where('exam_name_id', $this->selectedExamNameId)
                     ->where('is_active', true)
                     ->distinct()
                     ->pluck('subject_id');
+                // dd($configuredSubjectIds);
 
                 Log::info("Found " . $configuredSubjectIds->count() . " configured subjects for class {$this->selectedClassId}, exam {$this->selectedExamNameId}");
 
                 if ($configuredSubjectIds->isNotEmpty()) {
                     // Use configured subjects only
-                    $this->classSubjects = MyclassSubject::with('subject')
+                    $this->classSubjects = Exam06ClassSubject::with('subject')
                         ->where('myclass_id', $this->selectedClassId)
+                        ->whereIn('exam_detail_id', $examDetailIds)
                         ->whereIn('subject_id', $configuredSubjectIds)
                         ->where('is_active', true)
                         ->orderBy('order_index')
                         ->get();
                 } else {
                     // No configurations found, show all class subjects with a warning
-                    $this->classSubjects = MyclassSubject::with('subject')
+                    $this->classSubjects = Exam06ClassSubject::with('subject')
                         ->where('myclass_id', $this->selectedClassId)
+                        ->whereIn('exam_detail_id', $examDetailIds)
                         ->where('is_active', true)
                         ->orderBy('order_index')
                         ->get();
@@ -253,6 +283,8 @@ class AnswerScriptDistributionComp extends Component{
                         session()->flash('warning', 'No exam configurations found for this class and exam. Showing all class subjects. Please configure exams in Class Exam Subject first.');
                     }
                 }
+
+                // dd($this->classSubjects);
             } else {
                 // If no exam selected, load all class subjects
                 $this->classSubjects = MyclassSubject::with('subject')

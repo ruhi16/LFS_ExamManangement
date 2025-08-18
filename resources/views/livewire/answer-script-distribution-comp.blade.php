@@ -139,25 +139,28 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
+
                                 @foreach($classSubjects as $subject)
                                     <tr class="hover:bg-gray-50">
                                         <td
                                             class="px-6 py-4 text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200">
                                             <div class="font-semibold">{{ $subject->subject->name ?? 'Unknown Subject' }}</div>
-                                            <div class="text-xs text-gray-500">{{ $subject->name }}</div>
+                                            {{-- <div class="text-xs text-gray-500">{{ $subject ?? 'XX' }}</div> --}}
                                         </td>
                                         @foreach($classSections as $section)
                                             <td class="px-4 py-4 text-center border-l border-gray-300">
                                                 <div class="space-y-2">
                                                     @php
                                                         // Get configured combinations for this subject
+                                                        // dd($configuredCombinations);
                                                         $subjectCombinations = $configuredCombinations->get($subject->subject_id, collect());
                                                         // dd($subjectCombinations);
                                                         // Filter combinations for current exam type
                                                         $typePartCombinations = $subjectCombinations->where('exam_type_id', $examType->id);
                                                         // dd($typePartCombinations);
                                                     @endphp
-                                                    xx
+                                                    xx 
+                                                    {{ $examDetails }}
                                                     @if($typePartCombinations->isNotEmpty())
                                                         yy
                                                         @foreach($typePartCombinations as $combination)
