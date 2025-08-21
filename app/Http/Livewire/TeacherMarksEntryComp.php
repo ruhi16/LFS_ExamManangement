@@ -17,7 +17,7 @@ class TeacherMarksEntryComp extends Component
     public function mount()
     {
         // Load teachers
-        $this->teachers = Teacher::orderBy('name')->get();
+        $this->teachers = Teacher::orderBy('id')->get();
 
         // Load distributions with necessary relations
         $this->distributions = Exam07AnsscrDist::with([
@@ -28,7 +28,7 @@ class TeacherMarksEntryComp extends Component
         ])->get();
 
         // Group by teacher for quick access in the view
-        $this->distributionsByTeacher = $this->distributions->groupBy('teacher_id');
+        // $this->distributionsByTeacher = $this->distributions->groupBy('teacher_id');
 
         // Build subject map for resolving subject names quickly
         $examClassSubjectIds = $this->distributions
@@ -44,10 +44,6 @@ class TeacherMarksEntryComp extends Component
 
     public function render()
     {
-        return view('livewire.teacher-marks-entry-comp', [
-            'teachers' => $this->teachers,
-            'distByTeacher' => $this->distributionsByTeacher,
-            'subjectMap' => $this->subjectMap,
-        ]);
+        return view('livewire.teacher-marks-entry-comp');
     }
 }

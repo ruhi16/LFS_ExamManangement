@@ -265,6 +265,11 @@
                         @livewire('marks-entry-comp')
                     @endif
 
+                    <!-- Marks Entry -->
+                    @if($activeMenu === 'teacher-entry')
+                        @livewire('teacher-marks-entry-comp')
+                    @endif
+
                     <!-- System Logs -->
                     @if($activeMenu === 'logs-viewer')
                         @livewire('logs-viewer-comp')
@@ -278,6 +283,11 @@
                     <!-- Mark Register -->
                     @if($activeMenu === 'mark-register')
                         @livewire('mark-register-comp')
+                    @endif
+
+                    <!-- User Role Components -->
+                    @if($activeMenu === 'user-roles')
+                        {{-- @livewire('user-role-comp') --}}
                     @endif
 
                     <!-- Analytics -->

@@ -19,7 +19,7 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @foreach($teachers as $teacher)
-                        @php
+                        {{-- @php
                             $tDists = $distByTeacher->get($teacher->id, collect());
                             // Group by Exam Name first
                             $byExamName = $tDists->groupBy(function($d){
@@ -84,7 +84,7 @@
                                     </div>
                                 @endif
                             </td>
-                        </tr>
+                        </tr> --}}
                     @endforeach
                 </tbody>
             </table>
