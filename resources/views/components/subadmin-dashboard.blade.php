@@ -10,19 +10,13 @@
 
     <div class="h-fit min-w-full mx-auto">
         <div class="min-w-fit mx-auto bg-purple-300 text-center text-4xl font-bold my-4">
-            Management Dashboard
+            Sub-Admin or Teacher Dashboard
         </div>
-        {{-- <livewire:users-profile-detais-component > --}}
-            {{-- {{auth()->user()->teacher->id}} --}}
-        {{-- <livewire:admin-teacher-wise-marks-entry-links-component :teacher_id="auth()->user()->teacher->id" > --}}
-        {{-- <livewire:admin-teacher-wise-marks-entry-links-component> --}}
-
-        {{-- <livewire: user-change-password-component >123 --}}
-
         
     </div>
     
-
+    {{-- {{ auth()->user()->teacher->name ?? 'XX' }} --}}
+    @livewire('sub-admin-dashboard-comp', ['user' => auth()->user()])
 
 
 

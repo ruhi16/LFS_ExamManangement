@@ -35,39 +35,56 @@ class Exam07AnsscrDist extends Model
     ];
 
     // Relationships
-    public function myclass()
-    {
-        return $this->belongsTo(Myclass::class, 'myclass_id');
+    // public function myclass()
+    // {
+    //     return $this->belongsTo(Myclass::class, 'myclass_id');
+    // }
+
+    public function myclassSection(){
+        return $this->belongsTo(MyclassSection::class, 'myclass_section_id', 'id');
     }
 
-    public function examName()
-    {
-        return $this->belongsTo(Exam01Name::class, 'exam_name_id');
+    public function myclassSubject(){
+        return $this->belongsTo(MyclassSubject::class, 'exam_class_subject_id', 'id');
     }
 
-    public function examType()
+    public function session()
     {
-        return $this->belongsTo(Exam02Type::class, 'exam_type_id');
+        return $this->belongsTo(Session::class, 'session_id');
     }
 
-    public function examPart()
-    {
-        return $this->belongsTo(Exam03Part::class, 'exam_part_id');
+    public function examDetail(){
+        return $this->belongsTo(Exam05Detail::class, 'exam_detail_id', 'id');
     }
 
-    public function subject()
-    {
-        return $this->belongsTo(Subject::class, 'subject_id');
-    }
+    // public function examName()
+    // {
+    //     return $this->belongsTo(Exam01Name::class, 'exam_name_id');
+    // }
 
-    public function section()
-    {
-        return $this->belongsTo(MyclassSection::class, 'section_id');
-    }
+    // public function examType()
+    // {
+    //     return $this->belongsTo(Exam02Type::class, 'exam_type_id');
+    // }
+
+    // public function examPart()
+    // {
+    //     return $this->belongsTo(Exam03Part::class, 'exam_part_id');
+    // }
+
+    // public function subject()
+    // {
+    //     return $this->belongsTo(Subject::class, 'subject_id');
+    // }
+
+    // public function section()
+    // {
+    //     return $this->belongsTo(MyclassSection::class, 'section_id');
+    // }
 
     public function teacher()
     {
-        return $this->belongsTo(Teacher::class, 'teacher_id');
+        return $this->belongsTo(Teacher::class, 'teacher_id','id');
     }
 
     public function user()

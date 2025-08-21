@@ -10,6 +10,8 @@ use App\Models\Exam01Name;
 use App\Models\Exam02Type;
 use App\Models\Exam03Part;
 use App\Models\Exam05Detail;
+use App\Models\Exam06ClassSubject;
+use App\Models\Exam07AnsscrDist;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 
@@ -20,9 +22,12 @@ class MarksEntryComp extends Component
     public $examNames;
     public $examTypes;
     public $examParts;
+    
     public $classSections;
     public $classSubjects;
     public $examDetails;
+
+    public $answerScriptDistributions;
 
     // Debug properties
     public $debugMode = false;
@@ -34,13 +39,19 @@ class MarksEntryComp extends Component
             $this->examNames = collect();
             $this->examTypes = collect();
             $this->examParts = collect();
+
             $this->classSections = collect();
             $this->classSubjects = collect();
+            
             $this->examDetails = []; // Initialize as array instead of collection
 
             $this->loadExamNames();
             $this->loadExamTypes();
             $this->loadExamParts();
+
+            $this->answerScriptDistributions = Exam07AnsscrDist::all();
+
+
         } catch (\Exception $e) {
             Log::error('Error in MarksEntryComp mount: ' . $e->getMessage());
             session()->flash('error', 'Error initializing component: ' . $e->getMessage());
@@ -71,8 +82,9 @@ class MarksEntryComp extends Component
     {
         try {
             // Order by type: Summative first, then Formative
-            $this->examTypes = Exam02Type::orderByRaw("CASE WHEN LOWER(name) LIKE '%summative%' THEN 1 WHEN LOWER(name) LIKE '%formative%' THEN 2 ELSE 3 END")
-                ->orderBy('name')
+            $this->examTypes = Exam02Type::where('is_active', true)
+                // ->orderByRaw("CASE WHEN LOWER(name) LIKE '%summative%' THEN 1 WHEN LOWER(name) LIKE '%formative%' THEN 2 ELSE 3 END")
+                ->orderBy('id', 'desc')
                 ->get();
         } catch (\Exception $e) {
             Log::error('Error loading exam types: ' . $e->getMessage());
@@ -83,7 +95,7 @@ class MarksEntryComp extends Component
     protected function loadExamParts()
     {
         try {
-            $this->examParts = Exam03Part::orderBy('name')->get();
+            $this->examParts = Exam03Part::where('is_active', true)->orderBy('id')->get();
         } catch (\Exception $e) {
             Log::error('Error loading exam parts: ' . $e->getMessage());
             $this->examParts = collect();
@@ -109,6 +121,9 @@ class MarksEntryComp extends Component
             session()->flash('message', "DEBUG: Starting selectExamName with ID: {$examNameId}");
             $this->selectedExamNameId = $examNameId;
             session()->flash('message', "DEBUG: Set selectedExamNameId to: {$this->selectedExamNameId}");
+            
+            $this->resetData();
+            $this->loadClassData();
             $this->loadExamDetails();
             session()->flash('message', "DEBUG: Completed loadExamDetails");
         } catch (\Exception $e) {
@@ -131,18 +146,71 @@ class MarksEntryComp extends Component
         }
 
         try {
+            // Load examDetailids
+            $examDetailIds = Exam05Detail::where('myclass_id', $this->selectedClassId)
+                ->where('exam_name_id', $this->selectedExamNameId)                
+                ->where('is_active', true)
+                ->pluck('id');
+
             // Load class sections
             $this->classSections = MyclassSection::with('section')->where('myclass_id', $this->selectedClassId)
                 ->where('is_active', true)
                 ->orderBy('id')
                 ->get();
 
+            // Load class subjects - check if exam configurations exist
+            if ($this->selectedExamNameId) {
+                // First check if there are any configurations for this class and exam
+                $configuredSubjectIds = MyclassSubject::with('subject')
+                    ->where('myclass_id', $this->selectedClassId)                                        
+                    ->where('is_active', true)
+                    ->distinct()
+                    ->pluck('subject_id');
+                // dd($configuredSubjectIds);
+
+                Log::info("Found " . $configuredSubjectIds->count() . " configured subjects for class {$this->selectedClassId}, exam {$this->selectedExamNameId}");
+
+                // If there is any subject available for the class, then selected for the exam
+                if ($configuredSubjectIds->isNotEmpty()) {
+                    // Use configured subjects only
+                    $this->classSubjects = Exam06ClassSubject::with('subject')
+                        ->where('myclass_id', $this->selectedClassId)
+                        ->whereIn('exam_detail_id', $examDetailIds)
+                        ->whereIn('subject_id', $configuredSubjectIds)
+                        ->where('is_active', true)
+                        ->orderBy('order_index')
+                        ->get();
+                } else {
+                    // No configurations found, show all class subjects with a warning
+                    $this->classSubjects = Exam06ClassSubject::with('subject')
+                        ->where('myclass_id', $this->selectedClassId)
+                        ->whereIn('exam_detail_id', $examDetailIds)
+                        ->where('is_active', true)
+                        ->orderBy('order_index')
+                        ->get();
+
+                    if ($this->classSubjects->isNotEmpty()) {
+                        session()->flash('warning', 'No exam configurations found for this class and exam. Showing all class subjects. Please configure exams in Class Exam Subject first.');
+                    }
+                }
+
+                
+            } else {
+                // If no exam selected, load all class subjects
+                $this->classSubjects = MyclassSubject::with('subject')
+                    ->where('myclass_id', $this->selectedClassId)
+                    ->where('is_active', true)
+                    ->orderBy('order_index')
+                    ->get();
+            }
+            // dd($this->classSubjects);
+            
             // Load class subjects
-            $this->classSubjects = MyclassSubject::with('subject')
-                ->where('myclass_id', $this->selectedClassId)
-                ->where('is_active', true)
-                ->orderBy('order_index')
-                ->get();
+            // $this->classSubjects = MyclassSubject::with('subject')
+            //     ->where('myclass_id', $this->selectedClassId)
+            //     ->where('is_active', true)
+            //     ->orderBy('order_index')
+            //     ->get();
 
             Log::info("Loaded " . $this->classSections->count() . " sections and " . $this->classSubjects->count() . " subjects for class {$this->selectedClassId}");
         } catch (\Exception $e) {
@@ -182,6 +250,7 @@ class MarksEntryComp extends Component
                 }
                 $this->examDetails[$typeId][] = $examDetail;
             }
+            // dd($examDetailsQuery, $this->examDetails);
 
             session()->flash('message', "DEBUG: Organization completed, types: " . count($this->examDetails));
 

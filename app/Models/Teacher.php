@@ -36,17 +36,17 @@ class Teacher extends Model
         return $this->hasOne(User::class);
     }
 
-    public function Myclassteachers()
-    {
-        return $this->hasMany(Myclassteacher::class, 'teacher_id', 'id');
-        // 'teacher_id' is the foreign key in the Myclassteacher table
-        // 'id' is the primary key in the Teacher table
-    }
+    // public function Myclassteachers()
+    // {
+    //     return $this->hasMany(MyclassSectionteacher::class, 'teacher_id', 'id');
+    //     // 'teacher_id' is the foreign key in the Myclassteacher table
+    //     // 'id' is the primary key in the Teacher table
+    // }
 
 
-    public function Answerscriptdistributions()
+    public function getAnswerScripts()
     {
-        return $this->hasMany(Answerscriptdistribution::class, 'teacher_id', 'id');
+        return $this->hasMany(Exam07AnsscrDist::class, 'teacher_id', 'id');
         // 'teacher_id' is the foreign key in the Answerscriptdistribution table
         // 'id' is the primary key in the Teacher table
     }

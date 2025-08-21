@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\Teacher;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -108,7 +109,7 @@ class UserRoleComp extends Component
     public function loadUsers()
     {
         try {
-            $query = User::with(['role']);
+            $query = User::with(['role', 'teacher']);
 
             if ($this->selectedRole) {
                 $query->where('role_id', $this->selectedRole);
@@ -386,6 +387,123 @@ class UserRoleComp extends Component
         }
     }
 
+    /**
+     * Assign a teacher to a user and update the reverse mapping on Teacher
+     */
+    public function assignTeacher($userId, $teacherId)
+    {
+        try {
+            $user = User::findOrFail($userId);
+
+            // Privilege check: cannot manage users with higher/equal role
+            if (Auth::check() && $user->role_id >= Auth::user()->role_id) {
+                session()->flash('error', 'You cannot modify users with higher or equal privileges.');
+                return;
+            }
+
+            // Ensure teacher exists and is not assigned to any user
+            $teacher = Teacher::findOrFail($teacherId);
+            $teacherAlreadyLinked = (int)($teacher->user_id ?? 0) > 0;
+            $teacherUsedByAnotherUser = User::where('teacher_id', (int)$teacherId)->exists();
+            if ($teacherAlreadyLinked || $teacherUsedByAnotherUser) {
+                session()->flash('error', 'Selected teacher is already assigned to a user.');
+                return;
+            }
+
+            // If user already has a teacher, release the previous link
+            if ((int)($user->teacher_id ?? 0) > 0) {
+                $prev = Teacher::find($user->teacher_id);
+                if ($prev) {
+                    $prev->user_id = 0; // schema uses integer fields; 0 denotes no-link
+                    $prev->save();
+                }
+            }
+
+            // Link both sides
+            $user->teacher_id = (int)$teacherId;
+            $user->save();
+
+            Teacher::where('user_id', (int)$user->id)->update(['user_id' => 0]);
+
+            $teacher->user_id = (int)$user->id;
+            $teacher->save();
+
+            session()->flash('message', 'Teacher assigned to user successfully.');
+            $this->loadUsers();
+        } catch (\Exception $e) {
+            Log::error('Error assigning teacher: ' . $e->getMessage());
+            session()->flash('error', 'Error assigning teacher: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Revoke teacher assignment from a user, clearing both sides
+     */
+    public function revokeTeacher($userId)
+    {
+        try {
+            $user = User::findOrFail($userId);
+
+            if (Auth::check() && $user->role_id >= Auth::user()->role_id) {
+                session()->flash('error', 'You cannot modify users with higher or equal privileges.');
+                return;
+            }
+
+            $teacherId = (int)($user->teacher_id ?? 0);
+            if ($teacherId > 0) {
+                $teacher = Teacher::find($teacherId);
+                if ($teacher) {
+                    $teacher->user_id = 0; // integer schema; use 0 for unassigned
+                    $teacher->save();
+                }
+                $user->teacher_id = 0; // integer schema; use 0 for unassigned
+                $user->save();
+            }
+
+            session()->flash('message', 'Teacher assignment revoked successfully.');
+            $this->loadUsers();
+        } catch (\Exception $e) {
+            Log::error('Error revoking teacher: ' . $e->getMessage());
+            session()->flash('error', 'Error revoking teacher: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete a user safely. It will revoke teacher link first if present.
+     */
+    public function deleteUser($userId)
+    {
+        try {
+            if (Auth::check() && (int)$userId === (int)Auth::id()) {
+                session()->flash('error', 'You cannot delete your own account.');
+                return;
+            }
+
+            $user = User::findOrFail($userId);
+
+            if (Auth::check() && $user->role_id >= Auth::user()->role_id) {
+                session()->flash('error', 'You cannot delete users with higher or equal privileges.');
+                return;
+            }
+
+            // Revoke teacher if any
+            if ((int)($user->teacher_id ?? 0) > 0) {
+                $teacher = Teacher::find($user->teacher_id);
+                if ($teacher) {
+                    $teacher->user_id = 0;
+                    $teacher->save();
+                }
+            }
+
+            $user->delete();
+            session()->flash('message', 'User deleted successfully.');
+            $this->loadUsers();
+        } catch (\Exception $e) {
+            Log::error('Error deleting user: ' . $e->getMessage());
+            session()->flash('error', 'Error deleting user: ' . $e->getMessage());
+        }
+    }
+
     private function canAssignRole($roleId)
     {
         $currentUserRole = Auth::user()->role_id;
@@ -415,6 +533,32 @@ class UserRoleComp extends Component
                 return 'bg-gray-100 text-gray-800';
             default:
                 return 'bg-gray-100 text-gray-800';
+        }
+    }
+
+    public function getAvailableTeachers(){
+
+        try {
+            // Teachers that are not linked from either side
+            $inUseTeacherIds = User::where('teacher_id', '>', 0)->pluck('teacher_id')->filter()->values();
+            
+            // dd($inUseTeacherIds);
+
+            $teachers = Teacher::query()
+                ->when($inUseTeacherIds->count() > 0, function ($q) use ($inUseTeacherIds) {
+                    $q->whereNotIn('id', $inUseTeacherIds);
+                })
+                ->where(function ($q) {
+                    $q->where('user_id', '>', 0)->orWhere('user_id', 0);    //->orWhereNull('user_id');
+                })
+                ->orderBy('id')
+                ->get();
+
+                // dd( $teachers);
+                return $teachers;
+        } catch (\Exception $e) {
+            Log::error('Error loading available teachers: ' . $e->getMessage());
+            return collect();
         }
     }
 
@@ -466,6 +610,7 @@ class UserRoleComp extends Component
             'roles' => $this->roles ?? collect(),
             'users' => $this->users ?? collect(),
             'availableRoles' => $this->getAvailableRoles(),
+            'availableTeachers' => $this->getAvailableTeachers(),
             'currentUserRole' => Auth::user() ? Auth::user()->role_id : 5 // Default to admin for testing
         ]);
     }

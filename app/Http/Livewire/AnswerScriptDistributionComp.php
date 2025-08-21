@@ -347,20 +347,26 @@ class AnswerScriptDistributionComp extends Component{
             $this->distributions = collect();
 
             foreach ($distributions as $distribution) {
+                // dd($distribution);
                 // Get the exam detail to find exam type and part
-                $examDetail = $examDetails->where('id', $distribution->exam_detail_id)->first();
+                $examDetail = $examDetails->find($distribution->exam_detail_id);
 
                 // Get the class section to find section id
-                $classSection = $classSections->where('id', $distribution->myclass_section_id)->first();
+                $classSection = $classSections->find($distribution->myclass_section_id);
 
                 // Get exam class subject to find subject id
-                $examClassSubject = Exam06ClassSubject::where('id', $distribution->exam_class_subject_id)->first();
-
+                $examClassSubject = Exam06ClassSubject::find($distribution->exam_class_subject_id);
+                // dd($examDetail,$classSection,$examClassSubject);
+                // dd($examClassSubject->subject_id, $examDetail->exam_type_id, $examDetail->exam_part_id, $classSection->section_id);
+                $key = "{$examClassSubject->subject_id}_{$examDetail->exam_type_id}_{$examDetail->exam_part_id}_{$classSection->section_id}";
+                // dd($key);
                 if ($examDetail && $classSection && $examClassSubject) {
                     $key = "{$examClassSubject->subject_id}_{$examDetail->exam_type_id}_{$examDetail->exam_part_id}_{$classSection->section_id}";
+                    // dd($key);
                     $this->distributions[$key] = $distribution;
                 }
             }
+            // dd($this->distributions);
 
             Log::info("Loaded " . $this->distributions->count() . " distributions for class {$this->selectedClassId}, exam {$this->selectedExamNameId}");
         } catch (\Exception $e) {
@@ -664,8 +670,8 @@ class AnswerScriptDistributionComp extends Component{
     /**
      * Get all configured combinations for the selected class and exam
      */
-    public function getConfiguredCombinations()
-    {
+    public function getConfiguredCombinations(){
+
         if (!$this->selectedClassId || !$this->selectedExamNameId) {
             return collect();
         }
@@ -683,7 +689,7 @@ class AnswerScriptDistributionComp extends Component{
                 ->where('is_active', true)
                 // ->select('subject_id', 'exam_type_id', 'exam_part_id', 'full_marks', 'pass_marks', 'time_in_minutes')
                 ->get()
-                ->groupBy('subject_id');
+                // ->groupBy('subject_id')
                 ;
             // dd($combinations);
 

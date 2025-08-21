@@ -12,6 +12,7 @@ use App\Http\Livewire\About;
 use App\Http\Livewire\AdminUserPreviledgeControlComponent;
 use App\Http\Livewire\SubadminMarksEntryComponent;
 use App\Http\Livewire\SubadminMarksEntryEntityComponent;
+use App\Http\Livewire\TeacherMarksEntryComp;
 use App\Http\Livewire\UserChangePasswordComponent;
 
 // use App\Http\Livewire\Admin;
@@ -174,9 +175,12 @@ Route::get('/test-student-cr', function () {
 })->name('test.student.cr');
 
 // Test route for Answer Script Distribution component
-Route::get('/test-answer-script-distribution', function () {
-    return view('test-answer-script-distribution');
-})->name('test.answer.script.distribution');
+Route::get('/test-test', TeacherMarksEntryComp::class);
+
+
+// Route::get('/test-answer-script-distribution', function () {
+//     return view('teacher-marks-entry-comp');
+// })->name('test.answer.script.distribution');
 
 // Marks Entry routes
 Route::get('/marks-entry', App\Http\Livewire\MarksEntryComp::class)
@@ -241,7 +245,9 @@ Route::get('auth/google', [GoogleAuthController::class, 'redirect'])
 Route::get('auth/google/callback', [GoogleAuthController::class, 'callbackGoogle'])
     ->name('auth.google.callback');
 
-
+Route::get('/test-teacher-wise-marks-entry', function () {
+    return view('livewire.marks-entry-comp');
+})->name('test-teacher-wise-marks-entry');
 
 require __DIR__ . '/auth.php';
 

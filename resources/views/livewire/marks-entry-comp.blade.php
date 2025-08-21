@@ -3,7 +3,7 @@
     <div class="mb-6">
         <div class="flex justify-between items-center">
             <div>
-                <h1 class="text-2xl font-semibold text-gray-900">Marks Entry</h1>
+                <h1 class="text-2xl font-semibold text-gray-900">Marks Entry XX</h1>
                 <p class="mt-1 text-sm text-gray-600">Select exam details to enter marks for students</p>
             </div>
         </div>
@@ -93,7 +93,7 @@
     @endif
 
     <!-- DEBUG INFO -->
-    @if($selectedClassId && $selectedExamNameId)
+    {{-- @if($selectedClassId && $selectedExamNameId)
         <div class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
             <h4 class="text-sm font-medium text-yellow-800 mb-2">DEBUG INFO</h4>
             <div class="text-xs text-yellow-700 space-y-1">
@@ -109,18 +109,32 @@
                 @endif
             </div>
         </div>
-    @endif
-
+    @endif --}}
+        {{-- {{ dd($examDetails) }} --}}
     <!-- Marks Entry Tables by Exam Type (Summative first, then Formative) -->
     @if($selectedClassId && $selectedExamNameId && count($classSubjects) > 0 && count($classSections) > 0 && is_array($examDetails) && count($examDetails) > 0)
         <div class="space-y-8">
-            @foreach($examTypes as $examType)
+            @foreach($examTypes->sortByDesc('id') as $examType)
                 <!-- DEBUG: Checking exam type {{ $examType->id }} -->
+                {{-- ExamType: {{ $examType->id }} --}}
+                {{-- ExamDetail: {{ isset($examDetails[$examType->id]) ? json_encode($examDetails[$examType->id]) : 'NOT_FOUND' }} --}}
+                
                 @if(isset($examDetails[$examType->id]))
                     <div class="bg-white rounded-lg shadow overflow-hidden">
-                        <div class="p-4 border-b border-gray-200 bg-gray-50">
+                        <div class="p-4 border-b border-gray-200 bg-gray-200 sticky top-0 z-10 flex items-center justify-between py-2 px-4">
                             <h3 class="text-lg font-semibold text-gray-900">
                                 {{ $examType->name }} - Marks Entry
+                                {{-- {{ json_encode($examDetails) }} --}}
+                                {{-- @foreach($examDetails as $examDetail) --}}
+                                    {{-- {{ json_encode($examDetail) }}<br/><br/> --}}
+                                    {{-- @if($examDetail->examtype_id == $examType->id)
+                                        @if($examDetail->exammode_id == 1)
+                                            - Summative
+                                        @elseif($examDetail->exammode_id == 2)
+                                            - Formative
+                                        @endif
+                                    @endif --}}
+                                {{-- @endforeach --}}
                             </h3>
                             <p class="text-sm text-gray-600 mt-1">
                                 Click on any cell to enter marks for that exam part
@@ -146,7 +160,12 @@
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    @foreach($classSubjects as $subject)
+                                    @php 
+                                        $examDetailIds = $examDetails[$examType->id];
+                                        // dd($examDetailIds[0]['id']);
+                                    @endphp
+                                    {{-- {{ dd($classSubjects) }} --}}
+                                    @foreach($classSubjects->where('exam_detail_id', $examDetailIds[0]['id']) as $subject)
                                         <tr class="hover:bg-gray-50">
                                             <td
                                                 class="px-6 py-4 text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200">
@@ -168,20 +187,52 @@
                                                         @endphp
                                                         @foreach($examDetailsForType as $examDetail)
                                                             <!-- DEBUG: Processing exam detail {{ $examDetail->id ?? 'NO_ID' }} -->
+                                                            @php 
+                                                                $classSubjectId = $classSubjects
+                                                                    ->where('myclass_id', $selectedClassId)
+                                                                    ->where('subject_id', $subject->subject_id)
+                                                                    ->first()->id;
+
+                                                                $classSectionId = $classSections
+                                                                    ->where('myclass_id', $selectedClassId)                                                                    
+                                                                    ->where('section_id', $section->section_id)
+                                                                    ->first()->id;
+
+                                                                $answerScriptDistribution = $answerScriptDistributions
+                                                                    ->where('exam_detail_id', $examDetail->id)
+                                                                    ->where('exam_class_subject_id', $classSubjectId)
+                                                                    ->where('myclass_section_id', $classSectionId)
+                                                                    ->first();                                                               
+
+                                                            @endphp
+
+                                                            {{-- {{dd($answerScriptDistribution)}} --}}
                                                             <div class="relative">
                                                                 <button
                                                                     wire:click="openMarksEntry({{ $examDetail->id ?? 0 }}, {{ $subject->subject_id ?? 0 }}, {{ $section->section_id ?? 0 }})"
-                                                                    class="w-full bg-blue-100 border border-blue-300 rounded p-2 hover:bg-blue-200 transition-colors">
+                                                                    class="w-full {{ $answerScriptDistribution ? 'bg-green-100 border border-green-300' : 'bg-blue-100 border border-blue-300' }}  rounded p-2 hover:bg-blue-200 transition-colors">
                                                                     <div class="text-xs font-medium text-blue-800">
                                                                         {{ $examDetail->examPart->name ?? 'Unknown Part' }}
                                                                     </div>
                                                                     <div class="text-xs text-blue-600">Enter Marks</div>
+                                                                    <div class="text-xs text-gray-400 mt-1">
+                                                                        {{-- ExDet:{{ $examDetail->id ?? 'NO_ID' }} 
+                                                                        Cls:{{ $selectedClassId ?? 'NO_ID' }}
+                                                                        Sub:{{ $subject->subject_id ?? 'NO_ID' }} 
+                                                                        Sec:{{ $section->section_id ?? 'NO_ID' }} --}}
+                                                                        @if($answerScriptDistribution)
+                                                                            <div class="text-semibold text-blue-900 mt-1">
+                                                                                Teacher: {{ $answerScriptDistribution->teacher->name ?? 'Unknown Teacher' }}
+                                                                            </div>      
+                                                                        @endif
+                                                                    </div>
                                                                 </button>
                                                             </div>
                                                         @endforeach
                                                     </div>
                                                 </td>
                                             @endforeach
+
                                         </tr>
                                     @endforeach
                                 </tbody>

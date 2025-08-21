@@ -57,6 +57,114 @@
         </div>
     @endif
 
+
+    <!-- Registered User Table -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-8">
+        <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">Registered Users</h3>
+            @if($currentUserRole >= 4)
+                <button wire:click="openRoleModal"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-plus mr-2"></i>Register User
+                </button>
+            @endif
+        </div>
+
+        @if($users->where('role_id', 0) && $users->where('role_id', 0)->count() > 0)
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                ID
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                User Name & Email
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Description
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Status
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach($users->where('role_id', 0) as $user)
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span
+                                        class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
+                                        {{-- {{ $this->getRoleColor($role->id) }} --}}
+                                         ">
+                                        {{ $user->id }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">{{ $user->name }}</div>
+                                    <div class="text-sm font-normal text-gray-900">{{ $user->email }}</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm text-gray-900">{{ $user->id ?: 'No description' }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">
+                                        {{-- {{ $user->role_id }} --}}
+                                        <span
+                                            class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
+                                            {{ $user->role_id == 0 ?  'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'  }}">
+                                            {{ ucfirst($user->status ?? 'Pending') }}
+                                        </span>                                        
+                                    </div>
+                                </td>
+                                {{-- <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div class="flex space-x-2">
+                                        @if($currentUserRole >= 4 && $role->id < $currentUserRole)
+                                            <button wire:click="openRoleModal({{ $role->id }})"
+                                                class="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+                                                title="Edit Role">
+                                                <i class="fas fa-edit text-xs"></i>
+                                            </button>
+
+                                            @if($role->users_count == 0)
+                                                <button wire:click="deleteRole({{ $role->id }})"
+                                                    onclick="return confirm('Are you sure you want to delete this role?')"
+                                                    class="inline-flex items-center px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
+                                                    title="Delete Role">
+                                                    <i class="fas fa-trash text-xs"></i>
+                                                </button>
+                                            @endif
+                                        @else
+                                            <span class="text-gray-400 text-xs">No actions available</span>
+                                        @endif
+                                    </div>
+                                </td> --}}
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <div class="text-center py-12">
+                <div class="text-gray-400 mb-4">
+                    <i class="fas fa-user-shield text-6xl"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No Registered Users Found</h3>
+                <p class="text-gray-600 mb-4">First Register user to get started.</p>
+                {{-- @if($currentUserRole >= 4)
+                    <button wire:click="openRoleModal"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Add Role
+                    </button>
+                @endif --}}
+            </div>
+        @endif
+    </div>
+
+
     <!-- Roles Table -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-8">
         <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200">
@@ -258,52 +366,93 @@
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <span
                                                 class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
-                                                                                                                                                {{ ($user->status ?? 'active') === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                                {{ ($user->status ?? 'active') === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                                                 {{ ucfirst($user->status ?? 'active') }}
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <div class="flex space-x-2">
-                                                @if($user->role_id < $currentUserRole)
-                                                    <!-- Edit User -->
-                                                    <button wire:click="openUserModal({{ $user->id }})"
-                                                        class="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
-                                                        title="Edit User">
-                                                        <i class="fas fa-edit text-xs"></i>
-                                                    </button>
+                                            <div class="flex flex-col space-y-2">
+                                                <div class="flex space-x-2 items-center">
+                                                    @if($user->role_id < $currentUserRole)
+                                                        <!-- Edit User -->
+                                                        <button wire:click="openUserModal({{ $user->id }})"
+                                                            class="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+                                                            title="Edit User">
+                                                            <i class="fas fa-edit text-xs"></i>
+                                                        </button>
 
-                                                    <!-- Role Change Dropdown -->
-                                                    <div class="relative inline-block">
-                                                        <select
-                                                            onchange="if(this.value) @this.call('changeUserRole', {{ $user->id }}, this.value); this.value='';"
-                                                            class="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition-colors">
-                                                            <option value="">Change Role</option>
-                                                            @foreach($availableRoles as $availableRole)
-                                                                @if($availableRole->id != $user->role_id)
-                                                                    <option value="{{ $availableRole->id }}">{{ $availableRole->name }}</option>
-                                                                @endif
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
+                                                        <!-- Role Change Dropdown -->
+                                                        <div class="relative inline-block">
+                                                            <select
+                                                                onchange="if(this.value) @this.call('changeUserRole', {{ $user->id }}, this.value); this.value='';"
+                                                                class="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition-colors">
+                                                                <option value="">Change Role</option>
+                                                                @foreach($availableRoles as $availableRole)
+                                                                    @if($availableRole->id != $user->role_id)
+                                                                        <option value="{{ $availableRole->id }}">{{ $availableRole->name }}</option>
+                                                                    @endif
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
 
-                                                    <!-- Suspend/Activate -->
-                                                    @if(($user->status ?? 'active') === 'active')
-                                                        <button wire:click="suspendUser({{ $user->id }})"
-                                                            onclick="return confirm('Are you sure you want to suspend this user?')"
-                                                            class="inline-flex items-center px-2 py-1 bg-orange-100 text-orange-700 rounded hover:bg-orange-200 transition-colors"
-                                                            title="Suspend User">
-                                                            <i class="fas fa-user-slash text-xs"></i>
+                                                        <!-- Teacher Assignment -->
+                                                        <div class="relative inline-block">
+                                                            <select
+                                                                onchange="if(this.value) @this.call('assignTeacher', {{ $user->id }}, this.value); this.value='';"
+                                                                class="text-xs px-2 py-1 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 transition-colors">
+                                                                <option value="">Assign Teacher</option>
+                                                                @foreach($availableTeachers as $t)
+                                                                    <option value="{{ $t->id }}">{{ $t->name }} (ID: {{ $t->id }})</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+
+                                                        <!-- Revoke Teacher if assigned -->
+                                                        @if((int)($user->teacher_id ?? 0) > 0)
+                                                            <button wire:click="revokeTeacher({{ $user->id }})"
+                                                                onclick="return confirm('Revoke assigned teacher from this user?')"
+                                                                class="inline-flex items-center px-2 py-1 bg-pink-100 text-pink-700 rounded hover:bg-pink-200 transition-colors"
+                                                                title="Revoke Assigned Teacher">
+                                                                <i class="fas fa-unlink text-xs"></i>
+                                                            </button>
+                                                        @endif
+
+                                                        <!-- Suspend/Activate -->
+                                                        @if(($user->status ?? 'active') === 'active')
+                                                            <button wire:click="suspendUser({{ $user->id }})"
+                                                                onclick="return confirm('Are you sure you want to suspend this user?')"
+                                                                class="inline-flex items-center px-2 py-1 bg-orange-100 text-orange-700 rounded hover:bg-orange-200 transition-colors"
+                                                                title="Suspend User">
+                                                                <i class="fas fa-user-slash text-xs"></i>
+                                                            </button>
+                                                        @else
+                                                            <button wire:click="activateUser({{ $user->id }})"
+                                                                class="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
+                                                                title="Activate User">
+                                                                <i class="fas fa-user-check text-xs"></i>
+                                                            </button>
+                                                        @endif
+
+                                                        <!-- Delete User -->
+                                                        <button wire:click="deleteUser({{ $user->id }})"
+                                                            onclick="return confirm('Are you sure you want to delete this user? This action cannot be undone.')"
+                                                            class="inline-flex items-center px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
+                                                            title="Delete User">
+                                                            <i class="fas fa-trash text-xs"></i>
                                                         </button>
                                                     @else
-                                                        <button wire:click="activateUser({{ $user->id }})"
-                                                            class="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
-                                                            title="Activate User">
-                                                            <i class="fas fa-user-check text-xs"></i>
-                                                        </button>
+                                                        <span class="text-gray-400 text-xs">Higher privilege</span>
                                                     @endif
-                                                @else
-                                                    <span class="text-gray-400 text-xs">Higher privilege</span>
-                                                @endif
+                                                </div>
+
+                                                <!-- Current Teacher Display -->
+                                                <div class="text-xs text-gray-600">
+                                                    @if((int)($user->teacher_id ?? 0) > 0)
+                                                        Assigned Teacher: <span class="font-semibold">{{ optional($user->teacher)->name }} (ID: {{ $user->teacher_id }})</span>
+                                                    @else
+                                                        No Teacher Assigned
+                                                    @endif
+                                                </div>
                                             </div>
                                         </td>
                                     </tr>

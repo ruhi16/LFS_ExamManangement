@@ -60,6 +60,15 @@ class Exam05Detail extends Model
     {
         return $this->belongsTo(\App\Models\Exam04Mode::class, 'exam_mode_id');
     }
+
+    // public function myclassSection(){
+    //     return $this->belongsTo(\App\Models\MyclassSection::class, 'myclass_section_id');
+    // }
+
+    public function session()
+    {
+        return $this->belongsTo(\App\Models\Session::class, 'session_id');
+    }
     
     public function user()
     {
