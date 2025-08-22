@@ -18,7 +18,49 @@
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach($teachers as $teacher)
+                    @foreach($distributions as $distribution)
+                        <tr class="hover:bg-gray-50 align-top">
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200">
+                                <div class="font-semibold">{{ $distribution->teacher->name }}</div>
+                            </td>
+                        
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200">
+                                <div class="font-semibold">{{ $distribution->examDetail->examName->name }}</div>
+                            </td>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200">
+                                <div class="font-semibold">{{ $distribution->examDetail->examType->name }}</div>
+                            </td>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200">
+                                <div class="font-semibold">{{ $distribution->examDetail->examMode->name }}</div>
+                            </td>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200">
+                                <div class="font-semibold">{{ $distribution->myclassSection->myclass->name }}</div>
+                            </td>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200">
+                                <div class="font-semibold">{{ $distribution->myclassSection->section->name }}</div>
+                            </td>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200">
+                                <div class="font-semibold">{{ $distribution->myclassSubject->subject->name }}</div>
+                            </td>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200">
+                                <a class="text-indigo-600 hover:text-indigo-900"                                
+                                href="{{ route('marks-entry.detail', [
+                                    'examDetailId' => $distribution->exam_detail_id, 
+                                    'subjectId' => $distribution->myclassSubject->subject_id, 
+                                    'sectionId' => $distribution->myclassSection->section_id]) }}">
+                                    View
+                                </a>
+                                {{-- <a href="{{route('marks-entry.detail', [
+                                'examDetailId' => $distribution->exam_detail_id,
+                                'subjectId' => $distribution->myclass_subject_id,
+                                'sectionId' => $distribution->myclass_section_id,                                
+                                ])}}"> {{ $distribution->myclassSubject->subjectType->name }}</a> --}}
+                            </td>
+                            {{-- @if($distByTeacher->has($teacher->id))
+                                <div class="space-y-4">
+                            @endif --}}
+                        
+                        
                         {{-- @php
                             $tDists = $distByTeacher->get($teacher->id, collect());
                             // Group by Exam Name first
@@ -33,8 +75,8 @@
                                     <div class="text-xs text-gray-500">({{ $teacher->nickName }})</div>
                                 @endif
                                 <div class="text-xs text-gray-400">ID: {{ $teacher->id }}</div>
-                            </td>
-                            <td class="px-6 py-4">
+                            </td> --}}
+                            {{-- <td class="px-6 py-4">
                                 @if($tDists->isEmpty())
                                     <span class="inline-block text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 border border-gray-200">No allotments</span>
                                 @else
@@ -83,8 +125,8 @@
                                         @endforeach
                                     </div>
                                 @endif
-                            </td>
-                        </tr> --}}
+                            </td> --}}
+                        </tr>
                     @endforeach
                 </tbody>
             </table>

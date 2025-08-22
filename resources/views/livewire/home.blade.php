@@ -29,7 +29,7 @@
                 </div>
             </div>
 
-            <!-- Navigation -->
+            <!-- Left Side Navigation Bar -->
             <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
                 @foreach ($menuItems as $key => $item)
                     <div>
@@ -91,7 +91,7 @@
                         <span class="text-sm font-medium text-white">JD</span>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-gray-900 truncate">John Doe</p>
+                        <p class="text-sm font-medium text-gray-900 truncate">Little Flower School</p>
                         <p class="text-xs text-gray-500 truncate">admin@example.com</p>
                     </div>
                     <button class="text-gray-400 hover:text-gray-600">
@@ -210,6 +210,11 @@
                         @livewire('subject-comp')
                     @endif
 
+                    <!-- Subject Teacher -->
+                    @if($activeMenu === 'subject-teachers')
+                        @livewire('subject-teacher-comp')
+                    @endif
+
                     <!-- Class Subjects -->
                     @if($activeMenu === 'myclass-subjects')
                         @livewire('myclass-subject-comp')
@@ -287,7 +292,7 @@
 
                     <!-- User Role Components -->
                     @if($activeMenu === 'user-roles')
-                        {{-- @livewire('user-role-comp') --}}
+                        @livewire('user-role-comp')
                     @endif
 
                     <!-- Analytics -->
@@ -309,7 +314,7 @@
                     @endif
 
                     <!-- Default/Other Pages -->
-                    @if(!in_array($activeMenu, ['dashboard', 'classes', 'sections', 'class-sections', 'subject-types', 'subjects', 'MyClass', 'myclass-subjects', 'student-database', 'sessions', 'teachers', 'exam-settings', 'exam-settings-view', 'exam-settings-fmpm', 'exam-names', 'exam-types', 'exam-parts', 'exam-modes', 'student-cr', 'answer-script-distribution', 'marks-entry', 'logs-viewer', 'class-exam-subject', 'mark-register', 'analytics']))
+                    @if(!in_array($activeMenu, ['dashboard', 'classes', 'sections', 'class-sections', 'subject-types', 'subjects', 'MyClass', 'myclass-subjects', 'student-database', 'sessions', 'teachers', 'subject-teachers', 'exam-settings', 'exam-settings-view', 'exam-settings-fmpm', 'exam-names', 'exam-types', 'exam-parts', 'exam-modes', 'student-cr', 'answer-script-distribution', 'marks-entry', 'logs-viewer', 'class-exam-subject', 'mark-register', 'user-roles', 'analytics']))
                         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
                             <div class="text-center">
                                 <div

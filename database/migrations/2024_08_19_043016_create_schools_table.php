@@ -17,6 +17,7 @@ class CreateSchoolsTable extends Migration
             $table->increments('id');
             $table->integer('session_id');
             $table->string('name');
+            $table->string('code')->nullable();
             $table->string('details')->nullable();
             $table->string('vill')->nullable();
             $table->string('po')->nullable();

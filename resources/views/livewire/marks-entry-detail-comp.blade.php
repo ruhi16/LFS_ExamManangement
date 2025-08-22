@@ -7,16 +7,34 @@
                 @if($examDetail && $subject && $section)
                     <div class="mt-2 space-y-1">
                         <p class="text-sm text-gray-600">
-                            <span class="font-medium">Class:</span> {{ $examDetail->myclass->name ?? 'Unknown' }} |
-                            <span class="font-medium">Section:</span> {{ $section->section->name ?? 'Unknown' }}
+                            <span class="font-medium">Class:</span> 
+                            <span class="inline-block px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 text-semibold">                                
+                                {{ $examDetail->myclass->name ?? 'Unknown' }} 
+                            </span>|
+                            <span class="font-medium">Section:</span>
+                            <span class="inline-block px-2 py-0.5 rounded bg-red-100 text-red-800 text-semibold"> 
+                                {{ $section->section->name ?? 'Unknown' }}
+                            </span>|
                         </p>
                         <p class="text-sm text-gray-600">
-                            <span class="font-medium">Exam:</span> {{ $examDetail->examName->name ?? 'Unknown' }} |
-                            <span class="font-medium">Type:</span> {{ $examDetail->examType->name ?? 'Unknown' }} |
-                            <span class="font-medium">Part:</span> {{ $examDetail->examPart->name ?? 'Unknown' }}
+                            <span class="font-medium">Exam:</span> 
+                            <span class="inline block px-2 py-0.5 rounded bg-yellow-100 text-yellow-800 text-semibold" >                                
+                                {{ $examDetail->examName->name ?? 'Unknown' }} 
+                            </span>|
+                            <span class="font-medium">Type:</span> 
+                            <span class="inline-block px-2 py-0.5 rounded bg-green-100 text-green-800 text-semibold">
+                                {{ $examDetail->examType->name ?? 'Unknown' }}
+                            </span>|
+                            <span class="font-medium">Part:</span> 
+                            <span class="inline-block px-2 py-0.5 rounded bg-blue-100 text-blue-800 text-semibold">
+                                {{ $examDetail->examPart->name ?? 'Unknown' }}
+                            </span>
                         </p>
                         <p class="text-sm text-gray-600">
-                            <span class="font-medium">Subject:</span> {{ $subject->name ?? 'Unknown' }}
+                            <span class="font-medium">Subject:</span> 
+                            <span class="inline-block px-2 py-0.5 rounded bg-yellow-100 text-yellow-800 text-semibold">
+                            {{ $subject->name ?? 'Unknown' }}
+                            </span>
                         </p>
                     </div>
                 @endif

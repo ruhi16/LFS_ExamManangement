@@ -18,6 +18,7 @@ class CreateMyclassesTable extends Migration
             $table->string('name');
             $table->string('description')->nullable();
             $table->integer('order_index')->unsigned()->nullable();
+            $table->string('code')->nullable();
 
             $table->integer('school_id')->unsigned()->nullable();
             $table->integer('session_id')->unsigned()->nullable();

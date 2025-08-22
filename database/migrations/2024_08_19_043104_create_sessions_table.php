@@ -17,6 +17,7 @@ class CreateSessionsTable extends Migration
             $table->increments('id');
             $table->string('name');
             $table->string('details')->nullable();
+            $table->string('code')->nullable();
             $table->date('stdate');
             $table->date('entdate');
             $table->string('status')->nullable();

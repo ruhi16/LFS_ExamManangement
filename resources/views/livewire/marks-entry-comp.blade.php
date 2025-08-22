@@ -38,7 +38,7 @@
                 </button>
             </div>
             <div class="text-xs text-yellow-700">
-                Selected Class: {{ $selectedClassId ?? 'None' }} |
+                Selected Class: <span class="font-semibold"> {{ $selectedClassId ?? 'None' }} </span>|
                 Selected Exam: {{ $selectedExamNameId ?? 'None' }} |
                 Sections: {{ count($classSections) }} |
                 Subjects: {{ count($classSubjects) }} |
