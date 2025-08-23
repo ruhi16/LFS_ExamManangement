@@ -12,6 +12,7 @@
     {{-- </x-slot> --}}
     
     @livewire('home')
+    {{-- @livewire('wcui.welcome-banner-comp') --}}
 
 
     {{-- <livewire:footer-component/> --}}

@@ -54,6 +54,24 @@ class TeacherComp extends Component{
         'Temporary Staff' => ['Guest Teacher', 'Substitute Teacher', 'Part-time Teacher']
     ];
 
+    // protected $rules = [
+    //     'name' => 'required|string|max:255',
+    //     'nickName' => 'nullable|string|max:100',
+    //     'mobno' => 'nullable|string|max:15',
+    //     'desig' => 'required|string|max:255',
+    //     'hqual' => 'nullable|string|max:255',
+    //     'train_qual' => 'nullable|string|max:255',
+    //     'extra_qual' => 'nullable|string|max:255',
+    //     'main_subject_id' => 'nullable|exists:subjects,id',
+    //     'notes' => 'nullable|string|max:1000',
+    //     'profile_image' => 'nullable|image|max:2048',
+    //     'status' => 'required|in:active,inactive,retired,transferred',
+    //     'remark' => 'nullable|string|max:500',
+    //     'user_id' => 'required|integer',
+    //     'session_id' => 'required|integer',
+    //     'school_id' => 'required|integer',
+    // ];
+
     protected $rules = [
         'name' => 'required|string|max:255',
         'nickName' => 'nullable|string|max:100',
@@ -224,6 +242,7 @@ class TeacherComp extends Component{
 
     private function loadTeacherData($teacherId)
     {
+        // dd('Test');
         try {
             $teacher = Teacher::findOrFail($teacherId);
 
@@ -248,11 +267,22 @@ class TeacherComp extends Component{
         }
     }
 
-    public function save()
-    {
-        $this->validate();
+    public function save(){
+        
+        // dd('Before validation');
+        // $validationResult = $this->validate();
+        // $this->validate();
+        // dd('Before validation');
+        
 
-        try {
+        // dd($validatedData);
+        $validatedData = null;
+        try{
+            // dd('Before validation');
+            $validatedData = $this->validate();
+            // dd('After validation');
+
+
             $data = [
                 'name' => $this->name,
                 'nickName' => $this->nickName,
@@ -274,7 +304,9 @@ class TeacherComp extends Component{
             if ($this->profile_image) {
                 $data['img_ref'] = $this->profile_image->store('teacher-profiles', 'public');
             }
-
+            
+            // dd('After validation, with data:',$data);
+            
             if ($this->editMode && $this->teacherId) {
                 $teacher = Teacher::findOrFail($this->teacherId);
 
@@ -282,8 +314,10 @@ class TeacherComp extends Component{
                 if ($this->profile_image && $teacher->img_ref) {
                     Storage::disk('public')->delete($teacher->img_ref);
                 }
-
+                
+                
                 $teacher->update($data);
+                $this->closeModal();
                 session()->flash('message', 'Teacher updated successfully!');
             } else {
                 Teacher::create($data);
@@ -294,7 +328,7 @@ class TeacherComp extends Component{
             $this->closeModal();
         } catch (\Exception $e) {
             Log::error('Error saving teacher: ' . $e->getMessage());
-            session()->flash('error', 'Error saving teacher: ' . $e->getMessage());
+            session()->flash('error', 'Error saving teacher: ' . $e->getMessage() . $validatedData);
         }
     }
 

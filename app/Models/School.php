@@ -46,6 +46,10 @@ class School extends Model
         return $this->hasMany(Session::class);
     }
 
+    public function session(){
+        return $this->belongsTo(Session::class, 'session_id', 'id');
+    }
+
     public function myclasses(){
         return $this->hasMany(Myclass::class);
     }
