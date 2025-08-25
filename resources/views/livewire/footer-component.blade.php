@@ -7,7 +7,7 @@
               <a href="https://google.co.in/" class="flex items-center">
                   <img src="https://flowbite.com/docs/images/logo.svg" class="h-8 me-3" alt="FlowBite Logo" />
                   <span class="self-center text-2xl  font-semibold whitespace-nowrap 
-                                dark:text-white">Manikchak High Madrasah (H.S)</span>
+                                dark:text-white">Little Flower School</span>
               </a>
           </div>
           <div class="grid grid-cols-2 gap-8 sm:gap-6 sm:grid-cols-3">

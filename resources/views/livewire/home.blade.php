@@ -28,7 +28,6 @@
                     <span class="text-xl font-semibold">AdminPanel</span>
                 </div>
             </div>
-
             <!-- Left Side Navigation Bar -->
             <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
                 @foreach ($menuItems as $key => $item)
@@ -104,6 +103,8 @@
             </div>
 
         </div>
+        
+        @livewire('wcui.hero-section')
 
         <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">
@@ -348,6 +349,7 @@
                 </div>
             </main>
         </div>
+        
     </div>
 
 </div>

@@ -89,7 +89,7 @@ class StudentCrComp extends Component
         }
         // dd('Selected Class:', $this->selectedClassId);
         try {
-            return MyclassSection::where('myclass_id', $this->selectedClassId)
+            return MyclassSection::where('stclass_id', $this->selectedClassId)
                 ->where('is_active', true)
                 ->orderBy('id')
                 ->get();
@@ -138,11 +138,11 @@ class StudentCrComp extends Component
                 }
             }
 
-            $this->studentRecords = $query->orderBy('roll_number')->get()->toArray();
+            $this->studentRecords = $query->orderBy('roll_no')->get()->toArray();
 
             // Also get students from studentdb for reference
             $this->students = Studentdb::with('myclass')
-                ->where('myclass_id', $this->selectedClassId)
+                ->where('stclass_id', $this->selectedClassId)
                 // ->where('is_active', true)
                 ->orderBy('name')
                 ->get()

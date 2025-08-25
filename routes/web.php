@@ -14,11 +14,28 @@ use App\Http\Livewire\SubadminMarksEntryComponent;
 use App\Http\Livewire\SubadminMarksEntryEntityComponent;
 use App\Http\Livewire\TeacherMarksEntryComp;
 use App\Http\Livewire\UserChangePasswordComponent;
+use Illuminate\Support\Facades\Artisan;
 
 // use App\Http\Livewire\Admin;
 // use App\View\Components\AdminDashboard;
 
+Route::get('/clear', function(){
+    Artisan::call('cache:clear');
+    Artisan::call('config:clear');
+    Artisan::call('route:clear');
+    Artisan::call('view:clear');
+    Artisan::call('optimize:clear');
+    // php artisan config:clear
+    // php artisan route:clear
+    // php artisan view:clear
+    // php artisan optimize:clear 
+    return '<h1>Cache Cleared</h1>';
+});
 
+Route::get('/link', function(){
+    Artisan::call('storage:link');
+    return '<h1>Storage link created</h1>';
+});
 Route::controller(App\Http\Controllers\NoticeController::class)->group(
     function () {
         Route::get('notices', 'index'); // all notices, in a tabluler form, add new notice, open create

@@ -503,16 +503,16 @@ class StudentDbComponent extends Component
     public function render()
     {
         $students = $this->getFilteredStudents()->paginate(12);
-        $classes = Myclass::orderBy('order')->get();
-        $sections = Section::orderBy('order')->get();
+        $classes = Myclass::orderBy('order_index')->get();
+        $sections = Section::orderBy('order_index')->get();
 
         // Group students by class
-        $studentsByClass = $students->groupBy(function ($student) {
+        $studentsByClass = collect($students)->groupBy(function ($student) {
             return $student->myclass ? $student->myclass->name : 'No Class';
         });
 
         $this->updateDebugInfo([
-            'current_page_count' => $students->count(),
+            'current_page_count' => $students->total(),
             'classes_count' => $classes->count(),
             'sections_count' => $sections->count(),
         ]);

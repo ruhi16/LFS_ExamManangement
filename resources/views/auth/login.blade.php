@@ -5,7 +5,7 @@
                 <a href="/">
                     <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
                 </a>      
-                <h2 class="font-semibold text-xl text-gray-800 leading-tight">Manikchak High Madrasah(H.S)</h2>      
+                <h2 class="font-semibold text-xl text-gray-800 leading-tight">Little Flower School</h2>      
             </div>
         </x-slot>
         
