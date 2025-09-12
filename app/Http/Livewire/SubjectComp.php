@@ -49,7 +49,7 @@ class SubjectComp extends Component
     {
         $allSubjects = Subject::with(['subjectType'])
             ->withCount('myclassSubjects')
-            ->orderBy('name')
+            ->orderBy('id')
             ->get()
             ->map(function ($subject) {
                 return [
@@ -70,13 +70,13 @@ class SubjectComp extends Component
         // Group subjects by type: Summative first, then Formative, then others
         $this->subjects = [
             'summative' => $allSubjects->filter(function ($subject) {
-                return strtolower($subject['subject_type_name']) === 'summative';
+                return strtolower(Strtolower($subject['subject_type_name']) ) === 'summative';
             })->values()->toArray(),
             'formative' => $allSubjects->filter(function ($subject) {
-                return strtolower($subject['subject_type_name']) === 'formative';
+                return strtolower(Strtolower($subject['subject_type_name']) ) === 'formative';
             })->values()->toArray(),
             'others' => $allSubjects->filter(function ($subject) {
-                return !in_array(strtolower($subject['subject_type_name']), ['summative', 'formative']);
+                return !in_array(Strtolower(strtolower($subject['subject_type_name']) ), ['summative', 'formative']);
             })->values()->toArray()
         ];
     }
@@ -131,32 +131,58 @@ class SubjectComp extends Component
     public function saveSubject()
     {
         $this->validate();
+        // dd($this->subjectTypeId);
 
         try {
             DB::beginTransaction();
 
-            $data = [
-                'name' => $this->name,
-                'description' => $this->description,
-                'code' => $this->code,
-                'subject_type_id' => $this->subjectTypeId,
-                'is_active' => $this->isActive,
-                'remarks' => $this->remarks,
-                'user_id' => auth()->id(),
-                'session_id' => session('current_session_id', 1),
-                'school_id' => session('current_school_id', 1),
-            ];
+            $data = Subject::updateOrCreate(
+                ['id' => $this->editingId],
+                [
+                    'name' => $this->name,
+                    'description' => $this->description,
+                    'code' => $this->code,
+                    'subject_type_id' => $this->subjectTypeId ?? 0,
+                    'order_index'=> 1,
+                    // 'subject_type_id' => (int) $this->subjectTypeId ?? 0,
+                    'is_active' => $this->isActive,
+                    'remarks' => $this->remarks,
+                    'user_id' => auth()->id(),
+                    'session_id' => session('current_session_id', 1),
+                    'school_id' => session('current_school_id', 1),
+                ]
+            );
+            // dd($this->subjectTypeId, $data);
 
-            if ($this->editingId) {
-                // Update existing
-                $subject = Subject::findOrFail($this->editingId);
-                $subject->update($data);
+            if($this->editingId){
                 session()->flash('message', 'Subject updated successfully!');
-            } else {
-                // Create new
-                Subject::create($data);
+            }else{
                 session()->flash('message', 'Subject created successfully!');
             }
+
+
+            // $data = [
+            //     'name' => $this->name,
+            //     'description' => $this->description,
+            //     'code' => $this->code,
+            //     'subject_type_id' => (int) $this->subjectTypeId,
+            //     'is_active' => $this->isActive,
+            //     'remarks' => $this->remarks,
+            //     'user_id' => auth()->id(),
+            //     'session_id' => session('current_session_id', 1),
+            //     'school_id' => session('current_school_id', 1),
+            // ];
+
+            // if ($this->editingId) {
+            //     // Update existing
+            //     $subject = Subject::findOrFail($this->editingId);
+            //     $subject->update($data);
+            //     session()->flash('message', 'Subject updated successfully!');
+            // } else {
+            //     // Create new
+            //     Subject::create($data);
+            //     session()->flash('message', 'Subject created successfully!');
+            // }
 
             DB::commit();
 

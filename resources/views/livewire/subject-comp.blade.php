@@ -3,7 +3,7 @@
     <div class="mb-6">
         <div class="flex justify-between items-center">
             <div>
-                <h1 class="text-2xl font-semibold text-gray-900">Subjects Management</h1>
+                <h1 class="text-2xl font-semibold text-gray-900">Subjects Management xx</h1>
                 <p class="mt-1 text-sm text-gray-600">Manage school subjects and their types</p>
             </div>
             <div class="flex space-x-2">
@@ -91,7 +91,7 @@
                             @foreach($subjects['summative'] as $subject)
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-4 py-3 text-sm text-gray-900">
-                                        <div class="font-medium">{{ $subject['name'] }}</div>
+                                        <div class="font-medium">{{ $subject['name'] }}xx</div>
                                     </td>
                                     <td class="px-4 py-3 text-sm text-gray-500">
                                         {{ $subject['code'] ?: 'No code' }}

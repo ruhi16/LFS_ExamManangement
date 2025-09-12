@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class Exam06ClassSubject extends Model
 {
     use HasFactory;
+
+    protected $guarded = ['id'];
     
     protected $fillable = [
         'name',

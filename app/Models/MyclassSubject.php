@@ -10,23 +10,24 @@ class MyclassSubject extends Model
     use HasFactory;
 
     protected $table = "myclass_subjects";
+    protected $guarded = ['id'];
 
-    protected $fillable = [
-        'name',
-        'description',
-        'order_index',
-        'is_optional',
-        'myclass_id',
-        'subject_id',
-        'session_id',
-        'school_id',
-        'user_id',
-        'approved_by',
-        'is_active',
-        'is_finalized',
-        'status',
-        'remarks'
-    ];
+    // protected $fillable = [
+    //     'name',
+    //     'description',
+    //     'order_index',
+    //     'is_optional',
+    //     'myclass_id',
+    //     'subject_id',
+    //     'session_id',
+    //     'school_id',
+    //     'user_id',
+    //     'approved_by',
+    //     'is_active',
+    //     'is_finalized',
+    //     'status',
+    //     'remarks'
+    // ];
 
     protected $casts = [
         'is_optional' => 'boolean',
