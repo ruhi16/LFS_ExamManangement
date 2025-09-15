@@ -22,8 +22,11 @@ class TeacherMarksEntryComp extends Component{
         // Load distributions with necessary relations
         $this->distributions = Exam07AnsscrDist::with([
             'examDetail.examName',
+            'examDetail.examType',
+            'examDetail.examMode',
             'myclassSection.section',
             'myclassSection.myclass',
+            'examClassSubject.subject',
             'teacher',
         ])->get();
 

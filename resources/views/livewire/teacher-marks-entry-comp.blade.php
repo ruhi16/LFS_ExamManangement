@@ -13,43 +13,72 @@
                             Teacher
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                            Allotments (Exam → Class-Section → Subjects)
+                            Exam Name
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            Exam Type
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            Exam Mode
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            Class
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            Section
+                        </th>
+                        <th class="px-6 py-3 text-left textxs font-medium text-gray-700 uppercase tracking-wider">
+                            Subject
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            Action
                         </th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @foreach($distributions as $distribution)
                         <tr class="hover:bg-gray-50 align-top">
-                            <td class="px-6 py-4 text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200">
-                                <div class="font-semibold">{{ $distribution->teacher->name }}</div>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900 sticky left-0 bg-white hover:bg-gray-50 z-10 border-r border-gray-200">
+                                <div class="font-semibold">{{ optional($distribution->teacher)->name }}</div>
                             </td>
                         
-                            <td class="px-6 py-4 text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200">
-                                <div class="font-semibold">{{ $distribution->examDetail->examName->name }}</div>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-200">
+                                <div class="font-semibold">{{ optional(optional($distribution->examDetail)->examName)->name }}</div>
                             </td>
-                            <td class="px-6 py-4 text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200">
-                                <div class="font-semibold">{{ $distribution->examDetail->examType->name }}</div>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-200">
+                                <div class="font-semibold">{{ optional(optional($distribution->examDetail)->examType)->name }}</div>
                             </td>
-                            <td class="px-6 py-4 text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200">
-                                <div class="font-semibold">{{ $distribution->examDetail->examMode->name }}</div>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-200">
+                                <div class="font-semibold">{{ optional(optional($distribution->examDetail)->examMode)->name }}</div>
                             </td>
-                            <td class="px-6 py-4 text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200">
-                                <div class="font-semibold">{{ $distribution->myclassSection->myclass->name }}</div>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-200">
+                                <div class="font-semibold">{{ optional(optional($distribution->myclassSection)->myclass)->name }}</div>
                             </td>
-                            <td class="px-6 py-4 text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200">
-                                <div class="font-semibold">{{ $distribution->myclassSection->section->name }}</div>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-200">
+                                <div class="font-semibold">{{ optional(optional($distribution->myclassSection)->section)->name }}</div>
                             </td>
-                            <td class="px-6 py-4 text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200">
-                                <div class="font-semibold">{{ $distribution->myclassSubject->subject->name }}</div>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-200">
+                                <div class="font-semibold">{{ optional(optional($distribution->myclassSubject)->subject)->name }}xx</div>
                             </td>
-                            <td class="px-6 py-4 text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200">
-                                <a class="text-indigo-600 hover:text-indigo-900"                                
-                                href="{{ route('marks-entry.detail', [
-                                    'examDetailId' => $distribution->exam_detail_id, 
-                                    'subjectId' => $distribution->myclassSubject->subject_id, 
-                                    'sectionId' => $distribution->myclassSection->section_id]) }}">
-                                    View
-                                </a>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                                ExDetail: {{ $distribution->exam_detail_id ?? 'Unknown' }},
+                                {{-- Subject: {{ $distribution->myclassSubject->subject_id ?? 'Unknown' }}, --}}
+                                Subject2: {{ $distribution->examClassSubject->subject_id ?? 'Unknown' }},
+                                {{-- Class: {{ $distribution->myclassSection->myclass->subject_id ?? 'Unknown' }}, --}}
+                                Section: {{ $distribution->myclassSection->section_id  ?? 'Unknown' }}
+
+
+                                {{-- @if($distribution->myclassSubject && $distribution->myclassSection) --}}
+                                    <a class="text-indigo-600 hover:text-indigo-900"
+                                    href="{{ route('marks-entry.detail', [
+                                        'examDetailId' => $distribution->exam_detail_id,
+                                        'subjectId' => $distribution->examClassSubject->subject_id,
+                                        'sectionId' => $distribution->myclassSection->section_id]) }}">
+                                        View
+                                    </a>
+                                {{-- @else --}}
+                                    <span class="text-gray-400 cursor-not-allowed" title="Cannot generate link due to missing data.">View</span>
+                                {{-- @endif --}}
                                 {{-- <a href="{{route('marks-entry.detail', [
                                 'examDetailId' => $distribution->exam_detail_id,
                                 'subjectId' => $distribution->myclass_subject_id,
