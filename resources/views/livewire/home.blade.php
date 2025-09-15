@@ -271,6 +271,11 @@
                         @livewire('answer-script-distribution-comp')
                     @endif
 
+                    <!-- Answer Script Distribution -->
+                    @if($activeMenu === 'answer-script-distribution2')
+                        @livewire('answer-script-distribution-comp2')
+                    @endif
+
                     <!-- Marks Entry -->
                     @if($activeMenu === 'marks-entry')
                         @livewire('marks-entry-comp')

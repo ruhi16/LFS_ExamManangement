@@ -30,6 +30,7 @@ class CreateTeachersTable extends Migration
             $table->string('status')->nullable();
             $table->string('remark')->nullable();
             $table->integer('user_id');
+            $table->boolean('is_active')->default(1);
             $table->integer('session_id');
             $table->integer('school_id');
             $table->timestamps();

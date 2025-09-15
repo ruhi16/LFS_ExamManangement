@@ -13,17 +13,17 @@ class Session extends Model
 
     protected $guarded = ['id'];
 
-    protected $fillable = [
-        'name',
-        'details',
-        'stdate',
-        'entdate',
-        'status',
-        'remark',
-        'prev_session_id',
-        'next_session_id',
-        'school_id'
-    ];
+    // protected $fillable = [
+    //     'name',
+    //     'details',
+    //     'stdate',
+    //     'entdate',
+    //     'status',
+    //     'remark',
+    //     'prev_session_id',
+    //     'next_session_id',
+    //     'school_id'
+    // ];
     private static $table_type = "Basic";
 
 

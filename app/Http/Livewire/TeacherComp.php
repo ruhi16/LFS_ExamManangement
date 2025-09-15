@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class TeacherComp extends Component{
 
@@ -271,16 +272,21 @@ class TeacherComp extends Component{
         
         // dd('Before validation');
         // $validationResult = $this->validate();
-        // $this->validate();
+        try{
+            $this->validate();
+        }catch(ValidationException $e){
+            Log::error('Error saving teacher: ' . $e->getMessage());
+            session()->flash('error', 'Error saving teacher: ' . $e->getMessage() );
+        }
         // dd('Before validation');
         
-
+        
         // dd($validatedData);
         $validatedData = null;
         try{
             // dd('Before validation');
-            $validatedData = $this->validate();
-            // dd('After validation');
+            // $validatedData = $this->validate();
+            // dd('After validation', $validatedData);
 
 
             $data = [
@@ -299,6 +305,8 @@ class TeacherComp extends Component{
                 'session_id' => Session::currentlyActive()->first()->id, // Fixed: Added missing colon
                 'school_id' => $this->school_id ?: 1,
             ];
+
+            // dd('Without Validation:', $data);
 
             // Handle profile image upload
             if ($this->profile_image) {
@@ -326,6 +334,7 @@ class TeacherComp extends Component{
 
             $this->loadTeachers();
             $this->closeModal();
+       
         } catch (\Exception $e) {
             Log::error('Error saving teacher: ' . $e->getMessage());
             session()->flash('error', 'Error saving teacher: ' . $e->getMessage() . $validatedData);

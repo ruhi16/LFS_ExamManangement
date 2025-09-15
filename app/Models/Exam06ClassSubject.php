@@ -11,32 +11,32 @@ class Exam06ClassSubject extends Model
 
     protected $guarded = ['id'];
     
-    protected $fillable = [
-        'name',
-        'description',
-        'exam_detail_id',
-        'myclass_id',
-        'subject_id',
-        'exam_name_id',
-        'exam_type_id',
-        'exam_part_id',
-        'full_marks',
-        'pass_marks',
-        'time_in_minutes',
-        'is_additional',
-        'is_combined',
-        'order_index',
-        'is_optional',
-        'exam_weightage',
-        'session_id',
-        'school_id',
-        'user_id',
-        'approved_by',
-        'is_active',
-        'is_finalized',
-        'status',
-        'remarks'
-    ];
+    // protected $fillable = [
+    //     'name',
+    //     'description',
+    //     'exam_detail_id',
+    //     'myclass_id',
+    //     'subject_id',
+    //     'exam_name_id',
+    //     'exam_type_id',
+    //     'exam_part_id',
+    //     'full_marks',
+    //     'pass_marks',
+    //     'time_in_minutes',
+    //     'is_additional',
+    //     'is_combined',
+    //     'order_index',
+    //     'is_optional',
+    //     'exam_weightage',
+    //     'session_id',
+    //     'school_id',
+    //     'user_id',
+    //     'approved_by',
+    //     'is_active',
+    //     'is_finalized',
+    //     'status',
+    //     'remarks'
+    // ];
     
     protected $casts = [
         'is_additional' => 'boolean',

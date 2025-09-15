@@ -295,13 +295,13 @@
                     </button>
                 </div>
                 @if (session()->has('error'))
-            <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-                <div class="flex">
-                    <i class="fas fa-exclamation-circle mr-2 mt-0.5"></i>
-                    {{ session('error') }}
-                </div>
-            </div>
-        @endif
+                    <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+                        <div class="flex">
+                            <i class="fas fa-exclamation-circle mr-2 mt-0.5"></i>
+                            {{ session('error') }}
+                        </div>
+                    </div>
+                @endif
 
                 <!-- Modal Body -->
                 <div class="p-6">

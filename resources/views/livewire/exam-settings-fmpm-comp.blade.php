@@ -1,5 +1,4 @@
 <div class="flex-1 p-6 overflow-y-auto max-w-full mx-auto">
-    <!-- Header -->
     <div class="mb-6">
         <div class="flex justify-between items-center">
             <div>
@@ -10,7 +9,6 @@
         </div>
     </div>
 
-    <!-- Flash Messages -->
     @if (session()->has('message'))
         <div class="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
             {{ session('message') }}
@@ -23,7 +21,6 @@
         </div>
     @endif
 
-    <!-- Debug Panel (remove in production) -->
     <div class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
         <h4 class="text-sm font-medium text-yellow-800 mb-2">Debug Panel</h4>
         <div class="flex space-x-2">
@@ -53,7 +50,6 @@
         </div>
     </div>
 
-    <!-- Class Tabs -->
     <div class="border-b border-gray-200 mb-6">
         <nav class="-mb-px flex space-x-8">
             @if($this->classes && count($this->classes) > 0)
@@ -69,7 +65,6 @@
         </nav>
     </div>
 
-    <!-- Exam Configuration Panel -->
     @if($selectedClassId)
         <div class="bg-white rounded-lg shadow-md overflow-hidden">
             <div class="p-4 border-b border-gray-200">
@@ -86,11 +81,6 @@
             </div>
 
             @if(is_array($examConfigurations) && count($examConfigurations) > 0)
-                <!-- Debug Info (remove in production) -->
-                {{-- <div class="p-2 bg-yellow-50 text-xs text-gray-600 mb-4">
-                    Debug: {{ is_array($examConfigurations) ? count($examConfigurations) : 0 }} subjects, {{
-                    is_array($activeExamConfigs) ? count($activeExamConfigs) : 0 }} active exam configs
-                </div> --}}
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
@@ -99,12 +89,15 @@
                                     class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48 sticky left-0 bg-gray-50 z-10">
                                     Subject
                                 </th>
-                                @foreach($examNames as $examName)
+                                <th scope="col"
+                                    class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-300">
+                                    <div class="min-w-0">Mock Entry</div>
+                                </th>
+                                @foreach($examNames->sortBy('id') as $examName)
                                     @php
                                         $examHasData = false;
                                         $examTypesWithData = [];
                                         
-                                        // Check which exam types have data for this exam name
                                         foreach($examTypes as $examType) {
                                             $examTypeHasData = false;
                                             $examPartsWithData = [];
@@ -158,12 +151,54 @@
                                                 <span class="text-xs text-gray-500">{{ $subjectData['class_subject_name'] }}</span>
                                             </div>
                                         </td>
+
+                                        {{-- New Mock Entry Column --}}
+                                        <td class="px-4 py-3 text-sm text-gray-500 border-l border-gray-300">
+                                            <div class="p-1 min-w-0 bg-white" x-data="{
+                                                mockFullMarks: '',
+                                                mockPassMarks: '',
+                                                mockTime: ''
+                                            }">
+                                                <input x-model="mockFullMarks"
+                                                    x-on:input="
+                                                        let inputs = $el.closest('tr').querySelectorAll('.full-marks-input');
+                                                        inputs.forEach(input => {
+                                                            let key = input.getAttribute('wire:model').split('.')[1];
+                                                            $wire.set(`fullMarks.${key}`, mockFullMarks);
+                                                        });
+                                                    "
+                                                    type="number" placeholder="FM" min="1"
+                                                    class="w-full text-xs border-gray-300 rounded px-1 py-0.5 mb-1 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                                                
+                                                <input x-model="mockPassMarks"
+                                                    x-on:input="
+                                                        let inputs = $el.closest('tr').querySelectorAll('.pass-marks-input');
+                                                        inputs.forEach(input => {
+                                                            let key = input.getAttribute('wire:model').split('.')[1];
+                                                            $wire.set(`passMarks.${key}`, mockPassMarks);
+                                                        });
+                                                    "
+                                                    type="number" placeholder="PM" min="1"
+                                                    class="w-full text-xs border-gray-300 rounded px-1 py-0.5 mb-1 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+
+                                                <input x-model="mockTime"
+                                                    x-on:input="
+                                                        let inputs = $el.closest('tr').querySelectorAll('.time-in-minutes-input');
+                                                        inputs.forEach(input => {
+                                                            let key = input.getAttribute('wire:model').split('.')[1];
+                                                            $wire.set(`timeInMinutes.${key}`, mockTime);
+                                                        });
+                                                    "
+                                                    type="number" placeholder="Time" min="1"
+                                                    class="w-full text-xs border-gray-300 rounded px-1 py-0.5 mb-1 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                                            </div>
+                                        </td>
+
                                         @foreach($examNames as $examName)
                                             @php
                                                 $examHasData = false;
                                                 $examTypesWithData = [];
                                                 
-                                                // Check which exam types have data for this exam name
                                                 foreach($examTypes as $examType) {
                                                     $examTypeHasData = false;
                                                     $examPartsWithData = [];
@@ -203,22 +238,18 @@
                                                                         {{-- Only show cells that are enabled AND have data OR have a delete button (configId exists) --}}
                                                                         @if($isEnabled && ($hasData || $configId))
                                                                             <div class="border border-gray-100 p-1 min-w-0 bg-white">
-                                                                                <!-- Full Marks -->
                                                                                 <input wire:model="fullMarks.{{ $flatKey }}" type="number" placeholder="FM"
-                                                                                    min="1" max="1000" value="{{ $fullMarksValue }}"
-                                                                                    class="w-full text-xs border-gray-300 rounded px-1 py-0.5 mb-1 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                                                                                    min="1" max="1000"
+                                                                                    class="w-full text-xs border-gray-300 rounded px-1 py-0.5 mb-1 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 full-marks-input">
 
-                                                                                <!-- Pass Marks -->
                                                                                 <input wire:model="passMarks.{{ $flatKey }}" type="number" placeholder="PM"
-                                                                                    min="1" max="1000" value="{{ $passMarksValue }}"
-                                                                                    class="w-full text-xs border-gray-300 rounded px-1 py-0.5 mb-1 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                                                                                    min="1" max="1000"
+                                                                                    class="w-full text-xs border-gray-300 rounded px-1 py-0.5 mb-1 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 pass-marks-input">
 
-                                                                                <!-- Time in Minutes -->
                                                                                 <input wire:model="timeInMinutes.{{ $flatKey }}" type="number"
-                                                                                    placeholder="Time" min="1" max="600" value="{{ $timeValue }}"
-                                                                                    class="w-full text-xs border-gray-300 rounded px-1 py-0.5 mb-1 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                                                                                    placeholder="Time" min="1" max="600"
+                                                                                    class="w-full text-xs border-gray-300 rounded px-1 py-0.5 mb-1 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 time-in-minutes-input">
 
-                                                                                <!-- Save Button -->
                                                                                 @if($hasData)
                                                                                     <button
                                                                                         wire:click="saveConfiguration({{ $subjectId }}, {{ $examName->id }}, {{ $examTypeData['type']->id }}, {{ $examPart->id }})"
@@ -228,7 +259,6 @@
                                                                                     </button>
                                                                                 @endif
 
-                                                                                <!-- Delete Button (if config exists) -->
                                                                                 @if($configId)
                                                                                     <button
                                                                                         wire:click="deleteConfiguration({{ $subjectId }}, {{ $examName->id }}, {{ $examTypeData['type']->id }}, {{ $examPart->id }})"

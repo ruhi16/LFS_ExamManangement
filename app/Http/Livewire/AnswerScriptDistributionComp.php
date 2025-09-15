@@ -17,8 +17,9 @@ use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 
-class AnswerScriptDistributionComp extends Component{
-    
+class AnswerScriptDistributionComp extends Component
+{
+
     public $selectedClassId = null;
     public $selectedExamNameId = null;
     public $examNames;
@@ -52,9 +53,9 @@ class AnswerScriptDistributionComp extends Component{
 
             $this->classSections = collect();
             $this->classSubjects = collect();
-            
+
             $this->distributions = collect();
-            
+
             $this->teachers = collect();
 
             $this->loadExamNames();
@@ -106,24 +107,28 @@ class AnswerScriptDistributionComp extends Component{
     protected function loadExamTypes()
     {
         try {
-            // Only load exam types that are configured in Exam06ClassSubject for the selected class and exam
             if ($this->selectedClassId && $this->selectedExamNameId) {
-                $configuredTypeIds = Exam06ClassSubject::where('myclass_id', $this->selectedClassId)
+                // Get exam_detail_ids for the selected class and exam name
+                $examDetailIds = Exam05Detail::where('myclass_id', $this->selectedClassId)
                     ->where('exam_name_id', $this->selectedExamNameId)
-                    ->where('is_active', true)
+                    ->pluck('id');
+
+                // Get the exam_type_ids for subjects configured in this exam by joining tables
+                $configuredTypeIds = Exam06ClassSubject::where('myclass_id', $this->selectedClassId)
+                    ->whereIn('exam_detail_id', $examDetailIds)
+                    ->join('exam05_details', 'exam06_class_subjects.exam_detail_id', '=', 'exam05_details.id')
                     ->distinct()
-                    ->pluck('exam_type_id');
+                    ->pluck('exam05_details.exam_type_id');
 
                 Log::info("Found " . $configuredTypeIds->count() . " configured exam types for class {$this->selectedClassId}, exam {$this->selectedExamNameId}");
 
                 if ($configuredTypeIds->isNotEmpty()) {
                     $this->examTypes = Exam02Type::whereIn('id', $configuredTypeIds)
-                        ->orderBy('name')
+                        ->orderBy('id', 'desc')
                         ->get();
                 } else {
-                    // If no configured types found, load all exam types as fallback
-                    $this->examTypes = Exam02Type::orderBy('name')->get();
-                    Log::warning("No configured exam types found, loading all exam types as fallback");
+                    $this->examTypes = collect();
+                    Log::warning("No configured exam types found for the selected class and exam.");
                 }
             } else {
                 $this->examTypes = collect();
@@ -137,24 +142,28 @@ class AnswerScriptDistributionComp extends Component{
     protected function loadExamParts()
     {
         try {
-            // Only load exam parts that are configured in Exam06ClassSubject for the selected class and exam
             if ($this->selectedClassId && $this->selectedExamNameId) {
-                $configuredPartIds = Exam06ClassSubject::where('myclass_id', $this->selectedClassId)
+                // Get exam_detail_ids for the selected class and exam name
+                $examDetailIds = Exam05Detail::where('myclass_id', $this->selectedClassId)
                     ->where('exam_name_id', $this->selectedExamNameId)
-                    ->where('is_active', true)
+                    ->pluck('id');
+
+                // Get the exam_part_ids for subjects configured in this exam by joining tables
+                $configuredPartIds = Exam06ClassSubject::where('myclass_id', $this->selectedClassId)
+                    ->whereIn('exam_detail_id', $examDetailIds)
+                    ->join('exam05_details', 'exam06_class_subjects.exam_detail_id', '=', 'exam05_details.id')
                     ->distinct()
-                    ->pluck('exam_part_id');
+                    ->pluck('exam05_details.exam_part_id');
 
                 Log::info("Found " . $configuredPartIds->count() . " configured exam parts for class {$this->selectedClassId}, exam {$this->selectedExamNameId}");
 
                 if ($configuredPartIds->isNotEmpty()) {
                     $this->examParts = Exam03Part::whereIn('id', $configuredPartIds)
-                        ->orderBy('name')
+                        ->orderBy('id')
                         ->get();
                 } else {
-                    // If no configured parts found, load all exam parts as fallback
-                    $this->examParts = Exam03Part::orderBy('name')->get();
-                    Log::warning("No configured exam parts found, loading all exam parts as fallback");
+                    $this->examParts = collect();
+                    Log::warning("No configured exam parts found for the selected class and exam.");
                 }
             } else {
                 $this->examParts = collect();
@@ -204,7 +213,8 @@ class AnswerScriptDistributionComp extends Component{
         }
     }
 
-    public function selectExamName($examNameId){
+    public function selectExamName($examNameId)
+    {
 
         try {
             $this->selectedExamNameId = $examNameId;
@@ -239,7 +249,7 @@ class AnswerScriptDistributionComp extends Component{
         try {
             // Load examDetailids
             $examDetailIds = Exam05Detail::where('myclass_id', $this->selectedClassId)
-                ->where('exam_name_id', $this->selectedExamNameId)                
+                ->where('exam_name_id', $this->selectedExamNameId)
                 ->where('is_active', true)
                 ->pluck('id');
             // dd($examDetailIds);
@@ -323,50 +333,35 @@ class AnswerScriptDistributionComp extends Component{
         }
 
         try {
-            // Get exam details for the selected class and exam
-            $examDetails = Exam05Detail::where('myclass_id', $this->selectedClassId)
+            // Get exam detail IDs for the selected class and exam
+            $examDetailIds = Exam05Detail::where('myclass_id', $this->selectedClassId)
                 ->where('exam_name_id', $this->selectedExamNameId)
-                ->get();
+                ->pluck('id');
 
-            $examDetailIds = $examDetails->pluck('id');
-
-            // Get class sections for the selected class
-            $classSections = MyclassSection::where('myclass_id', $this->selectedClassId)
+            // Get class section IDs for the selected class
+            $classSectionIds = MyclassSection::where('myclass_id', $this->selectedClassId)
                 ->where('is_active', true)
-                ->get();
+                ->pluck('id');
 
-            $classSectionIds = $classSections->pluck('id');
-
-            // Load distributions with relationships
-            $distributions = Exam07AnsscrDist::with(['teacher', 'user'])
+            // Load distributions with all necessary relationships eager-loaded to prevent N+1 queries
+            $distributions = Exam07AnsscrDist::with([
+                'teacher',
+                'user',
+                'examDetail',
+                'myclassSection',
+                'examClassSubject'
+            ])
                 ->whereIn('exam_detail_id', $examDetailIds)
                 ->whereIn('myclass_section_id', $classSectionIds)
                 ->get();
 
-            // Create a keyed collection for easy lookup
-            $this->distributions = collect();
-
-            foreach ($distributions as $distribution) {
-                // dd($distribution);
-                // Get the exam detail to find exam type and part
-                $examDetail = $examDetails->find($distribution->exam_detail_id);
-
-                // Get the class section to find section id
-                $classSection = $classSections->find($distribution->myclass_section_id);
-
-                // Get exam class subject to find subject id
-                $examClassSubject = Exam06ClassSubject::find($distribution->exam_class_subject_id);
-                // dd($examDetail,$classSection,$examClassSubject);
-                // dd($examClassSubject->subject_id, $examDetail->exam_type_id, $examDetail->exam_part_id, $classSection->section_id);
-                $key = "{$examClassSubject->subject_id}_{$examDetail->exam_type_id}_{$examDetail->exam_part_id}_{$classSection->section_id}";
-                // dd($key);
-                if ($examDetail && $classSection && $examClassSubject) {
-                    $key = "{$examClassSubject->subject_id}_{$examDetail->exam_type_id}_{$examDetail->exam_part_id}_{$classSection->section_id}";
-                    // dd($key);
-                    $this->distributions[$key] = $distribution;
+            // Create a keyed collection for easy lookup in the view
+            $this->distributions = $distributions->keyBy(function ($distribution) {
+                if ($distribution->examDetail && $distribution->myclassSection && $distribution->examClassSubject) {
+                    return "{$distribution->examClassSubject->subject_id}_{$distribution->examDetail->exam_type_id}_{$distribution->examDetail->exam_part_id}_{$distribution->myclassSection->section_id}";
                 }
-            }
-            // dd($this->distributions);
+                return null; // Return null for items that can't be keyed, they will be filtered out.
+            })->filter();
 
             Log::info("Loaded " . $this->distributions->count() . " distributions for class {$this->selectedClassId}, exam {$this->selectedExamNameId}");
         } catch (\Exception $e) {
@@ -646,7 +641,7 @@ class AnswerScriptDistributionComp extends Component{
         }
 
         try {
-             
+
             $examDetailIds = Exam05Detail::where('myclass_id', $this->selectedClassId)
                 ->where('exam_name_id', $this->selectedExamNameId)
                 // ->where('subject_id', $subjectId)
@@ -670,7 +665,8 @@ class AnswerScriptDistributionComp extends Component{
     /**
      * Get all configured combinations for the selected class and exam
      */
-    public function getConfiguredCombinations(){
+    public function getConfiguredCombinations()
+    {
 
         if (!$this->selectedClassId || !$this->selectedExamNameId) {
             return collect();
@@ -690,14 +686,14 @@ class AnswerScriptDistributionComp extends Component{
                 // ->select('subject_id', 'exam_type_id', 'exam_part_id', 'full_marks', 'pass_marks', 'time_in_minutes')
                 ->get()
                 // ->groupBy('subject_id')
-                ;
+            ;
             // dd($combinations);
 
-                // ->select('subject_id', 'exam_type_id', 'exam_part_id', 'full_marks', 'pass_marks', 'time_in_minutes')
-                // ->get()
-                // ->groupBy('subject_id');
+            // ->select('subject_id', 'exam_type_id', 'exam_part_id', 'full_marks', 'pass_marks', 'time_in_minutes')
+            // ->get()
+            // ->groupBy('subject_id');
 
-                
+
             // $combinations = Exam06ClassSubject::where('myclass_id', $this->selectedClassId)
             //     ->where('exam_name_id', $this->selectedExamNameId)
             //     ->where('is_active', true)

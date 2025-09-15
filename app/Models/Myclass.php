@@ -8,20 +8,22 @@ use Illuminate\Database\Eloquent\Model;
 class Myclass extends Model
 {
     use HasFactory;
+
+    protected $guarded = ['id'];
     
-    protected $fillable = [
-        'name',
-        'description',
-        'order_index',
-        'school_id',
-        'session_id',
-        'user_id',
-        'approved_by',
-        'is_active',
-        'is_finalized',
-        'status',
-        'remarks'
-    ];
+    // protected $fillable = [
+    //     'name',
+    //     'description',
+    //     'order_index',
+    //     'school_id',
+    //     'session_id',
+    //     'user_id',
+    //     'approved_by',
+    //     'is_active',
+    //     'is_finalized',
+    //     'status',
+    //     'remarks'
+    // ];
     
     protected $casts = [
         'is_active' => 'boolean',

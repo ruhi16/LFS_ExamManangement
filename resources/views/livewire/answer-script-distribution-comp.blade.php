@@ -3,7 +3,7 @@
     <div class="mb-6">
         <div class="flex justify-between items-center">
             <div>
-                <h1 class="text-2xl font-semibold text-gray-900">Answer Script Distribution XX</h1>
+                <h1 class="text-2xl font-semibold text-gray-900">Answer Script Distribution </h1>
                 <p class="mt-1 text-sm text-gray-600">Assign teachers to evaluate answer scripts for different exam
                     types and parts</p>
             </div>

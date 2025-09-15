@@ -8,24 +8,26 @@ use Illuminate\Database\Eloquent\Model;
 class Teacher extends Model
 {
     use HasFactory;
-    protected $fillable = [
-        'name',
-        'nickName',
-        'mobno',
-        'desig',
-        'hqual',
-        'train_qual',
-        'extra_qual',
-        'main_subject_id',
-        'notes',
-        'img_ref',
-        'status',
-        'remark',
-        'user_id',
-        'session_id',
-        'school_id',
-        'prev_session_pk'
-    ];
+
+    protected $guarded = ['id'];
+    // protected $fillable = [
+    //     'name',
+    //     'nickName',
+    //     'mobno',
+    //     'desig',
+    //     'hqual',
+    //     'train_qual',
+    //     'extra_qual',
+    //     'main_subject_id',
+    //     'notes',
+    //     'img_ref',
+    //     'status',
+    //     'remark',
+    //     'user_id',
+    //     'session_id',
+    //     'school_id',
+    //     'prev_session_pk'
+    // ];
 
 
 

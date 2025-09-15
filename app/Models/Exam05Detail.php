@@ -8,26 +8,28 @@ use Illuminate\Database\Eloquent\Model;
 class Exam05Detail extends Model
 {
     use HasFactory;
+    protected $guarded = ['id'];
     
-    protected $fillable = [
-        'name',
-        'description',
-        'myclass_id',
-        'exam_name_id',
-        'exam_type_id',
-        'exam_part_id',
-        'exam_mode_id',
-        'order_index',
-        'is_optional',
-        'session_id',
-        'school_id',
-        'user_id',
-        'approved_by',
-        'is_active',
-        'is_finalized',
-        'status',
-        'remarks'
-    ];
+    
+    // protected $fillable = [
+    //     'name',
+    //     'description',
+    //     'myclass_id',
+    //     'exam_name_id',
+    //     'exam_type_id',
+    //     'exam_part_id',
+    //     'exam_mode_id',
+    //     'order_index',
+    //     'is_optional',
+    //     'session_id',
+    //     'school_id',
+    //     'user_id',
+    //     'approved_by',
+    //     'is_active',
+    //     'is_finalized',
+    //     'status',
+    //     'remarks'
+    // ];
     
     protected $casts = [
         'is_optional' => 'boolean',

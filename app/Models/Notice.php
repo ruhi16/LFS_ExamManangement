@@ -11,13 +11,15 @@ class Notice extends Model
 
     protected $table = 'notices';
 
-    protected $fillable = [
-        'title',
-        'desc',
-        'dop',
-        'doe',
-        'fileaddr',
-        'is_active'
-    ];
+    protected $guarded = ['id'];
+
+    // protected $fillable = [
+    //     'title',
+    //     'desc',
+    //     'dop',
+    //     'doe',
+    //     'fileaddr',
+    //     'is_active'
+    // ];
     
 }

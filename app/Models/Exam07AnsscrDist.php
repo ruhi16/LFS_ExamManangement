@@ -40,12 +40,14 @@ class Exam07AnsscrDist extends Model
     //     return $this->belongsTo(Myclass::class, 'myclass_id');
     // }
 
-    public function myclassSection(){
+    public function myclassSection()
+    {
         return $this->belongsTo(MyclassSection::class, 'myclass_section_id', 'id');
     }
 
-    public function myclassSubject(){
-        return $this->belongsTo(MyclassSubject::class, 'exam_class_subject_id', 'id');
+    public function examClassSubject()
+    {
+        return $this->belongsTo(Exam06ClassSubject::class, 'exam_class_subject_id');
     }
 
     public function session()
@@ -53,7 +55,8 @@ class Exam07AnsscrDist extends Model
         return $this->belongsTo(Session::class, 'session_id');
     }
 
-    public function examDetail(){
+    public function examDetail()
+    {
         return $this->belongsTo(Exam05Detail::class, 'exam_detail_id', 'id');
     }
 
@@ -84,7 +87,7 @@ class Exam07AnsscrDist extends Model
 
     public function teacher()
     {
-        return $this->belongsTo(Teacher::class, 'teacher_id','id');
+        return $this->belongsTo(Teacher::class, 'teacher_id', 'id');
     }
 
     public function user()
