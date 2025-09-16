@@ -22,12 +22,13 @@ class MarksEntryComp extends Component
     public $examNames;
     public $examTypes;
     public $examParts;
-    
+
     public $classSections;
     public $classSubjects;
     public $examDetails;
 
-    public $answerScriptDistributions;
+    public $distributions;
+    public $subjectExamDetailMap;
 
     // Debug properties
     public $debugMode = false;
@@ -42,16 +43,14 @@ class MarksEntryComp extends Component
 
             $this->classSections = collect();
             $this->classSubjects = collect();
-            
+
             $this->examDetails = []; // Initialize as array instead of collection
+            $this->distributions = collect();
+            $this->subjectExamDetailMap = collect();
 
             $this->loadExamNames();
             $this->loadExamTypes();
             $this->loadExamParts();
-
-            $this->answerScriptDistributions = Exam07AnsscrDist::all();
-
-
         } catch (\Exception $e) {
             Log::error('Error in MarksEntryComp mount: ' . $e->getMessage());
             session()->flash('error', 'Error initializing component: ' . $e->getMessage());
@@ -118,14 +117,12 @@ class MarksEntryComp extends Component
     public function selectExamName($examNameId)
     {
         try {
-            session()->flash('message', "DEBUG: Starting selectExamName with ID: {$examNameId}");
             $this->selectedExamNameId = $examNameId;
-            session()->flash('message', "DEBUG: Set selectedExamNameId to: {$this->selectedExamNameId}");
-            
+
             $this->resetData();
             $this->loadClassData();
             $this->loadExamDetails();
-            session()->flash('message', "DEBUG: Completed loadExamDetails");
+            $this->loadDistributions();
         } catch (\Exception $e) {
             Log::error('Error selecting exam name: ' . $e->getMessage());
             session()->flash('error', 'ERROR in selectExamName: ' . $e->getMessage() . ' | Line: ' . $e->getLine() . ' | File: ' . $e->getFile());
@@ -137,6 +134,8 @@ class MarksEntryComp extends Component
         $this->classSections = collect();
         $this->classSubjects = collect();
         $this->examDetails = []; // Reset as array
+        $this->distributions = collect();
+        $this->subjectExamDetailMap = collect();
     }
 
     protected function loadClassData()
@@ -147,11 +146,6 @@ class MarksEntryComp extends Component
 
         try {
             // Load examDetailids
-            $examDetailIds = Exam05Detail::where('myclass_id', $this->selectedClassId)
-                ->where('exam_name_id', $this->selectedExamNameId)                
-                ->where('is_active', true)
-                ->pluck('id');
-
             // Load class sections
             $this->classSections = MyclassSection::with('section')->where('myclass_id', $this->selectedClassId)
                 ->where('is_active', true)
@@ -160,57 +154,48 @@ class MarksEntryComp extends Component
 
             // Load class subjects - check if exam configurations exist
             if ($this->selectedExamNameId) {
-                // First check if there are any configurations for this class and exam
-                $configuredSubjectIds = MyclassSubject::with('subject')
-                    ->where('myclass_id', $this->selectedClassId)                                        
+                // Get all exam_detail_ids for the selected class and exam
+                $examDetailIds = Exam05Detail::where('myclass_id', $this->selectedClassId)
+                    ->where('exam_name_id', $this->selectedExamNameId)
                     ->where('is_active', true)
-                    ->distinct()
-                    ->pluck('subject_id');
-                // dd($configuredSubjectIds);
+                    ->pluck('id');
 
-                Log::info("Found " . $configuredSubjectIds->count() . " configured subjects for class {$this->selectedClassId}, exam {$this->selectedExamNameId}");
+                // Create a map of subject_id => [exam_detail_id, ...] to use for validation in the view
+                $this->subjectExamDetailMap = Exam06ClassSubject::whereIn('exam_detail_id', $examDetailIds)
+                    ->get()
+                    ->groupBy('subject_id')
+                    ->map(function ($group) {
+                        return $group->pluck('exam_detail_id')->all();
+                    });
 
-                // If there is any subject available for the class, then selected for the exam
-                if ($configuredSubjectIds->isNotEmpty()) {
-                    // Use configured subjects only
-                    $this->classSubjects = Exam06ClassSubject::with('subject')
-                        ->where('myclass_id', $this->selectedClassId)
-                        ->whereIn('exam_detail_id', $examDetailIds)
-                        ->whereIn('subject_id', $configuredSubjectIds)
-                        ->where('is_active', true)
-                        ->orderBy('order_index')
-                        ->get();
-                } else {
-                    // No configurations found, show all class subjects with a warning
-                    $this->classSubjects = Exam06ClassSubject::with('subject')
-                        ->where('myclass_id', $this->selectedClassId)
-                        ->whereIn('exam_detail_id', $examDetailIds)
-                        ->where('is_active', true)
-                        ->orderBy('order_index')
-                        ->get();
+                // Get all subject_ids from the map keys
+                $subjectIds = $this->subjectExamDetailMap->keys();
 
-                    if ($this->classSubjects->isNotEmpty()) {
-                        session()->flash('warning', 'No exam configurations found for this class and exam. Showing all class subjects. Please configure exams in Class Exam Subject first.');
-                    }
-                }
-
-                
+                // Get the MyclassSubject models for these subjects, ordered by subject type then order_index
+                $this->classSubjects = MyclassSubject::with(['subject.subjectType'])
+                    ->where('myclass_id', $this->selectedClassId)
+                    ->whereIn('subject_id', $subjectIds)
+                    ->where('is_active', true)
+                    ->get()
+                    ->sortBy([
+                        function ($myclassSubject) {
+                            if ($myclassSubject->subject && $myclassSubject->subject->subjectType) {
+                                $typeName = strtolower($myclassSubject->subject->subjectType->name);
+                                if (str_contains($typeName, 'summative')) return 1;
+                                if (str_contains($typeName, 'formative')) return 2;
+                            }
+                            return 3;
+                        },
+                        ['order_index', 'asc']
+                    ]);
             } else {
                 // If no exam selected, load all class subjects
-                $this->classSubjects = MyclassSubject::with('subject')
+                $this->classSubjects = MyclassSubject::with(['subject.subjectType'])
                     ->where('myclass_id', $this->selectedClassId)
                     ->where('is_active', true)
                     ->orderBy('order_index')
                     ->get();
             }
-            // dd($this->classSubjects);
-            
-            // Load class subjects
-            // $this->classSubjects = MyclassSubject::with('subject')
-            //     ->where('myclass_id', $this->selectedClassId)
-            //     ->where('is_active', true)
-            //     ->orderBy('order_index')
-            //     ->get();
 
             Log::info("Loaded " . $this->classSections->count() . " sections and " . $this->classSubjects->count() . " subjects for class {$this->selectedClassId}");
         } catch (\Exception $e) {
@@ -221,26 +206,18 @@ class MarksEntryComp extends Component
 
     protected function loadExamDetails()
     {
-        session()->flash('message', "DEBUG: Starting loadExamDetails - ClassID: {$this->selectedClassId}, ExamID: {$this->selectedExamNameId}");
-
         if (!$this->selectedClassId || !$this->selectedExamNameId) {
-            session()->flash('error', "DEBUG: Missing required IDs - ClassID: {$this->selectedClassId}, ExamID: {$this->selectedExamNameId}");
             return;
         }
 
         try {
-            session()->flash('message', "DEBUG: About to query Exam05Detail");
-
             // Load exam details for the selected class and exam
             $examDetailsQuery = Exam05Detail::with(['examType', 'examPart'])
                 ->where('myclass_id', $this->selectedClassId)
                 ->where('exam_name_id', $this->selectedExamNameId)
                 ->get();
 
-            session()->flash('message', "DEBUG: Query completed, found " . $examDetailsQuery->count() . " exam details");
-
             // Use simple array structure instead of Collection groupBy to avoid getKey() issues
-            session()->flash('message', "DEBUG: About to organize by exam_type_id");
             $this->examDetails = [];
 
             foreach ($examDetailsQuery as $examDetail) {
@@ -250,16 +227,6 @@ class MarksEntryComp extends Component
                 }
                 $this->examDetails[$typeId][] = $examDetail;
             }
-            // dd($examDetailsQuery, $this->examDetails);
-
-            session()->flash('message', "DEBUG: Organization completed, types: " . count($this->examDetails));
-
-            // Debug the structure
-            $debugInfo = [];
-            foreach ($this->examDetails as $typeId => $details) {
-                $debugInfo[] = "Type {$typeId}: " . count($details) . " details";
-            }
-            session()->flash('message', "DEBUG: Group structure: " . implode(', ', $debugInfo));
 
             Log::info("Loaded exam details for class {$this->selectedClassId}, exam {$this->selectedExamNameId}");
         } catch (\Exception $e) {
@@ -267,6 +234,28 @@ class MarksEntryComp extends Component
             session()->flash('error', 'ERROR in loadExamDetails: ' . $e->getMessage() . ' | Line: ' . $e->getLine() . ' | File: ' . $e->getFile());
             $this->examDetails = [];
         }
+    }
+
+    protected function loadDistributions()
+    {
+        if (!$this->selectedClassId || !$this->selectedExamNameId) {
+            $this->distributions = collect();
+            return;
+        }
+
+        $this->distributions = Exam07AnsscrDist::with(['teacher', 'examClassSubject'])
+            ->whereHas('examDetail', function ($query) {
+                $query->where('myclass_id', $this->selectedClassId)
+                    ->where('exam_name_id', $this->selectedExamNameId);
+            })
+            ->get()
+            ->keyBy(function ($dist) {
+                if ($dist->examClassSubject) {
+                    return $dist->exam_detail_id . '_' . $dist->examClassSubject->subject_id . '_' . $dist->myclass_section_id;
+                }
+                return null;
+            })
+            ->filter();
     }
 
     public function openMarksEntry($examDetailId, $subjectId, $sectionId)

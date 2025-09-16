@@ -14,15 +14,16 @@ class CreateExam10MarksEntriesTable extends Migration
     public function up()
     {
         Schema::create('exam10_marks_entries', function (Blueprint $table) {
-            $table->id();$table->string('name');
+            $table->id();$table->string('name')->nullable();
             $table->string('description')->nullable();
             
             $table->integer('exam_detail_id')->unsigned()->nullable();
             $table->integer('exam_class_subject_id')->unsigned()->nullable();
             $table->integer('myclass_section_id')->unsigned()->nullable();
+            $table->integer('studentcr_id')->unsigned()->nullable();
             
                         
-            $table->decimal('exam_marks', 8, 2)->unsigned()->nullable();
+            $table->decimal('exam_marks', 8, 2)->nullable();
                        
             $table->integer('session_id')->unsigned()->nullable();
             $table->integer('school_id')->unsigned()->nullable();

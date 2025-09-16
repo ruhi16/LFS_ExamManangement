@@ -145,7 +145,7 @@ class MarksEntryDetailComp extends Component
                         $this->marks[$student->id] = '';
                     } else {
                         $this->absentStudents[$student->id] = false;
-                        $this->marks[$student->id] = $existingMark ? $existingMark->exam_marks : '';
+                        $this->marks[$student->id] = $existingMark ? round($existingMark->exam_marks,0) : '';
                     }
                 } else {
                     $this->marks[$student->id] = '';

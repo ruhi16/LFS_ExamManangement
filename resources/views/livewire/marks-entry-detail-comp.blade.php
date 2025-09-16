@@ -34,6 +34,10 @@
                             <span class="font-medium">Subject:</span> 
                             <span class="inline-block px-2 py-0.5 rounded bg-yellow-100 text-yellow-800 text-semibold">
                             {{ $subject->name ?? 'Unknown' }}
+                            </span>|
+                            <span class="font-medium">Teacher:</span>
+                            <span class="inline-block px-2 py-0.5 rounded bg-green-100 text-green-800 text-semibold">
+                                {{ $examDetail->examDate ?? 'Unknown' }}
                             </span>
                         </p>
                     </div>

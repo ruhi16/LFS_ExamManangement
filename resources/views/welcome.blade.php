@@ -84,7 +84,7 @@
                                 class="text-sm text-gray-700 dark:text-gray-500 underline">Test Dashboard</a> --}}
                                 
                                 <a wire:navigate href="{{ url('/dashboard') }}"
-                                    class="text-sm text-gray-700 dark:text-gray-500 underline">Dashboard</a>
+                                    class="text-sm text-gray-700 dark:text-gray-500 underline">Dashboard: {{ auth()->user()->id }}</a>
                             @else
                                 <a wire:navigate href="{{ route('login') }}"
                                     class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-full font-semibold transition-colors">Log in</a>
