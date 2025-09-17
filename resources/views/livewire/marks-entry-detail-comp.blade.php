@@ -7,37 +7,37 @@
                 @if($examDetail && $subject && $section)
                     <div class="mt-2 space-y-1">
                         <p class="text-sm text-gray-600">
-                            <span class="font-medium">Class:</span> 
-                            <span class="inline-block px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 text-semibold">                                
-                                {{ $examDetail->myclass->name ?? 'Unknown' }} 
+                            <span class="font-medium">Class:</span>
+                            <span class="inline-block px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 text-semibold">
+                                {{ $examDetail->myclass->name ?? 'Unknown' }}
                             </span>|
                             <span class="font-medium">Section:</span>
-                            <span class="inline-block px-2 py-0.5 rounded bg-red-100 text-red-800 text-semibold"> 
+                            <span class="inline-block px-2 py-0.5 rounded bg-red-100 text-red-800 text-semibold">
                                 {{ $section->section->name ?? 'Unknown' }}
                             </span>|
                         </p>
                         <p class="text-sm text-gray-600">
-                            <span class="font-medium">Exam:</span> 
-                            <span class="inline block px-2 py-0.5 rounded bg-yellow-100 text-yellow-800 text-semibold" >                                
-                                {{ $examDetail->examName->name ?? 'Unknown' }} 
+                            <span class="font-medium">Exam:</span>
+                            <span class="inline block px-2 py-0.5 rounded bg-yellow-100 text-yellow-800 text-semibold">
+                                {{ $examDetail->examName->name ?? 'Unknown' }}
                             </span>|
-                            <span class="font-medium">Type:</span> 
+                            <span class="font-medium">Type:</span>
                             <span class="inline-block px-2 py-0.5 rounded bg-green-100 text-green-800 text-semibold">
                                 {{ $examDetail->examType->name ?? 'Unknown' }}
                             </span>|
-                            <span class="font-medium">Part:</span> 
+                            <span class="font-medium">Part:</span>
                             <span class="inline-block px-2 py-0.5 rounded bg-blue-100 text-blue-800 text-semibold">
                                 {{ $examDetail->examPart->name ?? 'Unknown' }}
                             </span>
                         </p>
                         <p class="text-sm text-gray-600">
-                            <span class="font-medium">Subject:</span> 
+                            <span class="font-medium">Subject:</span>
                             <span class="inline-block px-2 py-0.5 rounded bg-yellow-100 text-yellow-800 text-semibold">
-                            {{ $subject->name ?? 'Unknown' }}
+                                {{ $subject->name ?? 'Unknown' }}
                             </span>|
                             <span class="font-medium">Teacher:</span>
                             <span class="inline-block px-2 py-0.5 rounded bg-green-100 text-green-800 text-semibold">
-                                {{ $examDetail->examDate ?? 'Unknown' }}
+                                {{-- {{ $ansscrDist->teacher ? $ansscrDist->teacher->name : 'Unknown' }} --}}
                             </span>
                         </p>
                     </div>
@@ -112,7 +112,8 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                     <div class="font-medium">
-                                        {{ $student->studentdb->name ?? $student->name ?? 'Unknown Student' }}</div>
+                                        {{ $student->studentdb->name ?? $student->name ?? 'Unknown Student' }}
+                                    </div>
                                     <div class="text-xs text-gray-500">ID: {{ $student->id }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center">
@@ -120,10 +121,11 @@
                                         <div class="relative">
                                             @if(isset($absentStudents[$student->id]) && $absentStudents[$student->id])
                                                 <!-- Absent State -->
-                                                <div class="w-20 px-3 py-2 border-2 border-red-500 rounded-md bg-red-50 text-center text-red-700 font-bold text-sm">
+                                                <div
+                                                    class="w-20 px-3 py-2 border-2 border-red-500 rounded-md bg-red-50 text-center text-red-700 font-bold text-sm">
                                                     AB
                                                 </div>
-                                                <input type="number" 
+                                                <input type="number"
                                                     class="w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-center hidden"
                                                     disabled>
                                             @else
@@ -132,20 +134,20 @@
                                                     class="w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-center"
                                                     placeholder="0" min="0" max="100" step="0.01">
                                             @endif
-                                            
+
                                             <!-- Embedded Absent Checkbox -->
                                             <div class="absolute -top-1 -right-1">
-                                                <input type="checkbox" 
-                                                    wire:model="absentStudents.{{ $student->id }}"
+                                                <input type="checkbox" wire:model="absentStudents.{{ $student->id }}"
                                                     class="w-4 h-4 text-red-600 bg-white border-2 border-red-300 rounded focus:ring-red-500 focus:ring-2"
                                                     title="Mark as Absent">
                                             </div>
                                         </div>
-                                        
+
                                         <div class="text-xs text-green-600" wire:loading wire:target="marks.{{ $student->id }}">
                                             Saving...
                                         </div>
-                                        <div class="text-xs text-orange-600" wire:loading wire:target="absentStudents.{{ $student->id }}">
+                                        <div class="text-xs text-orange-600" wire:loading
+                                            wire:target="absentStudents.{{ $student->id }}">
                                             Updating...
                                         </div>
                                     </div>

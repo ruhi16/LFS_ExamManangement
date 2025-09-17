@@ -243,7 +243,7 @@
                                                                 $hasMarks = true;
                                                             }
                                                         }
-                                                        if ($hasMarks) {
+                                                        if ($hasMarks && $examPart['full_marks'] =! 0) {
                                                             $percentage = ($totalForPart / ($examPart['full_marks'] * count($examNames))) * 100;
                                                             if ($percentage >= 90)
                                                                 echo 'A+';

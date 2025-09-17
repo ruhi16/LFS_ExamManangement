@@ -164,6 +164,14 @@ class Home extends Component
                     'description' =>
                         'Manage exam modes and their configurations.',
                 ],
+                'exam-config' => [
+                    'label' => 'Exam Configuration',
+                    'icon' =>
+                        'M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2H9z M9 5a2 2 0 012-2h2a2 2 0 012 2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
+                    'component' => 'class-exam-subject-comp',
+                    'description' =>
+                        'Configure which subjects are available for each class, exam, and exam type combination.',
+                ],
                 'class-exam-subject' => [
                     'label' => 'Class Exam-Subject',
                     'icon' =>

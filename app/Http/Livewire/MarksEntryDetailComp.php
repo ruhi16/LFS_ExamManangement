@@ -11,6 +11,7 @@ use App\Models\Exam01Name;
 use App\Models\Exam02Type;
 use App\Models\Exam03Part;
 use App\Models\Exam06ClassSubject;
+use App\Models\Exam07AnsscrDist;
 // use App\Models\Exam10MarksEntry;
 use App\Models\Exam10MarksEntry;
 use Illuminate\Support\Facades\Log;
@@ -26,6 +27,10 @@ class MarksEntryDetailComp extends Component
     public $subject;
     public $section;
     public $students;
+
+    public $ansscrDist;
+
+
     public $marks = [];
     public $previousMarks = [];
     public $examClassSubject;
@@ -38,14 +43,32 @@ class MarksEntryDetailComp extends Component
             $this->subjectId = $subjectId;
             $this->sectionId = $sectionId;
 
+            
             $this->loadData();
             $this->loadStudents();
             $this->loadPreviousMarks();
+
+            $this->loadAnswerScriptDistribution();
         } catch (\Exception $e) {
             Log::error('Error in MarksEntryDetailComp mount: ' . $e->getMessage());
             session()->flash('error', 'Error initializing marks entry: ' . $e->getMessage());
         }
     }
+
+    protected function loadAnswerScriptDistribution(){
+        try {
+            $this->ansscrDist = Exam07AnsscrDist::where('exam_detail_id', $this->examDetailId)
+                ->where('exam_class_subject_id', $this->examClassSubject->id)
+                ->where('myclass_section_id', $this->section->id)
+                ->first();
+
+                
+        } catch (\Exception $e) {
+            Log::error('Error loading answer script distribution: ' . $e->getMessage());
+            session()->flash('error', 'Error loading answer script distribution: ' . $e->getMessage());
+        }
+    }
+
 
     protected function loadData()
     {

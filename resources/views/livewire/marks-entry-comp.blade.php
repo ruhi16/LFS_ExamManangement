@@ -196,12 +196,12 @@
                                                                     <button
                                                                         wire:click="openMarksEntry({{ $examDetail->id ?? 0 }}, {{ $subject->subject_id ?? 0 }}, {{ $section->section_id ?? 0 }})"
                                                                         class="w-full rounded p-2 hover:bg-blue-200 transition-colors
-                                                                                                        @if ($answerScriptDistribution)
-                                                                                                            {{ $answerScriptDistribution->status === 'Done' ? 'bg-green-100 border border-green-300' : 'bg-yellow-100 border border-yellow-300' }}
-                                                                                                        @else
-                                                                                                            bg-red-100 border border-red-300
-                                                                                                        @endif
-                                                                                                    ">
+                                                                            @if ($answerScriptDistribution)
+                                                                                {{ $answerScriptDistribution->status === 'Done' ? 'bg-green-100 border border-green-300' : 'bg-yellow-100 border border-yellow-300' }}
+                                                                            @else
+                                                                                bg-red-100 border border-red-300
+                                                                            @endif
+                                                                        ">
                                                                         <div class="text-xs font-medium text-blue-800">
                                                                             {{ $examDetail->examPart->name ?? 'Unknown Part' }}
                                                                         </div>

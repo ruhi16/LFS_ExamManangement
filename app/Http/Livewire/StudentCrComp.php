@@ -82,14 +82,15 @@ class StudentCrComp extends Component
         }
     }
 
-    public function getClassSectionsProperty(){
+    public function getClassSectionsProperty()
+    {
 
         if (!$this->selectedClassId) {
             return collect();
         }
         // dd('Selected Class:', $this->selectedClassId);
         try {
-            return MyclassSection::where('stclass_id', $this->selectedClassId)
+            return MyclassSection::where('myclass_id', $this->selectedClassId)
                 ->where('is_active', true)
                 ->orderBy('id')
                 ->get();
@@ -99,7 +100,8 @@ class StudentCrComp extends Component
         }
     }
 
-    protected function loadClassSections(){
+    protected function loadClassSections()
+    {
         $sections = $this->getClassSectionsProperty();
         if ($sections->isEmpty()) {
             Log::info("No sections found for class ID: {$this->selectedClassId}");
