@@ -28,7 +28,7 @@ class TeacherMarksEntryComp extends Component{
             'myclassSection.myclass',
             'examClassSubject.subject',
             'teacher',
-        ])->get();
+        ])->whereHas('examClassSubject')->get(); // Only get distributions where examClassSubject exists
 
         // Group by teacher for quick access in the view
         // $this->distributionsByTeacher = $this->distributions->groupBy('teacher_id');

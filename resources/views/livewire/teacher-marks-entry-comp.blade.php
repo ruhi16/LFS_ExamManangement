@@ -27,7 +27,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                             Section
                         </th>
-                        <th class="px-6 py-3 text-left textxs font-medium text-gray-700 uppercase tracking-wider">
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                             Subject
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
@@ -58,32 +58,20 @@
                                 <div class="font-semibold">{{ optional(optional($distribution->myclassSection)->section)->name }}</div>
                             </td>
                             <td class="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-200">
-                                <div class="font-semibold">{{ optional(optional($distribution->myclassSubject)->subject)->name }}xx</div>
+                                <div class="font-semibold">{{ optional(optional($distribution->examClassSubject)->subject)->name ?? 'N/A' }}</div>
                             </td>
                             <td class="px-6 py-4 text-sm font-medium text-gray-900">
-                                ExDetail: {{ $distribution->exam_detail_id ?? 'Unknown' }},
-                                {{-- Subject: {{ $distribution->myclassSubject->subject_id ?? 'Unknown' }}, --}}
-                                Subject2: {{ $distribution->examClassSubject->subject_id ?? 'Unknown' }},
-                                {{-- Class: {{ $distribution->myclassSection->myclass->subject_id ?? 'Unknown' }}, --}}
-                                Section: {{ $distribution->myclassSection->section_id  ?? 'Unknown' }}
-
-
-                                {{-- @if($distribution->myclassSubject && $distribution->myclassSection) --}}
+                                @if($distribution->examClassSubject && $distribution->myclassSection)
                                     <a class="text-indigo-600 hover:text-indigo-900"
                                     href="{{ route('marks-entry.detail', [
                                         'examDetailId' => $distribution->exam_detail_id,
-                                        'subjectId' => $distribution->examClassSubject->subject_id,
+                                        'subjectId' => optional($distribution->examClassSubject)->subject_id,
                                         'sectionId' => $distribution->myclassSection->section_id]) }}">
                                         View
                                     </a>
-                                {{-- @else --}}
+                                @else
                                     <span class="text-gray-400 cursor-not-allowed" title="Cannot generate link due to missing data.">View</span>
-                                {{-- @endif --}}
-                                {{-- <a href="{{route('marks-entry.detail', [
-                                'examDetailId' => $distribution->exam_detail_id,
-                                'subjectId' => $distribution->myclass_subject_id,
-                                'sectionId' => $distribution->myclass_section_id,                                
-                                ])}}"> {{ $distribution->myclassSubject->subjectType->name }}</a> --}}
+                                @endif
                             </td>
                             {{-- @if($distByTeacher->has($teacher->id))
                                 <div class="space-y-4">
