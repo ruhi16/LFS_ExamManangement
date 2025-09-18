@@ -239,6 +239,11 @@
                         @livewire('exam-settings-fmpm-comp')
                     @endif
 
+                     <!-- Exam Settings FMPM -->
+                    @if($activeMenu === 'exam-settings-fmpm2')
+                        @livewire('exam-setting-with-fmpm')
+                    @endif
+
                     <!-- Exam Names -->
                     @if($activeMenu === 'exam-names')
                         @livewire('exam-name-comp')
@@ -328,7 +333,7 @@
                     @endif
 
                     <!-- Default/Other Pages -->
-                    @if(!in_array($activeMenu, ['dashboard', 'schools', 'classes', 'sections', 'class-sections', 'subject-types', 'subjects', 'MyClass', 'myclass-subjects', 'student-database', 'sessions', 'teachers', 'subject-teachers', 'exam-settings', 'exam-settings-view', 'exam-settings-fmpm', 'exam-names', 'exam-types', 'exam-parts', 'exam-modes', 'student-cr', 'answer-script-distribution', 'marks-entry', 'logs-viewer', 'class-exam-subject', 'mark-register', 'user-roles', 'analytics', 'exam-config']))
+                    @if(!in_array($activeMenu, ['dashboard', 'schools', 'classes', 'sections', 'class-sections', 'subject-types', 'subjects', 'MyClass', 'myclass-subjects', 'student-database', 'sessions', 'teachers', 'subject-teachers', 'exam-settings', 'exam-settings-view', 'exam-settings-fmpm', 'exam-names', 'exam-types', 'exam-parts', 'exam-modes', 'student-cr', 'answer-script-distribution', 'marks-entry', 'logs-viewer', 'class-exam-subject', 'mark-register', 'user-roles', 'analytics', 'exam-config', 'exam-settings-fmpm2']))
                         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
                             <div class="text-center">
                                 <div

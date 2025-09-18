@@ -45,11 +45,25 @@ class ExamSettingsFmpmCompSimple extends Component
             $this->timeInMinutes = [];
             $this->configIds = [];
 
-            // Get existing configurations
-            $existingConfigs = Exam06ClassSubject::where('myclass_id', $classId)->get();
+            // Get existing configurations, ensuring we get the related exam detail
+            $existingConfigs = Exam06ClassSubject::with('examDetail')
+                ->where('myclass_id', $classId)
+                ->get();
 
             foreach ($existingConfigs as $config) {
-                $flatKey = "{$config->subject_id}_{$config->exam_name_id}_{$config->exam_type_id}_{$config->exam_part_id}";
+                // If the config was made with the new ExamConfigComp, it will have an examDetail relationship
+                if ($config->examDetail) {
+                    $examNameId = $config->examDetail->exam_name_id;
+                    $examTypeId = $config->examDetail->exam_type_id;
+                    $examPartId = $config->examDetail->exam_part_id;
+                } else {
+                    // Fallback for old data structure
+                    $examNameId = $config->exam_name_id;
+                    $examTypeId = $config->exam_type_id;
+                    $examPartId = $config->exam_part_id;
+                }
+
+                $flatKey = "{$config->subject_id}_{$examNameId}_{$examTypeId}_{$examPartId}";
                 $this->fullMarks[$flatKey] = $config->full_marks;
                 $this->passMarks[$flatKey] = $config->pass_marks;
                 $this->timeInMinutes[$flatKey] = $config->time_in_minutes;
@@ -65,7 +79,7 @@ class ExamSettingsFmpmCompSimple extends Component
     {
         try {
             $flatKey = "{$subjectId}_{$examNameId}_{$examTypeId}_{$examPartId}";
-            
+
             // Validation
             if (empty($this->fullMarks[$flatKey]) || empty($this->passMarks[$flatKey]) || empty($this->timeInMinutes[$flatKey])) {
                 session()->flash('error', 'All fields are required.');
@@ -86,33 +100,44 @@ class ExamSettingsFmpmCompSimple extends Component
                 return;
             }
 
+            // Find the corresponding Exam05Detail record
+            $examDetail = Exam05Detail::where('myclass_id', $this->selectedClassId)
+                ->where('exam_name_id', $examNameId)
+                ->where('exam_type_id', $examTypeId)
+                ->where('exam_part_id', $examPartId)
+                ->first();
+
+            if (!$examDetail) {
+                session()->flash('error', 'This specific exam configuration (Name, Type, Part) is not enabled for this class. Please enable it in Exam Configuration first.');
+                return;
+            }
+
             $configData = [
                 'name' => 'Configuration',
+                'exam_detail_id' => $examDetail->id,
                 'myclass_id' => $this->selectedClassId,
                 'subject_id' => $subjectId,
-                'exam_name_id' => $examNameId,
-                'exam_type_id' => $examTypeId,
-                'exam_part_id' => $examPartId,
                 'full_marks' => $fullMarks,
                 'pass_marks' => $passMarks,
                 'time_in_minutes' => $timeInMinutes,
                 'is_active' => true,
-                'user_id' => auth()->id() ?? 1,
-                'session_id' => 1,
-                'school_id' => 1,
+                'user_id' => auth()->id(),
+                'session_id' => session('current_session_id', 1),
+                'school_id' => session('current_school_id', 1),
             ];
 
-            if (isset($this->configIds[$flatKey]) && $this->configIds[$flatKey]) {
-                // Update existing
-                $config = Exam06ClassSubject::findOrFail($this->configIds[$flatKey]);
-                $config->update($configData);
-                session()->flash('message', 'Configuration updated successfully!');
-            } else {
-                // Create new
-                $newConfig = Exam06ClassSubject::create($configData);
-                $this->configIds[$flatKey] = $newConfig->id;
-                session()->flash('message', 'Configuration saved successfully!');
-            }
+            // Use updateOrCreate with a unique combination of keys for reliability
+            $newConfig = Exam06ClassSubject::updateOrCreate(
+                [
+                    'exam_detail_id' => $examDetail->id,
+                    'myclass_id' => $this->selectedClassId,
+                    'subject_id' => $subjectId,
+                ],
+                $configData
+            );
+
+            $this->configIds[$flatKey] = $newConfig->id;
+            session()->flash('message', 'Configuration saved successfully!');
         } catch (\Exception $e) {
             Log::error('Error saving configuration: ' . $e->getMessage());
             session()->flash('error', 'Error saving configuration: ' . $e->getMessage());
@@ -123,10 +148,21 @@ class ExamSettingsFmpmCompSimple extends Component
     {
         $classes = Myclass::where('is_active', true)->orderBy('id')->get();
         $subjects = [];
-        
+
         if ($this->selectedClassId) {
+            // Only show subjects that are configured for ANY exam in this class
+            $configuredSubjectIds = Exam06ClassSubject::where('myclass_id', $this->selectedClassId)
+                ->distinct()
+                ->pluck('subject_id');
+
+            // If no subjects are configured at all, fall back to showing all subjects for the class
+            if ($configuredSubjectIds->isEmpty()) {
+                $configuredSubjectIds = MyclassSubject::where('myclass_id', $this->selectedClassId)->pluck('subject_id');
+            }
+
             $subjects = MyclassSubject::with('subject')
                 ->where('myclass_id', $this->selectedClassId)
+                ->whereIn('subject_id', $configuredSubjectIds)
                 ->where('is_active', true)
                 ->get();
         }

@@ -81,6 +81,7 @@
             </div>
 
             @if(is_array($examConfigurations) && count($examConfigurations) > 0)
+                {{-- {{ dd($examConfigurations) }} --}}
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
@@ -114,6 +115,7 @@
                                                 $examTypesWithData[] = ['type' => $examType, 'parts' => $examPartsWithData];
                                             }
                                         }
+                                        // dd($examHasData);
                                     @endphp
                                     
                                     @if($examHasData)

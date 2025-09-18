@@ -13,7 +13,7 @@
                 </div>
             </div>
 
-            @livewire('exam-settings-fmpm-comp')
+            @livewire('exam-setting-with-fmpm')
         </div>
     </div>
 </x-livewire-layout>

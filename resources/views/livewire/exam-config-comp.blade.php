@@ -104,7 +104,8 @@
                                                         <div class="flex items-center justify-center mb-3">
                                                             <label class="flex items-center space-x-2 bg-blue-50 px-3 py-1 rounded-md border border-blue-200">
                                                                 <input type="checkbox"
-                                                                       wire:model.defer="selectedExamParts.{{ $selectedClassId }}.{{ $examName->id }}.{{ $examType->id }}.{{ $examPart->id }}"
+                                                                       id="part-{{ $selectedClassId }}-{{ $examName->id }}-{{ $examType->id }}-{{ $examPart->id }}"
+                                                                       wire:model="selectedExamParts.{{ $selectedClassId }}.{{ $examName->id }}.{{ $examType->id }}.{{ $examPart->id }}"
                                                                        class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
                                                                 <span class="text-sm font-semibold text-blue-800">{{ $examPart->name }}</span>
                                                             </label>
@@ -152,6 +153,8 @@
                                                                         </div>
                                                                     @endforeach
                                                                 @endif
+
+                                                                
                                                             </div>
                                                         @endif
                                                     </div>

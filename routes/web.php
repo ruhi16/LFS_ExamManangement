@@ -176,10 +176,20 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Test route for FMPM component
-Route::get('/test-fmpm', function () {
+// Test route for Exam Setting with FMPM component
+Route::get('/exam-setting-fmpm', App\Http\Livewire\ExamSettingWithFmpm::class)
+    ->middleware(['auth'])
+    ->name('exam.setting.fmpm');
+
+// Test route for Exam Setting (without auth for testing)
+Route::get('/test-exam-setting', function () {
+    return view('test-exam-setting');
+})->name('test.exam.setting');
+
+// Test route for Updated Exam Setting with FMPM component
+Route::get('/test-updated-exam-setting', function () {
     return view('test-fmpm');
-})->name('test.fmpm');
+})->name('test.updated.exam.setting');
 
 // Test route for simple FMPM component
 Route::get('/test-fmpm-simple', function () {
@@ -267,6 +277,7 @@ Route::get('/test-teacher-wise-marks-entry', function () {
 })->name('test-teacher-wise-marks-entry');
 
 require __DIR__ . '/auth.php';
+
 
 
 // Route::any('{any}', [UserController::class,'index'])->where('any', '^(?!api).*$');/
