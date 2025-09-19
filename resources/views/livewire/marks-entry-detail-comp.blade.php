@@ -37,7 +37,12 @@
                             </span>|
                             <span class="font-medium">Teacher:</span>
                             <span class="inline-block px-2 py-0.5 rounded bg-green-100 text-green-800 text-semibold">
-                                {{-- {{ $ansscrDist->teacher ? $ansscrDist->teacher->name : 'Unknown' }} --}}
+                                @if(isset($ansscrDist))
+                                    {{ $ansscrDist->teacher ? $ansscrDist->teacher->name ?? 'No Name': 'No Teacher Assigned' }}
+                                @else 
+                                    {{ 'Answer Script is not alloted to any instructor, al all.' }}
+                                @endif
+
                             </span>
                         </p>
                     </div>
