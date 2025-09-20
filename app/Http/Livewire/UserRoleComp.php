@@ -393,7 +393,14 @@ class UserRoleComp extends Component
     public function assignTeacher($userId, $teacherId)
     {
         try {
+            // Convert to integers for consistency
+            $userId = (int)$userId;
+            $teacherId = (int)$teacherId;
+            
+            Log::info("AssignTeacher called with userId: {$userId}, teacherId: {$teacherId}");
+            
             $user = User::findOrFail($userId);
+            $teacher = Teacher::findOrFail($teacherId);
 
             // Privilege check: cannot manage users with higher/equal role
             if (Auth::check() && $user->role_id >= Auth::user()->role_id) {
@@ -401,37 +408,49 @@ class UserRoleComp extends Component
                 return;
             }
 
-            // Ensure teacher exists and is not assigned to any user
-            $teacher = Teacher::findOrFail($teacherId);
-            $teacherAlreadyLinked = (int)($teacher->user_id ?? 0) > 0;
-            $teacherUsedByAnotherUser = User::where('teacher_id', (int)$teacherId)->exists();
-            if ($teacherAlreadyLinked || $teacherUsedByAnotherUser) {
-                session()->flash('error', 'Selected teacher is already assigned to a user.');
+            // Check if teacher is already assigned to another user
+            if ($teacher->user_id > 0 && $teacher->user_id != $userId) {
+                $assignedUser = User::find($teacher->user_id);
+                $assignedUserName = $assignedUser ? $assignedUser->name : 'Unknown User';
+                session()->flash('error', "Selected teacher is already assigned to {$assignedUserName} (ID: {$teacher->user_id}).");
                 return;
             }
 
-            // If user already has a teacher, release the previous link
-            if ((int)($user->teacher_id ?? 0) > 0) {
-                $prev = Teacher::find($user->teacher_id);
-                if ($prev) {
-                    $prev->user_id = 0; // schema uses integer fields; 0 denotes no-link
-                    $prev->save();
+            // Check if another user has this teacher_id assigned
+            $existingUserWithTeacher = User::where('teacher_id', $teacherId)
+                ->where('id', '!=', $userId)
+                ->first();
+            
+            if ($existingUserWithTeacher) {
+                session()->flash('error', "Selected teacher is already assigned to {$existingUserWithTeacher->name} (User ID: {$existingUserWithTeacher->id}).");
+                return;
+            }
+
+            // If user already has a teacher, clear the previous assignment
+            if ($user->teacher_id > 0 && $user->teacher_id != $teacherId) {
+                $prevTeacher = Teacher::find($user->teacher_id);
+                if ($prevTeacher) {
+                    $prevTeacher->user_id = 0;
+                    $prevTeacher->save();
+                    Log::info("Cleared previous teacher assignment: Teacher ID {$prevTeacher->id}");
                 }
             }
 
-            // Link both sides
-            $user->teacher_id = (int)$teacherId;
+            // Update both sides of the relationship
+            $user->teacher_id = $teacherId;
             $user->save();
+            Log::info("Updated user {$userId} teacher_id to {$teacherId}");
 
-            Teacher::where('user_id', (int)$user->id)->update(['user_id' => 0]);
-
-            $teacher->user_id = (int)$user->id;
+            $teacher->user_id = $userId;
             $teacher->save();
+            Log::info("Updated teacher {$teacherId} user_id to {$userId}");
 
-            session()->flash('message', 'Teacher assigned to user successfully.');
+            session()->flash('message', "Teacher '{$teacher->name}' successfully assigned to user '{$user->name}'.");
             $this->loadUsers();
+            
         } catch (\Exception $e) {
             Log::error('Error assigning teacher: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             session()->flash('error', 'Error assigning teacher: ' . $e->getMessage());
         }
     }
@@ -537,25 +556,44 @@ class UserRoleComp extends Component
     }
 
     public function getAvailableTeachers(){
-
         try {
-            // Teachers that are not linked from either side
-            $inUseTeacherIds = User::where('teacher_id', '>', 0)->pluck('teacher_id')->filter()->values();
-            
-            // dd($inUseTeacherIds);
-
+            // Get teachers that are truly available (not properly assigned)
             $teachers = Teacher::query()
-                ->when($inUseTeacherIds->count() > 0, function ($q) use ($inUseTeacherIds) {
-                    $q->whereNotIn('id', $inUseTeacherIds);
+                ->where(function ($q) {
+                    // Either no user_id assigned or invalid assignment
+                    $q->where('user_id', '<=', 0)
+                      ->orWhereNull('user_id')
+                      // Or assigned to a user that doesn't reciprocate the relationship
+                      ->orWhereNotIn('user_id', function ($subQuery) {
+                          $subQuery->select('id')
+                              ->from('users')
+                              ->whereColumn('users.teacher_id', 'teachers.id');
+                      });
                 })
                 ->where(function ($q) {
-                    $q->where('user_id', '>', 0)->orWhere('user_id', 0);    //->orWhereNull('user_id');
+                    // Only active teachers or teachers without status field
+                    $q->where('status', 'active')
+                      ->orWhereNull('status')
+                      ->orWhere('status', '')
+                      ->orWhere('status', 'Active');
                 })
-                ->orderBy('id')
+                ->orderBy('name')
                 ->get();
 
-                // dd( $teachers);
-                return $teachers;
+            Log::info('Available teachers query result: ' . $teachers->count() . ' teachers found');
+            
+            // Additional filter: Remove teachers whose ID is already used in users table
+            $teachers = $teachers->filter(function($teacher) {
+                $userWithThisTeacher = User::where('teacher_id', $teacher->id)->first();
+                if ($userWithThisTeacher) {
+                    Log::info("Teacher {$teacher->id} ({$teacher->name}) is assigned to user {$userWithThisTeacher->id} ({$userWithThisTeacher->name})");
+                    return false;
+                }
+                return true;
+            });
+            
+            Log::info('Final available teachers count after filtering: ' . $teachers->count());
+            return $teachers;
         } catch (\Exception $e) {
             Log::error('Error loading available teachers: ' . $e->getMessage());
             return collect();
@@ -574,6 +612,69 @@ class UserRoleComp extends Component
     {
         $this->loadData();
         session()->flash('message', 'Data refreshed successfully!');
+    }
+    
+    /**
+     * Clean up inconsistent teacher-user relationships
+     */
+    public function cleanupTeacherAssignments()
+    {
+        try {
+            $fixed = 0;
+            
+            // Step 1: Find teachers with invalid user_id assignments
+            $teachersWithInvalidUsers = Teacher::whereNotIn('user_id', function($query) {
+                $query->select('id')->from('users')->where('id', '>', 0);
+            })->where('user_id', '>', 0)->get();
+            
+            foreach($teachersWithInvalidUsers as $teacher) {
+                $teacher->user_id = 0;
+                $teacher->save();
+                $fixed++;
+                Log::info("Cleared invalid user_id for teacher {$teacher->id} ({$teacher->name})");
+            }
+            
+            // Step 2: Find users with invalid teacher_id assignments
+            $usersWithInvalidTeachers = User::whereNotIn('teacher_id', function($query) {
+                $query->select('id')->from('teachers')->where('id', '>', 0);
+            })->where('teacher_id', '>', 0)->get();
+            
+            foreach($usersWithInvalidTeachers as $user) {
+                $user->teacher_id = 0;
+                $user->save();
+                $fixed++;
+                Log::info("Cleared invalid teacher_id for user {$user->id} ({$user->name})");
+            }
+            
+            // Step 3: Fix bidirectional inconsistencies
+            $users = User::where('teacher_id', '>', 0)->get();
+            foreach($users as $user) {
+                $teacher = Teacher::find($user->teacher_id);
+                if($teacher && $teacher->user_id != $user->id) {
+                    // Clear conflicts first
+                    if($teacher->user_id > 0) {
+                        $conflictUser = User::find($teacher->user_id);
+                        if($conflictUser && $conflictUser->id != $user->id) {
+                            $conflictUser->teacher_id = 0;
+                            $conflictUser->save();
+                            Log::info("Cleared conflicting assignment for user {$conflictUser->id}");
+                        }
+                    }
+                    
+                    $teacher->user_id = $user->id;
+                    $teacher->save();
+                    $fixed++;
+                    Log::info("Fixed bidirectional link: User {$user->id} <-> Teacher {$teacher->id}");
+                }
+            }
+            
+            session()->flash('message', "Cleanup completed! Fixed {$fixed} inconsistencies.");
+            $this->loadData();
+            
+        } catch (\Exception $e) {
+            Log::error('Error during cleanup: ' . $e->getMessage());
+            session()->flash('error', 'Error during cleanup: ' . $e->getMessage());
+        }
     }
 
     public function testRoleModal()

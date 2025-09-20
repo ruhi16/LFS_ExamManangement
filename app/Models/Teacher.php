@@ -35,7 +35,9 @@ class Teacher extends Model
 
     public function user()
     {
-        return $this->hasOne(User::class);
+        return $this->belongsTo(User::class, 'user_id', 'id');
+        // 'user_id' is the foreign key in the Teacher model
+        // 'id' is the primary key in the User model
     }
 
     // public function Myclassteachers()

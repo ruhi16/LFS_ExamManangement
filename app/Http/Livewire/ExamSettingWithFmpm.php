@@ -72,11 +72,13 @@ class ExamSettingWithFmpm extends Component
             ->orderBy('order_index')
             ->get();
 
-        // Get unique exam names from the exam details
+        // Get unique exam names from the exam details, sorted by ID
         $this->examNames = $this->examDetails->groupBy('exam_name_id')
             ->map(function ($group) {
                 return $group->first()->examName;
-            })->values();
+            })
+            ->sortBy('id')
+            ->values();
 
         // Get unique exam types from the exam details  
         $this->examTypes = $this->examDetails->groupBy('exam_type_id')

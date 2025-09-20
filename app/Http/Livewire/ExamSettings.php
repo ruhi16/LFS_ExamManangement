@@ -30,10 +30,10 @@ class ExamSettings extends Component
     public function mount()
     {
         $this->classes = Myclass::all();
-        $this->examNames = Exam01Name::orderBy('name')->get();
-        $this->examTypes = Exam02Type::orderBy('name')->get();
-        $this->examParts = Exam03Part::orderBy('name')->get();
-        $this->examModes = Exam04Mode::orderBy('name')->get();
+        $this->examNames = Exam01Name::orderBy('id')->get();
+        $this->examTypes = Exam02Type::orderBy('id')->get();
+        $this->examParts = Exam03Part::orderBy('id')->get();
+        $this->examModes = Exam04Mode::orderBy('id')->get();
     }
 
     public function selectClass($classId)

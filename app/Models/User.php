@@ -55,9 +55,9 @@ class User extends Authenticatable //implements MustVerifyEmail
 
     public function teacher()
     {
-        return $this->hasOne(Teacher::class, 'user_id', 'id');
-        // 'user_id' is the foreign key of the User model
-        // 'id' is the primary key of the Teacher model
+        return $this->belongsTo(Teacher::class, 'teacher_id', 'id');
+        // 'teacher_id' is the foreign key in the User model
+        // 'id' is the primary key in the Teacher model
     }
     public function role()
     {

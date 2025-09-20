@@ -60,6 +60,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Modular Component Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Feature flag to enable modular Livewire components for exam settings.
+    | Set to true to use the new modular architecture, false for legacy.
+    |
+    */
+
+    'use_modular_exam_setting' => env('USE_MODULAR_EXAM_SETTING', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

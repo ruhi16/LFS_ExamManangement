@@ -176,10 +176,29 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Test route for Exam Setting with FMPM component
-Route::get('/exam-setting-fmpm', App\Http\Livewire\ExamSettingWithFmpm::class)
+// Test route for Exam Setting with FMPM component (with feature flag)
+Route::get('/exam-setting-fmpm', function () {
+    // Feature flag for modular vs monolithic component
+    $useModularExamSetting = config('app.use_modular_exam_setting', true);
+    
+    if ($useModularExamSetting) {
+        return App\Http\Livewire\ExamSetting\ExamSettingContainer::class;
+    } else {
+        return App\Http\Livewire\ExamSettingWithFmpm::class;
+    }
+})
     ->middleware(['auth'])
     ->name('exam.setting.fmpm');
+
+// Test route for Modular Exam Setting (direct access)
+Route::get('/exam-setting-modular', App\Http\Livewire\ExamSetting\ExamSettingContainer::class)
+    ->middleware(['auth'])
+    ->name('exam.setting.modular');
+
+// Test route for Legacy Exam Setting (direct access)
+Route::get('/exam-setting-legacy', App\Http\Livewire\ExamSettingWithFmpm::class)
+    ->middleware(['auth'])
+    ->name('exam.setting.legacy');
 
 // Test route for Exam Setting (without auth for testing)
 Route::get('/test-exam-setting', function () {
@@ -332,3 +351,8 @@ Route::get('/test-dashboard-main', function () {
 Route::get('/test-index', function () {
     return view('test-index');
 })->name('test.index');
+
+// Test page for Modular Exam Setting Implementation
+Route::get('/test-modular-exam-setting', function () {
+    return view('test-modular-exam-setting');
+})->name('test.modular.exam.setting');

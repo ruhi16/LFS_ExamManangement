@@ -22,7 +22,7 @@
                                 class="h-32 w-32 rounded-full object-cover border-4 border-indigo-200 shadow-md" />
                         </div>
                         <h1 class="text-2xl font-extrabold text-indigo-800 mb-1 tracking-wide text-center">{{
-                            $user->teacher->name }}</h1>
+                            $user->teacher ? $user->teacher->name : 'No Teacher Assigned' }}</h1>
                         <p class="text-gray-500 mb-2 text-center">{{ $user->email }}</p>
                         {{-- <span
                             class="inline-block px-3 py-1 rounded-2xl text-xs font-bold
