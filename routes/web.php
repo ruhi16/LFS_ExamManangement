@@ -356,3 +356,8 @@ Route::get('/test-index', function () {
 Route::get('/test-modular-exam-setting', function () {
     return view('test-modular-exam-setting');
 })->name('test.modular.exam.setting');
+
+// Task Finalization & Lock Status route
+Route::get('/task-finalize-lock-status', App\Http\Livewire\TaskFinalizeLockStatusComp::class)
+    ->middleware(['auth'])
+    ->name('task.finalize.lock.status');
