@@ -332,6 +332,11 @@ Route::get('/test-user-role', function () {
     return view('test-user-role');
 })->name('test.user.role');
 
+// User Role Management route
+Route::get('/user-role-management', App\Http\Livewire\UserRoleComp::class)
+    ->middleware(['auth'])
+    ->name('user.role.management');
+
 // Simple Modal Test
 Route::get('/test-modal-simple', function () {
     return view('test-modal-simple');

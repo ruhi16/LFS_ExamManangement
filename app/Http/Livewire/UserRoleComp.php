@@ -4,542 +4,520 @@ namespace App\Http\Livewire;
 
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\Role;
 use App\Models\User;
+use App\Models\Role;
 use App\Models\Teacher;
-use Illuminate\Support\Facades\Log;
+use App\Models\Studentdb;
+use App\Models\Myclass;
+use App\Models\Section;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class UserRoleComp extends Component
 {
     use WithPagination;
 
+    // Filter properties
+    public $selectedRole = '';
+    public $searchTerm = '';
+    public $statusFilter = '';
+
     // Modal properties
-    public $showRoleModal = false;
     public $showUserModal = false;
-    public $editMode = false;
-    public $roleId = null;
+    public $showStudentModal = false;
     public $userId = null;
+    public $editMode = false;
 
-    // Role form properties
-    public $roleName;
-    public $roleDescription;
-
-    // User form properties
-    public $userName;
-    public $userEmail;
-    public $userPassword;
-    public $userRoleId;
-    public $userStatus = 'active';
+    // Form properties for role assignment
+    public $selectedUserRole = '';
+    public $selectedTeacher = '';
+    
+    // Student assignment properties
+    public $selectedClass = '';
+    public $selectedSection = '';
+    public $studentRoll = '';
+    public $studentDob = '';
+    public $selectedStudent = '';
 
     // Display properties
-    public $searchTerm = '';
-    public $selectedRole = '';
-    protected $roles;
     protected $users;
-
-    // Role hierarchy (higher number = higher privilege)
-    protected $roleHierarchy = [
-        5 => 'Super Admin',
-        4 => 'Admin',
-        3 => 'Office',
-        2 => 'Sub Admin',
-        1 => 'User'
-    ];
+    protected $roles;
+    protected $teachers;
+    protected $students;
+    protected $classes;
+    protected $sections;
 
     protected $rules = [
-        'roleName' => 'required|string|max:255|unique:roles,name',
-        'roleDescription' => 'nullable|string|max:500',
-        'userName' => 'required|string|max:255',
-        'userEmail' => 'required|email|unique:users,email',
-        'userPassword' => 'required|string|min:8',
-        'userRoleId' => 'required|exists:roles,id',
+        'selectedUserRole' => 'required|exists:roles,id',
+        'selectedTeacher' => 'required_if:selectedUserRole,2|nullable|exists:teachers,id',
+        'selectedClass' => 'required_if:selectedUserRole,1|exists:myclasses,id',
+        'selectedSection' => 'required_if:selectedUserRole,1|exists:sections,id', 
+        'studentRoll' => 'required_if:selectedUserRole,1|string|max:20',
+        'studentDob' => 'required_if:selectedUserRole,1|date',
     ];
 
     protected $messages = [
-        'roleName.required' => 'Role name is required.',
-        'roleName.unique' => 'This role name already exists.',
-        'userName.required' => 'User name is required.',
-        'userEmail.required' => 'Email is required.',
-        'userEmail.unique' => 'This email is already registered.',
-        'userPassword.required' => 'Password is required.',
-        'userPassword.min' => 'Password must be at least 8 characters.',
-        'userRoleId.required' => 'Please select a role.',
+        'selectedUserRole.required' => 'Please select a role for the user.',
+        'selectedTeacher.required_if' => 'Teacher assignment is required for Sub Admin role.',
+        'selectedTeacher.exists' => 'Please select a valid teacher.',
+        'selectedClass.required_if' => 'Class is required for student role.',
+        'selectedSection.required_if' => 'Section is required for student role.',
+        'studentRoll.required_if' => 'Roll number is required for student role.',
+        'studentDob.required_if' => 'Date of birth is required for student verification.',
     ];
 
     public function mount()
     {
-        $this->checkPermissions();
-        $this->loadData();
-    }
-
-    private function checkPermissions()
-    {
-        $currentUser = Auth::user();
-        if (!$currentUser) {
-            // For testing purposes, create a mock user with admin privileges
-            session()->flash('warning', 'No authenticated user found. Using test mode with admin privileges.');
-            return;
-        }
-
-        if ($currentUser->role_id < 3) {
-            session()->flash('error', 'Unauthorized access. Only Office level and above can manage user roles. Current role: ' . $currentUser->role_id);
-            // Don't abort for testing, just show warning
-            return;
-        }
-    }
-
-    public function loadData()
-    {
-        $this->loadRoles();
-        $this->loadUsers();
-    }
-
-    public function loadRoles()
-    {
         try {
-            $this->roles = Role::withCount('users')->orderBy('id', 'desc')->get();
-        } catch (\Exception $e) {
-            Log::error('Error loading roles: ' . $e->getMessage());
+            // Initialize collections first
+            $this->users = collect();
             $this->roles = collect();
+            $this->teachers = collect();
+            $this->classes = collect();
+            $this->sections = collect();
+            
+            // Load data
+            $this->loadRoles();
+            $this->loadUsers();
+            $this->loadTeachers();
+            $this->loadClasses();
+            $this->loadSections();
+            
+        } catch (\Exception $e) {
+            Log::error('Error in UserRoleComp mount: ' . $e->getMessage());
+            session()->flash('error', 'Error loading component: ' . $e->getMessage());
+
+            // Initialize empty collections as fallback
+            $this->users = User::paginate(15);
+            $this->roles = collect();
+            $this->teachers = collect();
+            $this->classes = collect();
+            $this->sections = collect();
         }
     }
 
     public function loadUsers()
     {
         try {
-            $query = User::with(['role', 'teacher']);
+            $query = User::with(['role', 'teacher', 'studentdb.myclass', 'studentdb.sections']);
 
-            if ($this->selectedRole) {
-                $query->where('role_id', $this->selectedRole);
-            }
-
-            if ($this->searchTerm) {
-                $searchTerm = trim($this->searchTerm);
-                if (!empty($searchTerm)) {
-                    $query->where(function ($q) use ($searchTerm) {
-                        $q->where('name', 'like', "%{$searchTerm}%")
-                            ->orWhere('email', 'like', "%{$searchTerm}%");
+            // Filter by role (include unassigned users when filter is set to 0)
+            if ($this->selectedRole !== '' && $this->selectedRole !== null) {
+                if ($this->selectedRole == '0') {
+                    // Filter for unassigned users
+                    $query->where(function($q) {
+                        $q->whereNull('role_id')
+                          ->orWhere('role_id', 0);
                     });
+                } else {
+                    $query->where('role_id', $this->selectedRole);
                 }
             }
 
-            $this->users = $query->orderBy('role_id', 'desc')
-                ->orderBy('name')
-                ->paginate(15);
+            // Search filter
+            if ($this->searchTerm) {
+                $query->where(function ($q) {
+                    $q->where('name', 'like', "%{$this->searchTerm}%")
+                      ->orWhere('email', 'like', "%{$this->searchTerm}%");
+                });
+            }
+
+            // Status filter
+            if ($this->statusFilter) {
+                $query->where('status', $this->statusFilter);
+            }
+
+            $this->users = $query->orderByRaw('CASE WHEN role_id IS NULL OR role_id = 0 THEN 1 ELSE 0 END')
+                                ->orderBy('role_id', 'desc')
+                                ->orderBy('name')
+                                ->paginate(15);
+                                
+            // Ensure we have a collection
+            if (!$this->users) {
+                $this->users = User::paginate(15);
+            }
         } catch (\Exception $e) {
             Log::error('Error loading users: ' . $e->getMessage());
             $this->users = User::paginate(15);
         }
     }
 
+    public function loadRoles()
+    {
+        try {
+            $this->roles = Role::orderBy('id', 'desc')->get();
+            
+            // Ensure we have a collection, even if empty
+            if (!$this->roles) {
+                $this->roles = collect();
+            }
+        } catch (\Exception $e) {
+            Log::error('Error loading roles: ' . $e->getMessage());
+            $this->roles = collect();
+        }
+    }
+
+    public function loadTeachers()
+    {
+        try {
+            $this->teachers = Teacher::where(function($query) {
+                                       $query->whereNull('user_id')
+                                             ->orWhere('user_id', 0);
+                                   })
+                                   ->orWhereHas('user', function($q) {
+                                       $q->where('id', $this->userId);
+                                   })
+                                   ->orderBy('name')
+                                   ->get();
+                                   
+            // Ensure we have a collection
+            if (!$this->teachers) {
+                $this->teachers = collect();
+            }
+        } catch (\Exception $e) {
+            Log::error('Error loading teachers: ' . $e->getMessage());
+            $this->teachers = collect();
+        }
+    }
+
+    public function getUnassignedTeachers()
+    {
+        try {
+            // Only show teachers without user_id assignment (as per memory specification)
+            return Teacher::where(function($query) {
+                            $query->whereNull('user_id')
+                                  ->orWhere('user_id', 0);
+                        })
+                         ->orderBy('name')
+                         ->get();
+        } catch (\Exception $e) {
+            Log::error('Error loading unassigned teachers: ' . $e->getMessage());
+            return collect();
+        }
+    }
+
+    public function loadClasses()
+    {
+        try {
+            $this->classes = Myclass::where('is_active', true)->orderBy('name')->get();
+            
+            // Ensure we have a collection
+            if (!$this->classes) {
+                $this->classes = collect();
+            }
+        } catch (\Exception $e) {
+            Log::error('Error loading classes: ' . $e->getMessage());
+            $this->classes = collect();
+        }
+    }
+
+    public function loadSections()
+    {
+        try {
+            $this->sections = Section::orderBy('name')->get();
+            
+            // Ensure we have a collection
+            if (!$this->sections) {
+                $this->sections = collect();
+            }
+        } catch (\Exception $e) {
+            Log::error('Error loading sections: ' . $e->getMessage());
+            $this->sections = collect();
+        }
+    }
+
     public function updatedSelectedRole()
     {
         $this->resetPage();
-        $this->loadUsers();
+        try {
+            $this->loadUsers();
+        } catch (\Exception $e) {
+            Log::error('Error updating selected role filter: ' . $e->getMessage());
+            session()->flash('error', 'Error applying role filter.');
+        }
     }
 
     public function updatedSearchTerm()
     {
         $this->resetPage();
-        $this->loadUsers();
-    }
-
-    // Role Management Methods
-    public function openRoleModal($roleId = null)
-    {
-        $this->resetRoleForm();
-
-        if ($roleId) {
-            $this->editMode = true;
-            $this->roleId = $roleId;
-            $this->loadRoleData($roleId);
-        } else {
-            $this->editMode = false;
-            $this->roleId = null;
-        }
-
-        $this->showRoleModal = true;
-    }
-
-    public function closeRoleModal()
-    {
-        $this->showRoleModal = false;
-        $this->resetRoleForm();
-    }
-
-    public function resetRoleForm()
-    {
-        $this->reset(['roleName', 'roleDescription']);
-        $this->editMode = false;
-        $this->roleId = null;
-    }
-
-    private function loadRoleData($roleId)
-    {
         try {
-            $role = Role::findOrFail($roleId);
-            $this->roleName = $role->name;
-            $this->roleDescription = $role->description;
+            $this->loadUsers();
         } catch (\Exception $e) {
-            Log::error('Error loading role data: ' . $e->getMessage());
-            session()->flash('error', 'Error loading role data.');
+            Log::error('Error updating search term: ' . $e->getMessage());
+            session()->flash('error', 'Error applying search filter.');
         }
     }
 
-    public function saveRole()
+    public function updatedStatusFilter()
     {
-        $this->validate([
-            'roleName' => $this->editMode ? 'required|string|max:255|unique:roles,name,' . $this->roleId : 'required|string|max:255|unique:roles,name',
-            'roleDescription' => 'nullable|string|max:500',
-        ]);
-
+        $this->resetPage();
         try {
-            $data = [
-                'name' => $this->roleName,
-                'description' => $this->roleDescription,
-            ];
-
-            if ($this->editMode && $this->roleId) {
-                Role::findOrFail($this->roleId)->update($data);
-                session()->flash('message', 'Role updated successfully!');
-            } else {
-                Role::create($data);
-                session()->flash('message', 'Role created successfully!');
-            }
-
-            $this->loadRoles();
-            $this->closeRoleModal();
+            $this->loadUsers();
         } catch (\Exception $e) {
-            Log::error('Error saving role: ' . $e->getMessage());
-            session()->flash('error', 'Error saving role: ' . $e->getMessage());
+            Log::error('Error updating status filter: ' . $e->getMessage());
+            session()->flash('error', 'Error applying status filter.');
         }
     }
 
-    public function deleteRole($roleId)
+    public function openUserModal($userId)
     {
-        try {
-            $role = Role::findOrFail($roleId);
-
-            // Check if role has users
-            if ($role->users()->count() > 0) {
-                session()->flash('error', 'Cannot delete role with assigned users. Please reassign users first.');
-                return;
-            }
-
-            $role->delete();
-            session()->flash('message', 'Role deleted successfully!');
-            $this->loadRoles();
-        } catch (\Exception $e) {
-            Log::error('Error deleting role: ' . $e->getMessage());
-            session()->flash('error', 'Error deleting role: ' . $e->getMessage());
+        $this->resetForm();
+        $this->userId = $userId;
+        $this->editMode = true;
+        
+        $user = User::find($userId);
+        if ($user) {
+            $this->selectedUserRole = $user->role_id;
+            $this->selectedTeacher = $user->teacher_id;
         }
-    }
-
-    // User Management Methods
-    public function openUserModal($userId = null)
-    {
-        $this->resetUserForm();
-
-        if ($userId) {
-            $this->editMode = true;
-            $this->userId = $userId;
-            $this->loadUserData($userId);
-        } else {
-            $this->editMode = false;
-            $this->userId = null;
-        }
-
+        
+        $this->loadTeachers();
         $this->showUserModal = true;
     }
 
     public function closeUserModal()
     {
         $this->showUserModal = false;
-        $this->resetUserForm();
+        $this->resetForm();
     }
 
-    public function resetUserForm()
+    public function verifyStudent()
     {
-        $this->reset(['userName', 'userEmail', 'userPassword', 'userRoleId']);
-        $this->userStatus = 'active';
-        $this->editMode = false;
-        $this->userId = null;
-    }
-
-    private function loadUserData($userId)
-    {
-        try {
-            $user = User::findOrFail($userId);
-            $this->userName = $user->name;
-            $this->userEmail = $user->email;
-            $this->userRoleId = $user->role_id;
-            $this->userStatus = $user->status ?? 'active';
-        } catch (\Exception $e) {
-            Log::error('Error loading user data: ' . $e->getMessage());
-            session()->flash('error', 'Error loading user data.');
-        }
-    }
-
-    public function saveUser()
-    {
-        $rules = [
-            'userName' => 'required|string|max:255',
-            'userRoleId' => 'required|exists:roles,id',
-        ];
-
-        if ($this->editMode) {
-            $rules['userEmail'] = 'required|email|unique:users,email,' . $this->userId;
-            if (!empty($this->userPassword)) {
-                $rules['userPassword'] = 'string|min:8';
-            }
-        } else {
-            $rules['userEmail'] = 'required|email|unique:users,email';
-            $rules['userPassword'] = 'required|string|min:8';
-        }
-
-        $this->validate($rules);
-
-        // Check if current user can assign this role
-        if (!$this->canAssignRole($this->userRoleId)) {
-            session()->flash('error', 'You cannot assign a role higher than or equal to your own.');
-            return;
-        }
+        $this->validate([
+            'selectedClass' => 'required',
+            'selectedSection' => 'required',
+            'studentRoll' => 'required',
+            'studentDob' => 'required|date'
+        ]);
 
         try {
-            $data = [
-                'name' => $this->userName,
-                'email' => $this->userEmail,
-                'role_id' => $this->userRoleId,
-                'status' => $this->userStatus,
-            ];
+            $student = Studentdb::where('stclass_id', $this->selectedClass)
+                              ->where('stsection_id', $this->selectedSection)
+                              ->where('roll', $this->studentRoll)
+                              ->where('dob', $this->studentDob)
+                              ->first();
 
-            if (!empty($this->userPassword)) {
-                $data['password'] = Hash::make($this->userPassword);
-            }
-
-            if ($this->editMode && $this->userId) {
-                User::findOrFail($this->userId)->update($data);
-                session()->flash('message', 'User updated successfully!');
+            if ($student) {
+                $this->selectedStudent = $student->id;
+                session()->flash('student_verified', 'Student verified successfully!');
             } else {
-                User::create($data);
-                session()->flash('message', 'User created successfully!');
+                session()->flash('student_error', 'No student found with the provided details.');
+                $this->selectedStudent = '';
             }
-
-            $this->loadUsers();
-            $this->closeUserModal();
         } catch (\Exception $e) {
-            Log::error('Error saving user: ' . $e->getMessage());
-            session()->flash('error', 'Error saving user: ' . $e->getMessage());
+            Log::error('Error verifying student: ' . $e->getMessage());
+            session()->flash('student_error', 'Error verifying student.');
         }
     }
 
-    public function changeUserRole($userId, $newRoleId)
+    public function assignRole()
     {
-        if (!$this->canAssignRole($newRoleId)) {
-            session()->flash('error', 'You cannot assign a role higher than or equal to your own.');
+        // Check if current user can assign this role
+        if (!$this->canAssignRole($this->selectedUserRole)) {
+            session()->flash('error', 'You do not have permission to assign this role.');
             return;
         }
 
+        $this->validate();
+
         try {
-            $user = User::findOrFail($userId);
-            $user->update(['role_id' => $newRoleId]);
-
-            session()->flash('message', 'User role updated successfully!');
-            $this->loadUsers();
-        } catch (\Exception $e) {
-            Log::error('Error changing user role: ' . $e->getMessage());
-            session()->flash('error', 'Error changing user role: ' . $e->getMessage());
-        }
-    }
-
-    public function suspendUser($userId)
-    {
-        try {
-            $user = User::findOrFail($userId);
-
-            // Cannot suspend users with higher or equal privilege
-            if ($user->role_id >= Auth::user()->role_id) {
-                session()->flash('error', 'You cannot suspend users with higher or equal privileges.');
+            $user = User::find($this->userId);
+            if (!$user) {
+                session()->flash('error', 'User not found.');
                 return;
             }
 
-            $user->update(['status' => 'suspended']);
-            session()->flash('message', 'User suspended successfully!');
-            $this->loadUsers();
-        } catch (\Exception $e) {
-            Log::error('Error suspending user: ' . $e->getMessage());
-            session()->flash('error', 'Error suspending user: ' . $e->getMessage());
-        }
-    }
+            // Update role
+            $user->role_id = $this->selectedUserRole;
 
-    public function activateUser($userId)
-    {
-        try {
-            $user = User::findOrFail($userId);
-            $user->update(['status' => 'active']);
-            session()->flash('message', 'User activated successfully!');
-            $this->loadUsers();
-        } catch (\Exception $e) {
-            Log::error('Error activating user: ' . $e->getMessage());
-            session()->flash('error', 'Error activating user: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Assign a teacher to a user and update the reverse mapping on Teacher
-     */
-    public function assignTeacher($userId, $teacherId)
-    {
-        try {
-            // Convert to integers for consistency
-            $userId = (int)$userId;
-            $teacherId = (int)$teacherId;
-            
-            Log::info("AssignTeacher called with userId: {$userId}, teacherId: {$teacherId}");
-            
-            $user = User::findOrFail($userId);
-            $teacher = Teacher::findOrFail($teacherId);
-
-            // Privilege check: cannot manage users with higher/equal role
-            if (Auth::check() && $user->role_id >= Auth::user()->role_id) {
-                session()->flash('error', 'You cannot modify users with higher or equal privileges.');
-                return;
-            }
-
-            // Check if teacher is already assigned to another user
-            if ($teacher->user_id > 0 && $teacher->user_id != $userId) {
-                $assignedUser = User::find($teacher->user_id);
-                $assignedUserName = $assignedUser ? $assignedUser->name : 'Unknown User';
-                session()->flash('error', "Selected teacher is already assigned to {$assignedUserName} (ID: {$teacher->user_id}).");
-                return;
-            }
-
-            // Check if another user has this teacher_id assigned
-            $existingUserWithTeacher = User::where('teacher_id', $teacherId)
-                ->where('id', '!=', $userId)
-                ->first();
-            
-            if ($existingUserWithTeacher) {
-                session()->flash('error', "Selected teacher is already assigned to {$existingUserWithTeacher->name} (User ID: {$existingUserWithTeacher->id}).");
-                return;
-            }
-
-            // If user already has a teacher, clear the previous assignment
-            if ($user->teacher_id > 0 && $user->teacher_id != $teacherId) {
-                $prevTeacher = Teacher::find($user->teacher_id);
-                if ($prevTeacher) {
-                    $prevTeacher->user_id = 0;
-                    $prevTeacher->save();
-                    Log::info("Cleared previous teacher assignment: Teacher ID {$prevTeacher->id}");
+            // Handle teacher assignment for non-student roles
+            if ($this->selectedTeacher && $this->selectedUserRole != 1) {
+                $teacher = Teacher::find($this->selectedTeacher);
+                if ($teacher && ($teacher->user_id == 0 || $teacher->user_id == null)) {
+                    $teacher->user_id = $user->id;
+                    $teacher->save();
+                    $user->teacher_id = $this->selectedTeacher;
                 }
             }
 
-            // Update both sides of the relationship
-            $user->teacher_id = $teacherId;
+            // Handle student assignment for User role
+            if ($this->selectedStudent && $this->selectedUserRole == 1) {
+                $user->studentdb_id = $this->selectedStudent;
+                // Clear teacher assignment if switching to student
+                if ($user->teacher_id) {
+                    $oldTeacher = Teacher::find($user->teacher_id);
+                    if ($oldTeacher) {
+                        $oldTeacher->user_id = 0;
+                        $oldTeacher->save();
+                    }
+                    $user->teacher_id = 0;
+                }
+            }
+
+            // Clear student assignment if switching from student to other role
+            if ($this->selectedUserRole != 1 && $user->studentdb_id) {
+                $user->studentdb_id = 0;
+            }
+
             $user->save();
-            Log::info("Updated user {$userId} teacher_id to {$teacherId}");
 
-            $teacher->user_id = $userId;
-            $teacher->save();
-            Log::info("Updated teacher {$teacherId} user_id to {$userId}");
-
-            session()->flash('message', "Teacher '{$teacher->name}' successfully assigned to user '{$user->name}'.");
+            session()->flash('message', 'Role assigned successfully!');
+            $this->closeUserModal();
             $this->loadUsers();
-            
+
         } catch (\Exception $e) {
-            Log::error('Error assigning teacher: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
-            session()->flash('error', 'Error assigning teacher: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Revoke teacher assignment from a user, clearing both sides
-     */
-    public function revokeTeacher($userId)
-    {
-        try {
-            $user = User::findOrFail($userId);
-
-            if (Auth::check() && $user->role_id >= Auth::user()->role_id) {
-                session()->flash('error', 'You cannot modify users with higher or equal privileges.');
-                return;
-            }
-
-            $teacherId = (int)($user->teacher_id ?? 0);
-            if ($teacherId > 0) {
-                $teacher = Teacher::find($teacherId);
-                if ($teacher) {
-                    $teacher->user_id = 0; // integer schema; use 0 for unassigned
-                    $teacher->save();
-                }
-                $user->teacher_id = 0; // integer schema; use 0 for unassigned
-                $user->save();
-            }
-
-            session()->flash('message', 'Teacher assignment revoked successfully.');
-            $this->loadUsers();
-        } catch (\Exception $e) {
-            Log::error('Error revoking teacher: ' . $e->getMessage());
-            session()->flash('error', 'Error revoking teacher: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Delete a user safely. It will revoke teacher link first if present.
-     */
-    public function deleteUser($userId)
-    {
-        try {
-            if (Auth::check() && (int)$userId === (int)Auth::id()) {
-                session()->flash('error', 'You cannot delete your own account.');
-                return;
-            }
-
-            $user = User::findOrFail($userId);
-
-            if (Auth::check() && $user->role_id >= Auth::user()->role_id) {
-                session()->flash('error', 'You cannot delete users with higher or equal privileges.');
-                return;
-            }
-
-            // Revoke teacher if any
-            if ((int)($user->teacher_id ?? 0) > 0) {
-                $teacher = Teacher::find($user->teacher_id);
-                if ($teacher) {
-                    $teacher->user_id = 0;
-                    $teacher->save();
-                }
-            }
-
-            $user->delete();
-            session()->flash('message', 'User deleted successfully.');
-            $this->loadUsers();
-        } catch (\Exception $e) {
-            Log::error('Error deleting user: ' . $e->getMessage());
-            session()->flash('error', 'Error deleting user: ' . $e->getMessage());
+            Log::error('Error assigning role: ' . $e->getMessage());
+            session()->flash('error', 'Error assigning role: ' . $e->getMessage());
         }
     }
 
     private function canAssignRole($roleId)
     {
-        $currentUserRole = Auth::user()->role_id;
-        return $roleId < $currentUserRole;
+        $currentUser = Auth::user();
+        $currentUserRole = $currentUser->role_id;
+
+        // Super Admin (5) can assign any role
+        if ($currentUserRole == 5) {
+            return true;
+        }
+
+        // Admin (4) can assign roles 1, 2, 3
+        if ($currentUserRole == 4 && in_array($roleId, [1, 2, 3])) {
+            return true;
+        }
+
+        // Office (3) can assign roles 1, 2
+        if ($currentUserRole == 3 && in_array($roleId, [1, 2])) {
+            return true;
+        }
+
+        // Sub Admin (2) can assign role 1 only
+        if ($currentUserRole == 2 && $roleId == 1) {
+            return true;
+        }
+
+        return false;
     }
 
     public function getAvailableRoles()
     {
-        $currentUserRole = Auth::user() ? Auth::user()->role_id : 5; // Default to admin for testing
-        return $this->roles->filter(function ($role) use ($currentUserRole) {
-            return $role->id < $currentUserRole;
-        });
+        // Ensure roles are loaded
+        if (!$this->roles || $this->roles->isEmpty()) {
+            $this->loadRoles();
+        }
+        
+        $currentUser = Auth::user();
+        $currentUserRole = $currentUser->role_id;
+
+        $availableRoles = collect();
+
+        // Super Admin can assign any role
+        if ($currentUserRole == 5) {
+            $availableRoles = $this->roles;
+        }
+        // Admin can assign roles 1, 2, 3
+        elseif ($currentUserRole == 4) {
+            $availableRoles = $this->roles->whereIn('id', [1, 2, 3]);
+        }
+        // Office can assign roles 1, 2
+        elseif ($currentUserRole == 3) {
+            $availableRoles = $this->roles->whereIn('id', [1, 2]);
+        }
+        // Sub Admin can assign role 1 only
+        elseif ($currentUserRole == 2) {
+            $availableRoles = $this->roles->where('id', 1);
+        }
+
+        return $availableRoles;
     }
 
-    public function getRoleColor($roleId)
+    public function refreshData()
     {
-        switch ($roleId) {
+        $this->loadUsers();
+        $this->loadRoles();
+        $this->loadTeachers();
+        $this->loadClasses();
+        $this->loadSections();
+        session()->flash('message', 'Data refreshed successfully!');
+    }
+
+    public function clearFilters()
+    {
+        $this->selectedRole = '';
+        $this->searchTerm = '';
+        $this->statusFilter = '';
+        $this->resetPage();
+        $this->loadUsers();
+    }
+
+    private function resetForm()
+    {
+        $this->userId = null;
+        $this->editMode = false;
+        $this->selectedUserRole = '';
+        $this->selectedTeacher = '';
+        $this->selectedClass = '';
+        $this->selectedSection = '';
+        $this->studentRoll = '';
+        $this->studentDob = '';
+        $this->selectedStudent = '';
+    }
+
+    public function canUserManageRole($roleId)
+    {
+        $currentUser = Auth::user();
+        $currentUserRole = $currentUser->role_id;
+
+        // Allow de-assignment of unassigned users (role_id = 0 or null)
+        if (!$roleId || $roleId == 0) {
+            return true;
+        }
+
+        // Super Admin (5) can manage all roles except their own level
+        if ($currentUserRole == 5) {
+            return $roleId < 5; // Can manage roles 1, 2, 3, 4
+        }
+
+        // Admin (4) can manage roles 1, 2, 3
+        if ($currentUserRole == 4) {
+            return in_array($roleId, [1, 2, 3]);
+        }
+
+        // Office (3) can manage roles 1, 2
+        if ($currentUserRole == 3) {
+            return in_array($roleId, [1, 2]);
+        }
+
+        // Sub Admin (2) can manage role 1 only
+        if ($currentUserRole == 2) {
+            return $roleId == 1;
+        }
+
+        return false;
+    }
+
+    public function getRoleSectionColor($roleId)
+    {
+        switch($roleId) {
+            case 5:
+                return ['border' => 'border-purple-500', 'bg' => 'bg-purple-50'];
+            case 4:
+                return ['border' => 'border-red-500', 'bg' => 'bg-red-50'];
+            case 3:
+                return ['border' => 'border-blue-500', 'bg' => 'bg-blue-50'];
+            case 2:
+                return ['border' => 'border-green-500', 'bg' => 'bg-green-50'];
+            case 1:
+                return ['border' => 'border-gray-500', 'bg' => 'bg-gray-50'];
+            default:
+                return ['border' => 'border-gray-500', 'bg' => 'bg-gray-50'];
+        }
+    }
+
+    public function getRoleColorClass($roleId)
+    {
+        switch($roleId) {
             case 5:
                 return 'bg-purple-100 text-purple-800';
             case 4:
@@ -555,164 +533,194 @@ class UserRoleComp extends Component
         }
     }
 
-    public function getAvailableTeachers(){
-        try {
-            // Get teachers that are truly available (not properly assigned)
-            $teachers = Teacher::query()
-                ->where(function ($q) {
-                    // Either no user_id assigned or invalid assignment
-                    $q->where('user_id', '<=', 0)
-                      ->orWhereNull('user_id')
-                      // Or assigned to a user that doesn't reciprocate the relationship
-                      ->orWhereNotIn('user_id', function ($subQuery) {
-                          $subQuery->select('id')
-                              ->from('users')
-                              ->whereColumn('users.teacher_id', 'teachers.id');
-                      });
-                })
-                ->where(function ($q) {
-                    // Only active teachers or teachers without status field
-                    $q->where('status', 'active')
-                      ->orWhereNull('status')
-                      ->orWhere('status', '')
-                      ->orWhere('status', 'Active');
-                })
-                ->orderBy('name')
-                ->get();
-
-            Log::info('Available teachers query result: ' . $teachers->count() . ' teachers found');
-            
-            // Additional filter: Remove teachers whose ID is already used in users table
-            $teachers = $teachers->filter(function($teacher) {
-                $userWithThisTeacher = User::where('teacher_id', $teacher->id)->first();
-                if ($userWithThisTeacher) {
-                    Log::info("Teacher {$teacher->id} ({$teacher->name}) is assigned to user {$userWithThisTeacher->id} ({$userWithThisTeacher->name})");
-                    return false;
-                }
-                return true;
-            });
-            
-            Log::info('Final available teachers count after filtering: ' . $teachers->count());
-            return $teachers;
-        } catch (\Exception $e) {
-            Log::error('Error loading available teachers: ' . $e->getMessage());
-            return collect();
-        }
-    }
-
-    public function clearFilters()
-    {
-        $this->selectedRole = '';
-        $this->searchTerm = '';
-        $this->resetPage();
-        $this->loadUsers();
-    }
-
-    public function refreshData()
-    {
-        $this->loadData();
-        session()->flash('message', 'Data refreshed successfully!');
-    }
-    
-    /**
-     * Clean up inconsistent teacher-user relationships
-     */
-    public function cleanupTeacherAssignments()
-    {
-        try {
-            $fixed = 0;
-            
-            // Step 1: Find teachers with invalid user_id assignments
-            $teachersWithInvalidUsers = Teacher::whereNotIn('user_id', function($query) {
-                $query->select('id')->from('users')->where('id', '>', 0);
-            })->where('user_id', '>', 0)->get();
-            
-            foreach($teachersWithInvalidUsers as $teacher) {
-                $teacher->user_id = 0;
-                $teacher->save();
-                $fixed++;
-                Log::info("Cleared invalid user_id for teacher {$teacher->id} ({$teacher->name})");
-            }
-            
-            // Step 2: Find users with invalid teacher_id assignments
-            $usersWithInvalidTeachers = User::whereNotIn('teacher_id', function($query) {
-                $query->select('id')->from('teachers')->where('id', '>', 0);
-            })->where('teacher_id', '>', 0)->get();
-            
-            foreach($usersWithInvalidTeachers as $user) {
-                $user->teacher_id = 0;
-                $user->save();
-                $fixed++;
-                Log::info("Cleared invalid teacher_id for user {$user->id} ({$user->name})");
-            }
-            
-            // Step 3: Fix bidirectional inconsistencies
-            $users = User::where('teacher_id', '>', 0)->get();
-            foreach($users as $user) {
-                $teacher = Teacher::find($user->teacher_id);
-                if($teacher && $teacher->user_id != $user->id) {
-                    // Clear conflicts first
-                    if($teacher->user_id > 0) {
-                        $conflictUser = User::find($teacher->user_id);
-                        if($conflictUser && $conflictUser->id != $user->id) {
-                            $conflictUser->teacher_id = 0;
-                            $conflictUser->save();
-                            Log::info("Cleared conflicting assignment for user {$conflictUser->id}");
-                        }
-                    }
-                    
-                    $teacher->user_id = $user->id;
-                    $teacher->save();
-                    $fixed++;
-                    Log::info("Fixed bidirectional link: User {$user->id} <-> Teacher {$teacher->id}");
-                }
-            }
-            
-            session()->flash('message', "Cleanup completed! Fixed {$fixed} inconsistencies.");
-            $this->loadData();
-            
-        } catch (\Exception $e) {
-            Log::error('Error during cleanup: ' . $e->getMessage());
-            session()->flash('error', 'Error during cleanup: ' . $e->getMessage());
-        }
-    }
-
-    public function testRoleModal()
-    {
-        $this->showRoleModal = true;
-        session()->flash('message', 'Test Role Modal - showRoleModal is now: ' . ($this->showRoleModal ? 'TRUE' : 'FALSE'));
-    }
-
-    public function testUserModal()
-    {
-        $this->showUserModal = true;
-        session()->flash('message', 'Test User Modal - showUserModal is now: ' . ($this->showUserModal ? 'TRUE' : 'FALSE'));
-    }
-
-    public $showTestModal = false;
-
-    public function testBasicModal()
-    {
-        $this->showTestModal = true;
-        session()->flash('message', 'Basic Test Modal - showTestModal is now: ' . ($this->showTestModal ? 'TRUE' : 'FALSE'));
-    }
-
     public function render()
     {
-        // Ensure data is loaded
-        if (!$this->roles) {
-            $this->loadRoles();
-        }
+        // Ensure all properties are initialized
         if (!$this->users) {
             $this->loadUsers();
         }
+        if (!$this->roles) {
+            $this->loadRoles();
+        }
+        if (!$this->teachers) {
+            $this->loadTeachers();
+        }
+        if (!$this->classes) {
+            $this->loadClasses();
+        }
+        if (!$this->sections) {
+            $this->loadSections();
+        }
 
         return view('livewire.user-role-comp', [
+            'users' => $this->users ?? User::paginate(15),
             'roles' => $this->roles ?? collect(),
-            'users' => $this->users ?? collect(),
             'availableRoles' => $this->getAvailableRoles(),
-            'availableTeachers' => $this->getAvailableTeachers(),
-            'currentUserRole' => Auth::user() ? Auth::user()->role_id : 5 // Default to admin for testing
+            'teachers' => $this->teachers ?? collect(),
+            'unassignedTeachers' => $this->getUnassignedTeachers(),
+            'classes' => $this->classes ?? collect(),
+            'sections' => $this->sections ?? collect()
         ]);
+    }
+
+    public function suspendUser($userId)
+    {
+        try {
+            $user = User::find($userId);
+            if (!$user) {
+                session()->flash('error', 'User not found.');
+                return;
+            }
+
+            // Check if current user can manage this user's role
+            if (!$this->canUserManageRole($user->role_id)) {
+                session()->flash('error', 'You do not have permission to suspend this user.');
+                return;
+            }
+
+            $user->status = 'suspended';
+            $user->save();
+
+            session()->flash('message', 'User suspended successfully!');
+            $this->loadUsers();
+
+        } catch (\Exception $e) {
+            Log::error('Error suspending user: ' . $e->getMessage());
+            session()->flash('error', 'Error suspending user.');
+        }
+    }
+
+    public function reactivateUser($userId)
+    {
+        try {
+            $user = User::find($userId);
+            if (!$user) {
+                session()->flash('error', 'User not found.');
+                return;
+            }
+
+            // Check if current user can manage this user's role
+            if (!$this->canUserManageRole($user->role_id)) {
+                session()->flash('error', 'You do not have permission to reactivate this user.');
+                return;
+            }
+
+            $user->status = 'active';
+            $user->save();
+
+            session()->flash('message', 'User reactivated successfully!');
+            $this->loadUsers();
+
+        } catch (\Exception $e) {
+            Log::error('Error reactivating user: ' . $e->getMessage());
+            session()->flash('error', 'Error reactivating user.');
+        }
+    }
+
+    public function deAssignUser($userId)
+    {
+        try {
+            $user = User::find($userId);
+            if (!$user) {
+                session()->flash('error', 'User not found.');
+                return;
+            }
+
+            // Check if current user can manage this user's role
+            // Skip permission check if user is already unassigned (role_id = 0 or null)
+            if ($user->role_id && $user->role_id > 0 && !$this->canUserManageRole($user->role_id)) {
+                session()->flash('error', 'You do not have permission to de-assign this user.');
+                return;
+            }
+
+            // Clear teacher assignment if exists and update teacher record
+            if ($user->teacher_id) {
+                $teacher = Teacher::find($user->teacher_id);
+                if ($teacher) {
+                    $teacher->user_id = 0;
+                    $teacher->save();
+                    Log::info('Cleared teacher assignment for teacher ID: ' . $teacher->id);
+                }
+            }
+
+            // Store original values for logging
+            $originalRole = $user->role_id;
+            $originalTeacher = $user->teacher_id;
+            $originalStudent = $user->studentdb_id;
+
+            // Reset all user assignments
+            $user->role_id = 0;
+            $user->teacher_id = 0;
+            $user->studentdb_id = 0;
+            $user->status = 'inactive';
+            
+            // Use fill and save for better handling
+            $user->fill([
+                'role_id' => 0,
+                'teacher_id' => 0,
+                'studentdb_id' => 0,
+                'status' => 'inactive'
+            ]);
+            
+            $saveResult = $user->save();
+            
+            if (!$saveResult) {
+                throw new \Exception('Failed to save user changes');
+            }
+
+            Log::info('User de-assigned successfully', [
+                'user_id' => $userId,
+                'original_role' => $originalRole,
+                'original_teacher' => $originalTeacher,
+                'original_student' => $originalStudent
+            ]);
+
+            session()->flash('message', 'User de-assigned successfully! All role and assignment data cleared.');
+            $this->loadUsers();
+
+        } catch (\Exception $e) {
+            Log::error('Error de-assigning user: ' . $e->getMessage(), [
+                'user_id' => $userId,
+                'trace' => $e->getTraceAsString()
+            ]);
+            session()->flash('error', 'Error de-assigning user: ' . $e->getMessage());
+        }
+    }
+
+    public function testDeAssign($userId)
+    {
+        // Debug method to test de-assignment
+        try {
+            $user = User::find($userId);
+            $currentUser = Auth::user();
+            
+            if (!$user) {
+                session()->flash('error', 'User not found for testing.');
+                return;
+            }
+            
+            $debugInfo = [
+                'user_id' => $userId,
+                'user_name' => $user->name,
+                'user_role_id' => $user->role_id,
+                'user_teacher_id' => $user->teacher_id,
+                'user_studentdb_id' => $user->studentdb_id,
+                'user_status' => $user->status,
+                'current_user_role' => $currentUser->role_id,
+                'can_manage' => $this->canUserManageRole($user->role_id)
+            ];
+            
+            Log::info('De-assignment debug info', $debugInfo);
+            
+            // Try a simple update to test database connection
+            $user->updated_at = now();
+            $updateResult = $user->save();
+            
+            session()->flash('message', 'Debug completed. Can manage: ' . ($debugInfo['can_manage'] ? 'YES' : 'NO') . '. Update test: ' . ($updateResult ? 'SUCCESS' : 'FAILED'));
+            
+        } catch (\Exception $e) {
+            Log::error('Debug test failed: ' . $e->getMessage());
+            session()->flash('error', 'Debug test failed: ' . $e->getMessage());
+        }
     }
 }
