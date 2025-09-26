@@ -164,14 +164,14 @@ class Home extends Component
                     'description' =>
                         'Manage exam modes and their configurations.',
                 ],
-                'exam-config' => [
-                    'label' => 'Exam Configuration',
-                    'icon' =>
-                        'M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2H9z M9 5a2 2 0 012-2h2a2 2 0 012 2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
-                    'component' => 'class-exam-subject-comp',
-                    'description' =>
-                        'Configure which subjects are available for each class, exam, and exam type combination.',
-                ],
+                // 'exam-config' => [
+                //     'label' => 'Exam Configuration',
+                //     'icon' =>
+                //         'M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2H9z M9 5a2 2 0 012-2h2a2 2 0 012 2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
+                //     'component' => 'class-exam-subject-comp',
+                //     'description' =>
+                //         'Configure which subjects are available for each class, exam, and exam type combination.',
+                // ],
                 'class-exam-subject' => [
                     'label' => 'Class Exam-Subject',
                     'icon' =>
@@ -187,21 +187,21 @@ class Home extends Component
                     'description' =>
                         'Configure exam settings for classes and subjects.',
                 ],
-                'exam-settings-view' => [
-                    'label' => 'Exam Settings View',
-                    'icon' =>
-                        'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z',
-                    'component' => 'exam-settings-view',
-                    'description' => 'View and review exam configurations.',
-                ],
-                'exam-settings-fmpm' => [
-                    'label' => 'FM/PM & Time',
-                    'icon' =>
-                        'M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z',
-                    'component' => 'exam-settings-fmpm-comp',
-                    'description' =>
-                        'Configure full marks, pass marks, and time allocation for exams.',
-                ],
+                // 'exam-settings-view' => [
+                //     'label' => 'Exam Settings View',
+                //     'icon' =>
+                //         'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z',
+                //     'component' => 'exam-settings-view',
+                //     'description' => 'View and review exam configurations.',
+                // ],
+                // 'exam-settings-fmpm' => [
+                //     'label' => 'FM/PM & Time',
+                //     'icon' =>
+                //         'M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z',
+                //     'component' => 'exam-settings-fmpm-comp',
+                //     'description' =>
+                //         'Configure full marks, pass marks, and time allocation for exams.',
+                // ],
                 'exam-settings-fmpm2' => [
                     'label' => 'Exam FM/PM 2',
                     'icon' =>
@@ -227,6 +227,14 @@ class Home extends Component
             'description' =>
                 'Manage basic school entities like classes, sections, and their relationships.',
             'subitems' => [
+                'class-section-tasks' => [
+                    'label' => 'Class-Sec Tasks',
+                    'icon' =>
+                        'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z',
+                    'component' => 'class-section-tasks-comp',
+                    'description' =>
+                        'View and manage class-wise student information from student database.',
+                ],
                 'student-cr' => [
                     'label' => 'Student Records',
                     'icon' =>
@@ -235,14 +243,14 @@ class Home extends Component
                     'description' =>
                         'View and manage class-wise student information from student database.',
                 ],
-                'answer-script-distribution' => [
-                    'label' => 'Teacher Allocation',
-                    'icon' =>
-                        'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
-                    'component' => 'answer-script-distribution-comp',
-                    'description' =>
-                        'Assign teachers to evaluate answer scripts for different exam types and parts.',
-                ],
+                // 'answer-script-distribution' => [
+                //     'label' => 'Teacher Allocation',
+                //     'icon' =>
+                //         'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+                //     'component' => 'answer-script-distribution-comp',
+                //     'description' =>
+                //         'Assign teachers to evaluate answer scripts for different exam types and parts.',
+                // ],
 
                 'answer-script-distribution2' => [
                     'label' => 'Teacher Allocation 2',

@@ -25,6 +25,8 @@ class CreateSessionsTable extends Migration
             $table->integer('prev_session_id')->nullable();
             $table->integer('next_session_id')->nullable();
             $table->integer('school_id')->nullable();
+            $table->boolean('is_active')->default(false);
+            $table->boolean('is_finalized')->default(false);
             $table->timestamps();
         });
     }

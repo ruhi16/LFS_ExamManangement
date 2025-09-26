@@ -30,6 +30,8 @@ class CreateSchoolsTable extends Migration
             $table->string('estd')->nullable();
             $table->string('status')->nullable();
             $table->string('remark')->nullable();
+            $table->boolean('is_active')->default(false);
+            $table->boolean('is_finalized')->default(false);
             $table->timestamps();
         });
     }

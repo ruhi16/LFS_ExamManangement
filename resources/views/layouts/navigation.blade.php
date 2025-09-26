@@ -12,33 +12,43 @@
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" {{-- user="Hari" --}}>
-                        {{-- {{ __('Dashboard') }}       <!-- This is $slot in nav-link --> --}}
-                        <span class="font-bold text-blue-800">{{ __('LF School:') }}</span> {{ ' '.__(auth()->user()->role->name). ' Dashboard: ' . __('Role-').__(auth()->user()->role->description) }}
+                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" {{-- user="Hari"
+                        --}}>
+                        {{-- {{ __('Dashboard') }}
+                        <!-- This is $slot in nav-link --> --}}
+                        <span class="font-bold text-blue-800">{{ __('LF School:') }}</span>
+                        @if(auth()->user() && auth()->user()->role)
+                        {{ ' '.__(auth()->user()->role->name). ' Dashboard: ' .
+                        __('Role-').__(auth()->user()->role->description) }}
+                        @else
+                        {{ ' Guest Dashboard' }}
+                        @endif
                     </x-nav-link>
                 </div>
+                
             </div>
 
 
             <!-- Special Menu, center at navbar -->
             {{-- @if( Auth::user()->role_id == 3 || Auth::user()->role_id == 4 )
-                <div class="flex">
-                    <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                        <x-nav-link wire:navigate :href="route('home')" :active="request()->routeIs('home')" >
-                            {{ __('Home') }}    <!-- This part goes to slot in nav-link component -->
-                        </x-nav-link>                    
-                    </div>
-                    <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                        <x-nav-link wire:navigate :href="route('about')" :active="request()->routeIs('about')" >
-                            {{ __('About') }}
-                        </x-nav-link>
-                    </div>
-                    <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                        <x-nav-link wire:navigate :href="route('contact')" :active="request()->routeIs('contact')" >
-                            {{ __('Contact') }}
-                        </x-nav-link>
-                    </div>
+            <div class="flex">
+                <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                    <x-nav-link wire:navigate :href="route('home')" :active="request()->routeIs('home')">
+                        {{ __('Home') }}
+                        <!-- This part goes to slot in nav-link component -->
+                    </x-nav-link>
                 </div>
+                <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                    <x-nav-link wire:navigate :href="route('about')" :active="request()->routeIs('about')">
+                        {{ __('About') }}
+                    </x-nav-link>
+                </div>
+                <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                    <x-nav-link wire:navigate :href="route('contact')" :active="request()->routeIs('contact')">
+                        {{ __('Contact') }}
+                    </x-nav-link>
+                </div>
+            </div>
             @endif --}}
             <!-- Special Menu, center at navbar -->
 
@@ -50,7 +60,7 @@
                     <x-slot name="trigger">
                         <button
                             class="flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition duration-150 ease-in-out">
-                            <div>{{ Auth::user()->name ?? '' }}</div>
+                            <div>{{ Auth::user() ? Auth::user()->name : 'Guest' }}</div>
 
                             <div class="ml-1">
                                 <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg"
@@ -65,22 +75,32 @@
 
                     <x-slot name="content">
                         <!-- Authentication -->
-                        {{-- <x-dropdown-link :href="route('subadmin.changePassword')" --}}
-                                {{-- :href="route('logout')" --}}
-                                {{-- onclick="event.preventDefault(); this.closest('form').submit();" --}}
-                                
-                                {{-- {{ __('Settings') }} --}}
-                        {{-- </x-dropdown-link> --}}
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            
+                        {{-- <x-dropdown-link :href="route('subadmin.changePassword')" --}} {{-- :href="route('logout')"
+                            --}} {{-- onclick="event.preventDefault(); this.closest('form').submit();" --}} {{-- {{
+                            __('Settings') }} --}} {{-- </x-dropdown-link> --}}
 
-                            <x-dropdown-link :href="route('logout')"
-                                onclick="event.preventDefault();
-                                    this.closest('form').submit();">
-                                {{ __('Log Out') }}
+                            <!-- Test Links -->
+                            {{-- <x-dropdown-link :href="route('test.exam.setting.view')">
+                                {{ __('Exam Setting View') }}
                             </x-dropdown-link>
-                        </form>
+
+                            <x-dropdown-link :href="route('test.exam.detail')">
+                                {{ __('Exam Detail Management') }}
+                            </x-dropdown-link>
+
+                            <x-dropdown-link :href="route('test.marks.entry.management')">
+                                {{ __('Marks Entry Management') }}
+                            </x-dropdown-link> --}}
+
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+
+
+                                <x-dropdown-link :href="route('logout')" onclick="event.preventDefault();
+                                    this.closest('form').submit();">
+                                    {{ __('Log Out') }}
+                                </x-dropdown-link>
+                            </form>
                     </x-slot>
                 </x-dropdown>
             </div>
@@ -113,17 +133,16 @@
         <!-- Responsive Settings Options -->
         <div class="pt-4 pb-1 border-t border-gray-200">
             <div class="px-4">
-                <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
+                <div class="font-medium text-base text-gray-800">{{ Auth::user() ? Auth::user()->name : 'Guest' }}</div>
+                <div class="font-medium text-sm text-gray-500">{{ Auth::user() ? Auth::user()->email : '' }}</div>
             </div>
 
-           
+
             <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('dashboard')"
-                    {{-- onclick="event.preventDefault(); this.closest('form').submit();" --}}
-                    >
+                <x-responsive-nav-link :href="route('dashboard')" {{--
+                    onclick="event.preventDefault(); this.closest('form').submit();" --}}>
                     {{ __('Dashboard') }}
-                </x-responsive-nav-link>                
+                </x-responsive-nav-link>
             </div>
 
             <div class="mt-3 space-y-1">
@@ -131,8 +150,7 @@
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
 
-                    <x-responsive-nav-link :href="route('logout')"
-                        onclick="event.preventDefault();
+                    <x-responsive-nav-link :href="route('logout')" onclick="event.preventDefault();
                                         this.closest('form').submit();">
                         {{ __('Log Out') }}
                     </x-responsive-nav-link>

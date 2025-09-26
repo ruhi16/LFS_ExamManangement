@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 
 class Studentcr extends Model
 {
@@ -37,5 +38,12 @@ class Studentcr extends Model
         return $this->belongsTo(MyclassSection::class, 'myclass_section_id', 'id');
         // 'myclass_section_id' is the foreign key in the 'studentcrs' tablet
         // 'id' is the primary key in the 'myclasssections' table
+    }
+    
+    public function session()
+    {
+        return $this->belongsTo(Session::class, 'session_id', 'id');
+        // 'session_id' is the foreign key in the 'studentcrs' table
+        // 'id' is the primary key in the 'sessions' table
     }
 }

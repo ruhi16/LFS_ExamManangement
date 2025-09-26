@@ -29,6 +29,9 @@ class SessionComp extends Component
     public $prevSessionId = null;
     public $nextSessionId = null;
     public $schoolId = null;
+    public $showFinalizeModal = false;
+    public $finalizingId = null;
+    public $isDataFinalized = false;
 
     protected $rules = [
         'name' => 'required|string|max:255',
@@ -58,16 +61,17 @@ class SessionComp extends Component
     {
         $this->showWidget = $widget;
 
-
         $this->loadSessions();
         // $this->loadSchools();
         $this->loadActiveSession();
+        $this->checkGlobalFinalizationStatus();
     }
 
     protected function loadSessions()
     {
         $this->sessions = Session::with(['school', 'previousSession', 'nextSession'])
             ->withCount(['myclasses', 'sections', 'subjects', 'studentdbs', 'studentcrs', 'exams'])
+            ->orderBy('id', 'desc')
             ->orderBy('stdate', 'desc')
             ->get()
             ->map(function ($session) {
@@ -82,6 +86,7 @@ class SessionComp extends Component
                     'prev_session_id' => $session->prev_session_id,
                     'next_session_id' => $session->next_session_id,
                     'school_id' => $session->school_id,
+                    'is_finalized' => $session->is_finalized ?? false,
                     'school_name' => $session->school->name ?? 'No School',
                     'prev_session_name' => $session->previousSession->name ?? 'None',
                     'next_session_name' => $session->nextSession->name ?? 'None',
@@ -162,6 +167,11 @@ class SessionComp extends Component
 
     public function saveSession()
     {
+        if ($this->isDataFinalized) {
+            session()->flash('error', 'Cannot modify data - it has been finalized.');
+            return;
+        }
+
         $this->validate();
 
         try {
@@ -234,6 +244,11 @@ class SessionComp extends Component
 
     public function toggleStatus($id)
     {
+        if ($this->isDataFinalized) {
+            session()->flash('error', 'Cannot modify data - it has been finalized.');
+            return;
+        }
+
         try {
             $session = Session::findOrFail($id);
             $newStatus = $session->status === 'Active' ? 'Inactive' : 'Active';
@@ -272,6 +287,48 @@ class SessionComp extends Component
             Log::error('Error refreshing data: ' . $e->getMessage());
             session()->flash('error', 'Error refreshing data: ' . $e->getMessage());
         }
+    }
+
+    protected function checkGlobalFinalizationStatus()
+    {
+        $this->isDataFinalized = Session::where('is_finalized', true)->exists();
+    }
+
+    public function confirmFinalize($id)
+    {
+        $this->finalizingId = $id;
+        $this->showFinalizeModal = true;
+    }
+
+    public function finalizeData()
+    {
+        if ($this->finalizingId) {
+            $session = Session::findOrFail($this->finalizingId);
+            $session->update(['is_finalized' => true]);
+            
+            $this->checkGlobalFinalizationStatus();
+            session()->flash('message', 'Session finalized successfully! No further changes allowed.');
+        }
+        
+        $this->showFinalizeModal = false;
+        $this->finalizingId = null;
+        $this->loadSessions();
+    }
+
+    public function unfinalizeData($id)
+    {
+        $session = Session::findOrFail($id);
+        $session->update(['is_finalized' => false]);
+        
+        $this->checkGlobalFinalizationStatus();
+        session()->flash('message', 'Session unfinalized successfully! Changes are now allowed.');
+        $this->loadSessions();
+    }
+
+    public function cancelFinalize()
+    {
+        $this->showFinalizeModal = false;
+        $this->finalizingId = null;
     }
 
     public function render()

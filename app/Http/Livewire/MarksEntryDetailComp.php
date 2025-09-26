@@ -175,6 +175,8 @@ class MarksEntryDetailComp extends Component
                     $this->absentStudents[$student->id] = false;
                 }
             }
+            
+            Log::info('Loaded exam class subject with finalization status: ' . ($this->examClassSubject->is_finalized ? 'finalized' : 'not finalized'));
         } catch (\Exception $e) {
             Log::error('Error loading current marks: ' . $e->getMessage());
             foreach ($this->students as $student) {
@@ -250,6 +252,12 @@ class MarksEntryDetailComp extends Component
     public function updatedMarks($value, $studentId)
     {
         try {
+            // Check if marks are finalized
+            if ($this->examClassSubject && $this->examClassSubject->is_finalized) {
+                session()->flash('error', 'Cannot update marks: This exam has been finalized.');
+                return;
+            }
+
             if ($value !== '' && $value !== null && !$this->absentStudents[$studentId]) {
                 $this->saveMarkForStudent($studentId, $value);
                 session()->flash('message', 'Mark saved automatically for student ID: ' . $studentId);
@@ -264,6 +272,12 @@ class MarksEntryDetailComp extends Component
     public function updatedAbsentStudents($value, $studentId)
     {
         try {
+            // Check if marks are finalized
+            if ($this->examClassSubject && $this->examClassSubject->is_finalized) {
+                session()->flash('error', 'Cannot update absent status: This exam has been finalized.');
+                return;
+            }
+
             if ($value) {
                 // Student is marked as absent
                 $this->marks[$studentId] = '';
@@ -366,6 +380,12 @@ class MarksEntryDetailComp extends Component
     public function saveMarks()
     {
         try {
+            // Check if marks are finalized
+            if ($this->examClassSubject && $this->examClassSubject->is_finalized) {
+                session()->flash('error', 'Cannot save marks: This exam has been finalized.');
+                return;
+            }
+
             DB::beginTransaction();
 
             foreach ($this->marks as $studentId => $mark) {
@@ -386,6 +406,44 @@ class MarksEntryDetailComp extends Component
     public function goBack()
     {
         return redirect()->route('marks-entry');
+    }
+
+    public function finalizeMarks()
+    {
+        try {
+            if (!$this->examClassSubject) {
+                throw new \Exception('Exam class subject not found');
+            }
+
+            // Validate that all students have marks entered (or are marked absent)
+            $unmarkedStudents = [];
+            foreach ($this->students as $student) {
+                $isAbsent = isset($this->absentStudents[$student->id]) && $this->absentStudents[$student->id];
+                $hasMark = isset($this->marks[$student->id]) && $this->marks[$student->id] !== '' && $this->marks[$student->id] !== null;
+                
+                if (!$isAbsent && !$hasMark) {
+                    $unmarkedStudents[] = $student->studentdb->name ?? $student->name ?? "Student ID: {$student->id}";
+                }
+            }
+
+            if (!empty($unmarkedStudents)) {
+                $studentList = implode(', ', $unmarkedStudents);
+                throw new \Exception("Cannot finalize: The following students do not have marks entered: {$studentList}");
+            }
+
+            DB::beginTransaction();
+
+            // Set the is_finalized flag to true
+            $this->examClassSubject->update(['is_finalized' => true]);
+
+            DB::commit();
+
+            session()->flash('message', 'Marks have been finalized successfully. No further edits are allowed.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error finalizing marks: ' . $e->getMessage());
+            session()->flash('error', 'Error finalizing marks: ' . $e->getMessage());
+        }
     }
 
     public function render()

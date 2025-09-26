@@ -19,6 +19,9 @@ class SubjectTypeComp extends Component
     public $code = '';
     public $isActive = true;
     public $remarks = '';
+    public $showFinalizeModal = false;
+    public $finalizingId = null;
+    public $isDataFinalized = false;
 
     protected $rules = [
         'name' => 'required|string|max:255',
@@ -37,11 +40,13 @@ class SubjectTypeComp extends Component
     public function mount()
     {
         $this->loadSubjectTypes();
+        $this->checkGlobalFinalizationStatus();
     }
 
     protected function loadSubjectTypes()
     {
         $this->subjectTypes = SubjectType::withCount('subjects')
+            ->orderBy('id')
             ->orderBy('name')
             ->get()
             ->map(function ($subjectType) {
@@ -51,6 +56,7 @@ class SubjectTypeComp extends Component
                     'description' => $subjectType->description,
                     'code' => $subjectType->code,
                     'is_active' => $subjectType->is_active,
+                    'is_finalized' => $subjectType->is_finalized ?? false,
                     'remarks' => $subjectType->remarks,
                     'subjects_count' => $subjectType->subjects_count,
                     'created_at' => $subjectType->created_at,
@@ -92,6 +98,11 @@ class SubjectTypeComp extends Component
 
     public function saveSubjectType()
     {
+        if ($this->isDataFinalized) {
+            session()->flash('error', 'Cannot modify data - it has been finalized.');
+            return;
+        }
+
         $this->validate();
 
         try {
@@ -158,6 +169,11 @@ class SubjectTypeComp extends Component
 
     public function toggleStatus($id)
     {
+        if ($this->isDataFinalized) {
+            session()->flash('error', 'Cannot modify data - it has been finalized.');
+            return;
+        }
+
         try {
             $subjectType = SubjectType::findOrFail($id);
             $subjectType->update([
@@ -170,6 +186,48 @@ class SubjectTypeComp extends Component
             Log::error('Error toggling status: ' . $e->getMessage());
             session()->flash('error', 'Error updating status: ' . $e->getMessage());
         }
+    }
+
+    protected function checkGlobalFinalizationStatus()
+    {
+        $this->isDataFinalized = SubjectType::where('is_finalized', true)->exists();
+    }
+
+    public function confirmFinalize($id)
+    {
+        $this->finalizingId = $id;
+        $this->showFinalizeModal = true;
+    }
+
+    public function finalizeData()
+    {
+        if ($this->finalizingId) {
+            $subjectType = SubjectType::findOrFail($this->finalizingId);
+            $subjectType->update(['is_finalized' => true]);
+            
+            $this->checkGlobalFinalizationStatus();
+            session()->flash('message', 'Subject type finalized successfully! No further changes allowed.');
+        }
+        
+        $this->showFinalizeModal = false;
+        $this->finalizingId = null;
+        $this->loadSubjectTypes();
+    }
+
+    public function unfinalizeData($id)
+    {
+        $subjectType = SubjectType::findOrFail($id);
+        $subjectType->update(['is_finalized' => false]);
+        
+        $this->checkGlobalFinalizationStatus();
+        session()->flash('message', 'Subject type unfinalized successfully! Changes are now allowed.');
+        $this->loadSubjectTypes();
+    }
+
+    public function cancelFinalize()
+    {
+        $this->showFinalizeModal = false;
+        $this->finalizingId = null;
     }
 
     protected function resetForm()

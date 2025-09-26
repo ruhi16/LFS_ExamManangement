@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 
 class Studentdb extends Model
 {
@@ -12,21 +13,21 @@ class Studentdb extends Model
 
     public function studentcrs(){
         return $this->hasMany(Studentcr::class, 'studentdb_id', 'id');
-        // 'studentdb_id' is the foreign key in the 'studentcrs' tablet
+        // 'studentdb_id' is the foreign key in the 'studentcrs' table
         // 'id' is the primary key in the 'studentdb' table
     }
 
 
     public function myclass(){
         return $this->belongsTo(Myclass::class, 'stclass_id', 'id');
-        // 'myclass_id' is the foreign key in the 'studentdbs' tablet
+        // 'stclass_id' is the foreign key in the 'studentdbs' table
         // 'id' is the primary key in the 'myclasses' table
     }
 
     public function sections(){
         return $this->belongsTo(Section::class, 'stsection_id', 'id');
-        // 'myclass_id' is the foreign key in the 'studentdbs' tablet
-        // 'id' is the primary key in the 'myclasses' table
+        // 'stsection_id' is the foreign key in the 'studentdbs' table
+        // 'id' is the primary key in the 'sections' table
     }
 
 

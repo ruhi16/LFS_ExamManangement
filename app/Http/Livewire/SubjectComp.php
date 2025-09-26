@@ -22,6 +22,9 @@ class SubjectComp extends Component
     public $subjectTypeId = null;
     public $isActive = true;
     public $remarks = '';
+    public $showFinalizeModal = false;
+    public $finalizingId = null;
+    public $isDataFinalized = false;
 
     protected $rules = [
         'name' => 'required|string|max:255',
@@ -43,12 +46,14 @@ class SubjectComp extends Component
     {
         $this->loadSubjects();
         $this->loadSubjectTypes();
+        $this->checkGlobalFinalizationStatus();
     }
 
     protected function loadSubjects()
     {
         $allSubjects = Subject::with(['subjectType'])
             ->withCount('myclassSubjects')
+            ->orderBy('subject_type_id')
             ->orderBy('id')
             ->get()
             ->map(function ($subject) {
@@ -60,6 +65,7 @@ class SubjectComp extends Component
                     'subject_type_id' => $subject->subject_type_id,
                     'subject_type_name' => $subject->subjectType->name ?? 'No Type',
                     'is_active' => $subject->is_active,
+                    'is_finalized' => $subject->is_finalized ?? false,
                     'remarks' => $subject->remarks,
                     'myclass_subjects_count' => $subject->myclass_subjects_count,
                     'created_at' => $subject->created_at,
@@ -70,13 +76,13 @@ class SubjectComp extends Component
         // Group subjects by type: Summative first, then Formative, then others
         $this->subjects = [
             'summative' => $allSubjects->filter(function ($subject) {
-                return strtolower(Strtolower($subject['subject_type_name']) ) === 'summative';
+                return strtolower($subject['subject_type_name']) === 'summative';
             })->values()->toArray(),
             'formative' => $allSubjects->filter(function ($subject) {
-                return strtolower(Strtolower($subject['subject_type_name']) ) === 'formative';
+                return strtolower($subject['subject_type_name']) === 'formative';
             })->values()->toArray(),
             'others' => $allSubjects->filter(function ($subject) {
-                return !in_array(Strtolower(strtolower($subject['subject_type_name']) ), ['summative', 'formative']);
+                return !in_array(strtolower($subject['subject_type_name']), ['summative', 'formative']);
             })->values()->toArray()
         ];
     }
@@ -130,6 +136,11 @@ class SubjectComp extends Component
 
     public function saveSubject()
     {
+        if ($this->isDataFinalized) {
+            session()->flash('error', 'Cannot modify data - it has been finalized.');
+            return;
+        }
+
         $this->validate();
         // dd($this->subjectTypeId);
 
@@ -159,30 +170,6 @@ class SubjectComp extends Component
             }else{
                 session()->flash('message', 'Subject created successfully!');
             }
-
-
-            // $data = [
-            //     'name' => $this->name,
-            //     'description' => $this->description,
-            //     'code' => $this->code,
-            //     'subject_type_id' => (int) $this->subjectTypeId,
-            //     'is_active' => $this->isActive,
-            //     'remarks' => $this->remarks,
-            //     'user_id' => auth()->id(),
-            //     'session_id' => session('current_session_id', 1),
-            //     'school_id' => session('current_school_id', 1),
-            // ];
-
-            // if ($this->editingId) {
-            //     // Update existing
-            //     $subject = Subject::findOrFail($this->editingId);
-            //     $subject->update($data);
-            //     session()->flash('message', 'Subject updated successfully!');
-            // } else {
-            //     // Create new
-            //     Subject::create($data);
-            //     session()->flash('message', 'Subject created successfully!');
-            // }
 
             DB::commit();
 
@@ -223,6 +210,11 @@ class SubjectComp extends Component
 
     public function toggleStatus($id)
     {
+        if ($this->isDataFinalized) {
+            session()->flash('error', 'Cannot modify data - it has been finalized.');
+            return;
+        }
+
         try {
             $subject = Subject::findOrFail($id);
             $subject->update([
@@ -235,6 +227,48 @@ class SubjectComp extends Component
             Log::error('Error toggling status: ' . $e->getMessage());
             session()->flash('error', 'Error updating status: ' . $e->getMessage());
         }
+    }
+
+    protected function checkGlobalFinalizationStatus()
+    {
+        $this->isDataFinalized = Subject::where('is_finalized', true)->exists();
+    }
+
+    public function confirmFinalize($id)
+    {
+        $this->finalizingId = $id;
+        $this->showFinalizeModal = true;
+    }
+
+    public function finalizeData()
+    {
+        if ($this->finalizingId) {
+            $subject = Subject::findOrFail($this->finalizingId);
+            $subject->update(['is_finalized' => true]);
+            
+            $this->checkGlobalFinalizationStatus();
+            session()->flash('message', 'Subject finalized successfully! No further changes allowed.');
+        }
+        
+        $this->showFinalizeModal = false;
+        $this->finalizingId = null;
+        $this->loadSubjects();
+    }
+
+    public function unfinalizeData($id)
+    {
+        $subject = Subject::findOrFail($id);
+        $subject->update(['is_finalized' => false]);
+        
+        $this->checkGlobalFinalizationStatus();
+        session()->flash('message', 'Subject unfinalized successfully! Changes are now allowed.');
+        $this->loadSubjects();
+    }
+
+    public function cancelFinalize()
+    {
+        $this->showFinalizeModal = false;
+        $this->finalizingId = null;
     }
 
     protected function resetForm()

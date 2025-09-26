@@ -506,8 +506,12 @@ class StudentDbComponent extends Component
         $classes = Myclass::orderBy('order_index')->get();
         $sections = Section::orderBy('order_index')->get();
 
-        // Group students by class
-        $studentsByClass = collect($students)->groupBy(function ($student) {
+        // Group students by class - use items() to get the actual collection
+        $studentsByClass = collect($students->items())->groupBy(function ($student) {
+            // Additional safety check
+            if (!$student || !is_object($student)) {
+                return 'Invalid Student';
+            }
             return $student->myclass ? $student->myclass->name : 'No Class';
         });
 

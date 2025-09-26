@@ -25,6 +25,12 @@ class CreateMyclassSectionsTable extends Migration
 
             $table->integer('school_id')->unsigned()->nullable();
             $table->integer('session_id')->unsigned()->nullable();
+            
+            $table->integer('teacher_id')->unsigned()->nullable();
+            $table->integer('room_id')->unsigned()->nullable();
+            
+            
+            
             $table->integer('user_id')->unsigned()->nullable();
             $table->integer('approved_by')->unsigned()->nullable();
             $table->boolean('is_active')->default(1)->nullable();

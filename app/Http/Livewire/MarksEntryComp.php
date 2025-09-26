@@ -273,6 +273,27 @@ class MarksEntryComp extends Component
         }
     }
 
+    public function unfinalizeMarks($examClassSubjectId)
+    {
+        try {
+            $examClassSubject = Exam06ClassSubject::find($examClassSubjectId);
+            
+            if (!$examClassSubject) {
+                throw new \Exception('Exam class subject not found');
+            }
+            
+            $examClassSubject->update(['is_finalized' => false]);
+            
+            // Refresh distributions to reflect the change
+            $this->loadDistributions();
+            
+            session()->flash('message', 'Marks entry has been unfinalized successfully. You can now edit marks.');
+        } catch (\Exception $e) {
+            Log::error('Error unfinalizing marks: ' . $e->getMessage());
+            session()->flash('error', 'Error unfinalizing marks: ' . $e->getMessage());
+        }
+    }
+
     // Debug methods
     public function checkDatabaseConnection()
     {

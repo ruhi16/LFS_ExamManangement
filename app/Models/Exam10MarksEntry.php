@@ -16,6 +16,7 @@ class Exam10MarksEntry extends Model
         'exam_marks' => 'decimal:2',
         'is_active' => 'boolean',
         'is_finalized' => 'boolean',
+        'is_absent' => 'boolean',
     ];
 
     // Relationships
@@ -54,10 +55,15 @@ class Exam10MarksEntry extends Model
         return $this->belongsTo(User::class, 'approved_by');
     }
 
+    public function grade()
+    {
+        return $this->belongsTo(Exam08Grade::class, 'grade_id');
+    }
+
     // Helper methods
     public function isAbsent()
     {
-        return $this->exam_marks < 0 || $this->status === 'absent';
+        return $this->exam_marks < 0 || $this->status === 'absent' || $this->is_absent;
     }
 
     public function getDisplayMarks()

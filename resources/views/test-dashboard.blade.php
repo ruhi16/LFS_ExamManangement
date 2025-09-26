@@ -25,7 +25,7 @@
         <div class="text-center mb-8">
             <h1 class="text-4xl font-bold text-gray-800 mb-2">
                 <i class="fas fa-bug text-red-500 mr-3"></i>
-                Test Dashboard XX
+                Test Dashboard
             </h1>
             <p class="text-gray-600 text-lg">LFS Exam Management System - Testing & Debug Center</p>
             <div class="mt-4 inline-flex items-center px-4 py-2 bg-yellow-100 border border-yellow-400 rounded-lg">
@@ -192,6 +192,19 @@
                         <i class="fas fa-play mr-2"></i>Test Component
                     </a>
                 </div>
+
+                <!-- User Role Management -->
+                <div class="test-card bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-user-cog text-indigo-500 text-2xl mr-3"></i>
+                        <h3 class="text-lg font-semibold">User Role Management</h3>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-4">Advanced user role management</p>
+                    <a href="{{ route('user.role.management') }}"
+                        class="inline-flex items-center px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-colors">
+                        <i class="fas fa-play mr-2"></i>Test Component
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -227,6 +240,33 @@
                         <i class="fas fa-play mr-2"></i>Test Component
                     </a>
                 </div>
+
+                <!-- Student Profile -->
+                <div class="test-card bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-user-graduate text-purple-500 text-2xl mr-3"></i>
+                        <h3 class="text-lg font-semibold">Student Profile</h3>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-4">View student profile with tabs</p>
+                    <div class="flex flex-col space-y-2">
+                        <a href="{{ route('test.student.profile') }}"
+                            class="inline-flex items-center px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors">
+                            <i class="fas fa-play mr-2"></i>Livewire Component
+                        </a>
+                        <a href="{{ route('simple.student.profile') }}"
+                            class="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                            <i class="fas fa-play mr-2"></i>Simple Component
+                        </a>
+                        <a href="{{ route('test.student.profile.view') }}"
+                            class="inline-flex items-center px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-colors">
+                            <i class="fas fa-play mr-2"></i>Blade View
+                        </a>
+                        <a href="{{ route('debug.student.profile') }}"
+                            class="inline-flex items-center px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors">
+                            <i class="fas fa-bug mr-2"></i>Debug Component
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -257,14 +297,45 @@
                         <h3 class="text-lg font-semibold">FMPM Settings</h3>
                     </div>
                     <p class="text-gray-600 text-sm mb-4">Full marks & pass marks configuration</p>
-                    <div class="flex space-x-2">
-                        <a href="{{ route('test.fmpm') }}"
-                            class="inline-flex items-center px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors">
-                            <i class="fas fa-play mr-1"></i>Full
-                        </a>
+                    <div class="flex flex-col space-y-2">
                         <a href="{{ route('test.fmpm.simple') }}"
                             class="inline-flex items-center px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-colors">
-                            <i class="fas fa-play mr-1"></i>Simple
+                            <i class="fas fa-play mr-1"></i>Simple FMPM
+                        </a>
+                        <a href="{{ route('exam.setting.fmpm') }}"
+                            class="inline-flex items-center px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors">
+                            <i class="fas fa-play mr-1"></i>FMPM with Feature Flag
+                        </a>
+                        <a href="{{ route('exam.setting.modular') }}"
+                            class="inline-flex items-center px-3 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors">
+                            <i class="fas fa-play mr-1"></i>Modular Exam Setting
+                        </a>
+                        <a href="{{ route('exam.setting.legacy') }}"
+                            class="inline-flex items-center px-3 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors">
+                            <i class="fas fa-play mr-1"></i>Legacy Exam Setting
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Exam Setting Components -->
+                <div class="test-card bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-cogs text-indigo-500 text-2xl mr-3"></i>
+                        <h3 class="text-lg font-semibold">Exam Setting Components</h3>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-4">Various exam setting implementations</p>
+                    <div class="flex flex-col space-y-2">
+                        <a href="{{ route('test.exam.setting') }}"
+                            class="inline-flex items-center px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                            <i class="fas fa-play mr-1"></i>Exam Setting
+                        </a>
+                        <a href="{{ route('test.updated.exam.setting') }}"
+                            class="inline-flex items-center px-3 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors">
+                            <i class="fas fa-play mr-1"></i>Updated Exam Setting
+                        </a>
+                        <a href="{{ route('test.modular.exam.setting') }}"
+                            class="inline-flex items-center px-3 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-colors">
+                            <i class="fas fa-play mr-1"></i>Modular Implementation
                         </a>
                     </div>
                 </div>
@@ -276,10 +347,10 @@
                         <h3 class="text-lg font-semibold">Script Distribution</h3>
                     </div>
                     <p class="text-gray-600 text-sm mb-4">Assign answer scripts to teachers</p>
-                    <a href="{{ route('test.answer.script.distribution') }}"
+                    {{-- <a href="{{ route('test-test') }}"
                         class="inline-flex items-center px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors">
                         <i class="fas fa-play mr-2"></i>Test Component
-                    </a>
+                    </a> --}}
                 </div>
 
                 <!-- Marks Entry -->
@@ -289,10 +360,39 @@
                         <h3 class="text-lg font-semibold">Marks Entry</h3>
                     </div>
                     <p class="text-gray-600 text-sm mb-4">Enter student marks</p>
-                    <a href="{{ route('test.marks.entry') }}"
-                        class="inline-flex items-center px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors">
-                        <i class="fas fa-play mr-2"></i>Test Component
-                    </a>
+                    <div class="flex flex-col space-y-2">
+                        <a href="{{ route('test.marks.entry') }}"
+                            class="inline-flex items-center px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors">
+                            <i class="fas fa-play mr-2"></i>Marks Entry Test
+                        </a>
+                        <a href="{{ route('marks-entry') }}"
+                            class="inline-flex items-center px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition-colors">
+                            <i class="fas fa-play mr-2"></i>Marks Entry
+                        </a>
+                        <a href="{{ route('test-teacher-wise-marks-entry') }}"
+                            class="inline-flex items-center px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors">
+                            <i class="fas fa-play mr-2"></i>Teacher Wise Entry
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Formative Marks Entry -->
+                <div class="test-card bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-file-contract text-teal-500 text-2xl mr-3"></i>
+                        <h3 class="text-lg font-semibold">Formative Marks Entry</h3>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-4">Enter formative assessment marks</p>
+                    <div class="flex flex-col space-y-2">
+                        <a href="{{ route('test.formative.marks.entry.info') }}"
+                            class="inline-flex items-center px-4 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-colors">
+                            <i class="fas fa-play mr-2"></i>Info Page
+                        </a>
+                        <a href="{{ route('test.formative.marks.entry', ['exam_detail_id' => 1, 'myclass_section_id' => 1]) }}"
+                            class="inline-flex items-center px-4 py-2 bg-cyan-500 text-white rounded hover:bg-cyan-600 transition-colors">
+                            <i class="fas fa-play mr-2"></i>Entry Component
+                        </a>
+                    </div>
                 </div>
 
                 <!-- Mark Register -->
@@ -306,6 +406,38 @@
                         class="inline-flex items-center px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors">
                         <i class="fas fa-play mr-2"></i>Test Component
                     </a>
+                </div>
+
+                <!-- Exam Finalization -->
+                <div class="test-card bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-lock text-gray-700 text-2xl mr-3"></i>
+                        <h3 class="text-lg font-semibold">Exam Finalization</h3>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-4">Task finalization & lock status</p>
+                    <div class="flex flex-col space-y-2">
+                        <a href="{{ route('task.finalize.lock.status') }}"
+                            class="inline-flex items-center px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 transition-colors">
+                            <i class="fas fa-play mr-2"></i>Lock Status
+                        </a>
+                        <a href="{{ route('test.class.exam.finalization') }}"
+                            class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors">
+                            <i class="fas fa-play mr-2"></i>Class Finalization
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Grades -->
+                <div class="test-card bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-award text-yellow-500 text-2xl mr-3"></i>
+                        <h3 class="text-lg font-semibold">Grades</h3>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-4">Grade management and configuration</p>
+                    {{-- <a href="{{ route('test.grades') }}"
+                        class="inline-flex items-center px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition-colors">
+                        <i class="fas fa-play mr-2"></i>Test Component
+                    </a> --}}
                 </div>
             </div>
         </div>
@@ -337,10 +469,16 @@
                         <h3 class="text-lg font-semibold">Sessions</h3>
                     </div>
                     <p class="text-gray-600 text-sm mb-4">Manage academic sessions</p>
-                    <a href="{{ route('test.session') }}"
-                        class="inline-flex items-center px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors">
-                        <i class="fas fa-play mr-2"></i>Test Component
-                    </a>
+                    <div class="flex flex-col space-y-2">
+                        <a href="{{ route('test.session') }}"
+                            class="inline-flex items-center px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors">
+                            <i class="fas fa-play mr-2"></i>Session Test
+                        </a>
+                        <a href="{{ route('test.session.comp') }}"
+                            class="inline-flex items-center px-4 py-2 bg-emerald-500 text-white rounded hover:bg-emerald-600 transition-colors">
+                            <i class="fas fa-play mr-2"></i>Session Component
+                        </a>
+                    </div>
                 </div>
 
                 <!-- Logs Viewer -->
@@ -354,6 +492,53 @@
                         class="inline-flex items-center px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors">
                         <i class="fas fa-play mr-2"></i>Test Component
                     </a>
+                </div>
+
+                <!-- Modals & UI Components -->
+                <div class="test-card bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-window-maximize text-purple-500 text-2xl mr-3"></i>
+                        <h3 class="text-lg font-semibold">Modals & UI</h3>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-4">UI components and modals</p>
+                    <div class="flex flex-col space-y-2">
+                        <a href="{{ route('test.modal.simple') }}"
+                            class="inline-flex items-center px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors">
+                            <i class="fas fa-play mr-2"></i>Simple Modal
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Subject Grouping -->
+                <div class="test-card bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-object-group text-indigo-500 text-2xl mr-3"></i>
+                        <h3 class="text-lg font-semibold">Subject Grouping</h3>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-4">Group subjects for exams</p>
+                    <a href="{{ route('test.subject.grouping') }}"
+                        class="inline-flex items-center px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-colors">
+                        <i class="fas fa-play mr-2"></i>Test Component
+                    </a>
+                </div>
+
+                <!-- Class Section Tasks -->
+                <div class="test-card bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-tasks text-orange-500 text-2xl mr-3"></i>
+                        <h3 class="text-lg font-semibold">Class Section Tasks</h3>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-4">Manage class section tasks</p>
+                    <div class="flex flex-col space-y-2">
+                        {{-- <a href="{{ route('test.class.section.tasks') }}"
+                            class="inline-flex items-center px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors">
+                            <i class="fas fa-play mr-2"></i>Tasks Component
+                        </a> --}}
+                        <a href="{{ route('test.class.section.tasks.info') }}"
+                            class="inline-flex items-center px-4 py-2 bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors">
+                            <i class="fas fa-play mr-2"></i>Tasks Info
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

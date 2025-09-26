@@ -25,6 +25,11 @@ class CreateExam10MarksEntriesTable extends Migration
                         
             $table->decimal('exam_marks', 8, 2)->nullable();
                        
+            $table->integer('grade_id')->nullable();
+            $table->boolean('is_absent')->default(false);
+            
+
+
             $table->integer('session_id')->unsigned()->nullable();
             $table->integer('school_id')->unsigned()->nullable();
             $table->integer('user_id')->unsigned()->nullable();

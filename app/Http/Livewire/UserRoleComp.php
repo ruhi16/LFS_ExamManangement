@@ -10,6 +10,7 @@ use App\Models\Teacher;
 use App\Models\Studentdb;
 use App\Models\Myclass;
 use App\Models\Section;
+use App\Models\Studentcr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -291,14 +292,18 @@ class UserRoleComp extends Component
             'studentDob' => 'required|date'
         ]);
 
-        try {
-            $student = Studentdb::where('stclass_id', $this->selectedClass)
-                              ->where('stsection_id', $this->selectedSection)
-                              ->where('roll', $this->studentRoll)
-                              ->where('dob', $this->studentDob)
-                              ->first();
+        
 
-            if ($student) {
+        try{
+            $student = Studentcr::where('myclass_id', $this->selectedClass)
+                              ->where('section_id', $this->selectedSection)
+                              ->where('roll_no', $this->studentRoll)
+                            //   ->where('dob', $this->studentDob)
+                              ->first();
+            // dd($student->studentdb->dob);
+
+        
+            if ($student->studentdb->dob == $this->studentDob) {
                 $this->selectedStudent = $student->id;
                 session()->flash('student_verified', 'Student verified successfully!');
             } else {
@@ -319,7 +324,8 @@ class UserRoleComp extends Component
             return;
         }
 
-        $this->validate();
+        // dd($this->selectedStudent);
+        // $this->validate();
 
         try {
             $user = User::find($this->userId);

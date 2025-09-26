@@ -18,8 +18,10 @@ class ClassExamSubjectComp extends Component
     public $examNames;
     public $examTypes;
     public $classSubjects;
+    public $subjectsByType = []; // Grouped by subject type
     public $examDetails = [];
     public $subjectSelections = []; // [subject_id][exam_name_id][exam_type_id] = true/false
+    public $isFinalized = false;
 
     // Debug properties
     public $debugMode = false;
@@ -55,7 +57,8 @@ class ClassExamSubjectComp extends Component
     protected function loadExamNames()
     {
         try {
-            $this->examNames = Exam01Name::orderBy('name')->get();
+            // Sort by ID as requested
+            $this->examNames = Exam01Name::orderBy('id')->get();
         } catch (\Exception $e) {
             Log::error('Error loading exam names: ' . $e->getMessage());
             $this->examNames = collect();
@@ -83,6 +86,7 @@ class ClassExamSubjectComp extends Component
             $this->loadClassSubjects();
             $this->loadExamDetails();
             $this->loadExistingSelections();
+            $this->checkFinalizationStatus();
         } catch (\Exception $e) {
             Log::error('Error selecting class: ' . $e->getMessage());
             session()->flash('error', 'Error loading class data: ' . $e->getMessage());
@@ -92,8 +96,10 @@ class ClassExamSubjectComp extends Component
     protected function resetData()
     {
         $this->classSubjects = collect();
+        $this->subjectsByType = [];
         $this->examDetails = [];
         $this->subjectSelections = [];
+        $this->isFinalized = false;
     }
 
     protected function loadClassSubjects()
@@ -103,14 +109,57 @@ class ClassExamSubjectComp extends Component
         }
 
         try {
-            // Load class subjects
-            $this->classSubjects = MyclassSubject::with('subject')
+            // Load class subjects with subject and subject type relationships
+            $this->classSubjects = MyclassSubject::with(['subject.subjectType'])
                 ->where('myclass_id', $this->selectedClassId)
                 ->where('is_active', true)
                 ->orderBy('order_index')
                 ->get();
 
-            Log::info("Loaded " . $this->classSubjects->count() . " subjects for class {$this->selectedClassId}");
+            // Group subjects by subject type and sort by subject ID within each type
+            $this->subjectsByType = [];
+            foreach ($this->classSubjects as $classSubject) {
+                if ($classSubject->subject && $classSubject->subject->subjectType) {
+                    $subjectType = $classSubject->subject->subjectType;
+                    $subjectTypeName = $subjectType->name;
+                    
+                    if (!isset($this->subjectsByType[$subjectTypeName])) {
+                        $this->subjectsByType[$subjectTypeName] = [
+                            'type' => $subjectType,
+                            'subjects' => collect()
+                        ];
+                    }
+                    
+                    $this->subjectsByType[$subjectTypeName]['subjects']->push($classSubject);
+                } else {
+                    // Handle subjects without subject type
+                    if (!isset($this->subjectsByType['Uncategorized'])) {
+                        $this->subjectsByType['Uncategorized'] = [
+                            'type' => (object) ['id' => 0, 'name' => 'Uncategorized'],
+                            'subjects' => collect()
+                        ];
+                    }
+                    
+                    $this->subjectsByType['Uncategorized']['subjects']->push($classSubject);
+                }
+            }
+
+            // Sort subjects within each type by subject ID
+            foreach ($this->subjectsByType as $key => $typeData) {
+                $this->subjectsByType[$key]['subjects'] = $typeData['subjects']->sortBy('subject.id');
+            }
+
+            // Sort subject types by name (Summative first, then Formative, then others alphabetically)
+            $this->subjectsByType = collect($this->subjectsByType)
+                ->sortBy(function ($typeData, $typeName) {
+                    if (stripos($typeName, 'summative') !== false) return 1;
+                    if (stripos($typeName, 'formative') !== false) return 2;
+                    if ($typeName === 'Uncategorized') return 999;
+                    return 3;
+                })
+                ->toArray();
+
+            Log::info("Loaded " . $this->classSubjects->count() . " subjects for class {$this->selectedClassId}, grouped into " . count($this->subjectsByType) . " types");
         } catch (\Exception $e) {
             Log::error('Error loading class subjects: ' . $e->getMessage());
             session()->flash('error', 'Error loading class subjects: ' . $e->getMessage());
@@ -179,6 +228,12 @@ class ClassExamSubjectComp extends Component
     public function toggleSubjectSelection($subjectId, $examNameId, $examTypeId)
     {
         try {
+            // Check if data is finalized
+            if ($this->isFinalized) {
+                session()->flash('error', 'Cannot modify selections - data has been finalized.');
+                return;
+            }
+
             $examDetailKey = $examNameId . '_' . $examTypeId;
 
             if (!isset($this->examDetails[$examDetailKey])) {
@@ -276,6 +331,12 @@ class ClassExamSubjectComp extends Component
                 return;
             }
 
+            // Check if data is finalized
+            if ($this->isFinalized) {
+                session()->flash('error', 'Cannot save selections - data has been finalized.');
+                return;
+            }
+
             DB::beginTransaction();
 
             // Remove all existing selections for this class
@@ -324,6 +385,12 @@ class ClassExamSubjectComp extends Component
                 return;
             }
 
+            // Check if data is finalized
+            if ($this->isFinalized) {
+                session()->flash('error', 'Cannot clear selections - data has been finalized.');
+                return;
+            }
+
             DB::beginTransaction();
 
             // Remove all existing selections for this class
@@ -357,6 +424,7 @@ class ClassExamSubjectComp extends Component
                 $this->loadClassSubjects();
                 $this->loadExamDetails();
                 $this->loadExistingSelections();
+                $this->checkFinalizationStatus();
                 session()->flash('message', 'Data refreshed successfully!');
             } else {
                 session()->flash('error', 'Please select a class first.');
@@ -364,6 +432,101 @@ class ClassExamSubjectComp extends Component
         } catch (\Exception $e) {
             Log::error('Error refreshing data: ' . $e->getMessage());
             session()->flash('error', 'Error refreshing data: ' . $e->getMessage());
+        }
+    }
+
+    protected function checkFinalizationStatus()
+    {
+        try {
+            if (!$this->selectedClassId) {
+                $this->isFinalized = false;
+                return;
+            }
+
+            // Check if any record for this class is finalized
+            $this->isFinalized = Exam06ClassSubject::where('myclass_id', $this->selectedClassId)
+                ->where('is_finalized', true)
+                ->exists();
+
+            Log::info("Finalization status for class {$this->selectedClassId}: " . ($this->isFinalized ? 'finalized' : 'not finalized'));
+        } catch (\Exception $e) {
+            Log::error('Error checking finalization status: ' . $e->getMessage());
+            $this->isFinalized = false;
+        }
+    }
+
+    public function finalizeData()
+    {
+        try {
+            if (!$this->selectedClassId) {
+                session()->flash('error', 'Please select a class first.');
+                return;
+            }
+
+            if ($this->isFinalized) {
+                session()->flash('error', 'Data is already finalized.');
+                return;
+            }
+
+            // Check if there are any selections to finalize
+            $selectionsCount = Exam06ClassSubject::where('myclass_id', $this->selectedClassId)->count();
+            if ($selectionsCount === 0) {
+                session()->flash('error', 'No subject selections found to finalize. Please add some selections first.');
+                return;
+            }
+
+            DB::beginTransaction();
+
+            // Set all records for this class as finalized
+            Exam06ClassSubject::where('myclass_id', $this->selectedClassId)
+                ->update([
+                    'is_finalized' => true,
+                    'updated_at' => now(),
+                ]);
+
+            $this->isFinalized = true;
+
+            DB::commit();
+            session()->flash('message', "Successfully finalized {$selectionsCount} subject selections. No further changes are allowed.");
+            Log::info("Finalized {$selectionsCount} subject selections for class {$this->selectedClassId}");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error finalizing data: ' . $e->getMessage());
+            session()->flash('error', 'Error finalizing data: ' . $e->getMessage());
+        }
+    }
+
+    public function unfinalizeData()
+    {
+        try {
+            if (!$this->selectedClassId) {
+                session()->flash('error', 'Please select a class first.');
+                return;
+            }
+
+            if (!$this->isFinalized) {
+                session()->flash('error', 'Data is not finalized.');
+                return;
+            }
+
+            DB::beginTransaction();
+
+            // Remove finalization for all records of this class
+            $count = Exam06ClassSubject::where('myclass_id', $this->selectedClassId)
+                ->update([
+                    'is_finalized' => false,
+                    'updated_at' => now(),
+                ]);
+
+            $this->isFinalized = false;
+
+            DB::commit();
+            session()->flash('message', "Successfully unfinalized {$count} subject selections. Changes are now allowed.");
+            Log::info("Unfinalized {$count} subject selections for class {$this->selectedClassId}");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error unfinalizing data: ' . $e->getMessage());
+            session()->flash('error', 'Error unfinalizing data: ' . $e->getMessage());
         }
     }
 

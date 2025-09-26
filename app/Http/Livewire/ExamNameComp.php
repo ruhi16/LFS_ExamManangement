@@ -26,6 +26,9 @@ class ExamNameComp extends Component
     public $confirmingDeletion = false;
     public $deletingId = null;
     public $search = '';
+    public $showFinalizeModal = false;
+    public $finalizingId = null;
+    public $isDataFinalized = false;
 
     protected $rules = [
         'name' => 'required|string|max:255',
@@ -49,6 +52,7 @@ class ExamNameComp extends Component
     public function mount()
     {
         $this->resetForm();
+        $this->checkGlobalFinalizationStatus();
     }
 
     public function updatingSearch()
@@ -84,6 +88,11 @@ class ExamNameComp extends Component
 
     public function save()
     {
+        if ($this->isDataFinalized) {
+            session()->flash('error', 'Cannot modify data - it has been finalized.');
+            return;
+        }
+
         $this->validate();
 
         $data = [
@@ -161,11 +170,56 @@ class ExamNameComp extends Component
 
     public function toggleStatus($id)
     {
+        if ($this->isDataFinalized) {
+            session()->flash('error', 'Cannot modify data - it has been finalized.');
+            return;
+        }
+
         $examName = Exam01Name::findOrFail($id);
         $examName->update(['is_active' => !$examName->is_active]);
         
         $status = $examName->is_active ? 'activated' : 'deactivated';
         session()->flash('message', "Exam name {$status} successfully!");
+    }
+
+    protected function checkGlobalFinalizationStatus()
+    {
+        $this->isDataFinalized = Exam01Name::where('is_finalized', true)->exists();
+    }
+
+    public function confirmFinalize($id)
+    {
+        $this->finalizingId = $id;
+        $this->showFinalizeModal = true;
+    }
+
+    public function finalizeData()
+    {
+        if ($this->finalizingId) {
+            $examName = Exam01Name::findOrFail($this->finalizingId);
+            $examName->update(['is_finalized' => true]);
+            
+            $this->checkGlobalFinalizationStatus();
+            session()->flash('message', 'Exam name finalized successfully! No further changes allowed.');
+        }
+        
+        $this->showFinalizeModal = false;
+        $this->finalizingId = null;
+    }
+
+    public function unfinalizeData($id)
+    {
+        $examName = Exam01Name::findOrFail($id);
+        $examName->update(['is_finalized' => false]);
+        
+        $this->checkGlobalFinalizationStatus();
+        session()->flash('message', 'Exam name unfinalized successfully! Changes are now allowed.');
+    }
+
+    public function cancelFinalize()
+    {
+        $this->showFinalizeModal = false;
+        $this->finalizingId = null;
     }
 
     public function render()
@@ -176,6 +230,7 @@ class ExamNameComp extends Component
                       ->orWhere('description', 'like', '%' . $this->search . '%')
                       ->orWhere('status', 'like', '%' . $this->search . '%');
             })
+            ->orderBy('id', 'asc')
             ->orderBy('order_index', 'asc')
             ->orderBy('name', 'asc')
             ->paginate(10);

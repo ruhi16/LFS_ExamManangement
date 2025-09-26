@@ -230,14 +230,14 @@
                     @endif
 
                     <!-- Exam Settings View -->
-                    @if($activeMenu === 'exam-settings-view')
+                    {{-- @if($activeMenu === 'exam-settings-view')
                         @livewire('exam-settings-view')
-                    @endif
+                    @endif --}}
 
                     <!-- Exam Settings FMPM -->
-                    @if($activeMenu === 'exam-settings-fmpm')
+                    {{-- @if($activeMenu === 'exam-settings-fmpm')
                         @livewire('exam-settings-fmpm-comp')
-                    @endif
+                    @endif --}}
 
                      <!-- Exam Settings FMPM -->
                     @if($activeMenu === 'exam-settings-fmpm2')
@@ -265,9 +265,9 @@
                     @endif
 
                     <!-- Exam Cinfiguration -->
-                    @if($activeMenu === 'exam-config')
+                    {{-- @if($activeMenu === 'exam-config')
                         @livewire('exam-config-comp')
-                    @endif
+                    @endif --}}
 
                     <!-- Student Class Records -->
                     @if($activeMenu === 'student-cr')
@@ -275,15 +275,20 @@
                     @endif
 
                     <!-- Answer Script Distribution -->
-                    @if($activeMenu === 'answer-script-distribution')
+                    {{-- @if($activeMenu === 'answer-script-distribution')
                         @livewire('answer-script-distribution-comp')
-                    @endif
+                    @endif --}}
 
                     <!-- Answer Script Distribution -->
                     @if($activeMenu === 'answer-script-distribution2')
                         @livewire('answer-script-distribution-comp2')
                     @endif
 
+                    <!-- Marks Entry -->
+                    @if($activeMenu === 'class-section-tasks')
+                        @livewire('class-section-tasks-comp')
+                    @endif
+                    
                     <!-- Marks Entry -->
                     @if($activeMenu === 'marks-entry')
                         @livewire('marks-entry-comp')
@@ -333,7 +338,7 @@
                     @endif
 
                     <!-- Default/Other Pages -->
-                    @if(!in_array($activeMenu, ['dashboard', 'schools', 'classes', 'sections', 'class-sections', 'subject-types', 'subjects', 'MyClass', 'myclass-subjects', 'student-database', 'sessions', 'teachers', 'subject-teachers', 'exam-settings', 'exam-settings-view', 'exam-settings-fmpm', 'exam-names', 'exam-types', 'exam-parts', 'exam-modes', 'student-cr', 'answer-script-distribution', 'marks-entry', 'logs-viewer', 'class-exam-subject', 'mark-register', 'user-roles', 'analytics', 'exam-config', 'exam-settings-fmpm2']))
+                    @if(!in_array($activeMenu, ['dashboard', 'schools', 'classes', 'sections', 'class-sections', 'subject-types', 'subjects', 'MyClass', 'myclass-subjects', 'student-database', 'sessions', 'teachers', 'subject-teachers', 'exam-settings', 'exam-settings-view', 'exam-settings-fmpm', 'exam-names', 'exam-types', 'exam-parts', 'exam-modes', 'student-cr', 'answer-script-distribution', 'marks-entry', 'logs-viewer', 'class-exam-subject', 'mark-register', 'user-roles', 'analytics', 'exam-config', 'exam-settings-fmpm2', 'class-section-tasks']))
                         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
                             <div class="text-center">
                                 <div

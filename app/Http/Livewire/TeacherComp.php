@@ -43,7 +43,6 @@ class TeacherComp extends Component{
     // Display properties
     public $selectedCategory = '';
     public $searchTerm = '';
-    protected $teachers;
     protected $subjects;
 
     // Teacher categories
@@ -103,19 +102,14 @@ class TeacherComp extends Component{
     {
         try {
             $this->initializeDefaults();
-            $this->loadTeachers();
             $this->loadSubjects();
-
-
         } catch (\Exception $e) {
             Log::error('Error in TeacherComp mount: ' . $e->getMessage());
             session()->flash('error', 'Error loading component: ' . $e->getMessage());
 
             // Initialize empty collections as fallback
             $this->subjects = collect();
-            $this->teachers = collect();
         }
-        // dd($this->teachers, $this->subjects);
     }
 
     private function initializeDefaults()
@@ -133,40 +127,6 @@ class TeacherComp extends Component{
         // dd($this->session_id, $this->school_id, $this->user_id);
     }
 
-    public function loadTeachers()
-    {
-        try {
-            $query = Teacher::with(['subject']);
-            // dd($this->selectedCategory);
-
-            if ($this->selectedCategory) {
-                $categoryDesignations = $this->teacherCategories[$this->selectedCategory] ?? [];
-                if (!empty($categoryDesignations)) {
-                    $query->whereIn('desig', $categoryDesignations);
-                }
-            }
-            // dd($this->searchTerm);
-            if ($this->searchTerm) {
-                $searchTerm = trim($this->searchTerm);
-                if (!empty($searchTerm)) {
-                    $query->where(function ($q) use ($searchTerm) {
-                        $q->where('name', 'like', "%{$searchTerm}%")
-                            ->orWhere('nickName', 'like', "%{$searchTerm}%")
-                            ->orWhere('mobno', 'like', "%{$searchTerm}%")
-                            ->orWhere('desig', 'like', "%{$searchTerm}%");
-                    });
-                }
-            }
-
-            $this->teachers = $query->orderBy('id')->paginate(10);
-            // dd($this->teachers);
-
-        } catch (\Exception $e) {
-            Log::error('Error loading teachers: ' . $e->getMessage()); // Fixed: Removed unexpected comma
-            $this->teachers = Teacher::paginate(15); // Fallback to basic pagination
-        }
-    }
-
     public function loadSubjects()
     {
         try {
@@ -180,13 +140,11 @@ class TeacherComp extends Component{
     public function updatedSelectedCategory()
     {
         $this->resetPage();
-        $this->loadTeachers();
     }
 
     public function updatedSearchTerm()
     {
         $this->resetPage();
-        $this->loadTeachers();
     }
 
     public function openModal($teacherId = null)
@@ -332,7 +290,6 @@ class TeacherComp extends Component{
                 session()->flash('message', 'Teacher created successfully!');
             }
 
-            $this->loadTeachers();
             $this->closeModal();
        
         } catch (\Exception $e) {
@@ -352,8 +309,6 @@ class TeacherComp extends Component{
 
             $statusText = $newStatus === 'active' ? 'activated' : 'suspended';
             session()->flash('message', "Teacher {$statusText} successfully!");
-
-            $this->loadTeachers();
         } catch (\Exception $e) {
             Log::error('Error toggling teacher status: ' . $e->getMessage());
             session()->flash('error', 'Error updating teacher status: ' . $e->getMessage());
@@ -381,8 +336,6 @@ class TeacherComp extends Component{
 
             $teacher->delete();
             session()->flash('message', 'Teacher deleted successfully!');
-
-            $this->loadTeachers();
         } catch (\Exception $e) {
             Log::error('Error deleting teacher: ' . $e->getMessage());
             session()->flash('error', 'Error deleting teacher: ' . $e->getMessage());
@@ -438,12 +391,10 @@ class TeacherComp extends Component{
         $this->selectedCategory = '';
         $this->searchTerm = '';
         $this->resetPage();
-        $this->loadTeachers();
     }
 
     public function refreshData()
     {
-        $this->loadTeachers();
         $this->loadSubjects();
         session()->flash('message', 'Teacher data refreshed successfully!');
     }
@@ -461,8 +412,32 @@ class TeacherComp extends Component{
             $this->loadSubjects();
         }
 
+        // Load teachers directly in render method for proper pagination
+        $query = Teacher::with(['subject']);
+        
+        if ($this->selectedCategory) {
+            $categoryDesignations = $this->teacherCategories[$this->selectedCategory] ?? [];
+            if (!empty($categoryDesignations)) {
+                $query->whereIn('desig', $categoryDesignations);
+            }
+        }
+        
+        if ($this->searchTerm) {
+            $searchTerm = trim($this->searchTerm);
+            if (!empty($searchTerm)) {
+                $query->where(function ($q) use ($searchTerm) {
+                    $q->where('name', 'like', "%{$searchTerm}%")
+                        ->orWhere('nickName', 'like', "%{$searchTerm}%")
+                        ->orWhere('mobno', 'like', "%{$searchTerm}%")
+                        ->orWhere('desig', 'like', "%{$searchTerm}%");
+                });
+            }
+        }
+        
+        $teachers = $query->orderBy('id')->paginate(10);
+
         return view('livewire.teacher-comp', [
-            'teachers' => $this->teachers ?? collect(),
+            'teachers' => $teachers,
             'subjects' => $this->subjects ?? collect()
         ]);
     }

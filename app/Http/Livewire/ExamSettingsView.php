@@ -9,18 +9,19 @@ use App\Models\Myclass;
 class ExamSettingsView extends Component
 {
     public $classes;
-    public $selectedClassId = null;
-    public $examConfigurations = [];
+    public $classConfigurations = [];
     
     public function mount()
     {
         $this->classes = Myclass::all();
+        $this->loadAllClassConfigurations();
     }
     
-    public function selectClass($classId)
+    protected function loadAllClassConfigurations()
     {
-        $this->selectedClassId = $classId;
-        $this->loadExamConfigurations($classId);
+        foreach ($this->classes as $class) {
+            $this->classConfigurations[$class->id] = $this->loadExamConfigurations($class->id);
+        }
     }
     
     protected function loadExamConfigurations($classId)
@@ -41,32 +42,34 @@ class ExamSettingsView extends Component
         ->get();
 
         // Organize data in matrix format: examName -> examType -> [parts with modes]
-        $this->examConfigurations = [];
+        $examConfigurations = [];
         
         foreach ($configurations as $config) {
             $examNameId = $config->exam_name_id;
             $examTypeId = $config->exam_type_id;
             
-            if (!isset($this->examConfigurations[$examNameId])) {
-                $this->examConfigurations[$examNameId] = [
+            if (!isset($examConfigurations[$examNameId])) {
+                $examConfigurations[$examNameId] = [
                     'examName' => $config->examName,
                     'types' => []
                 ];
             }
             
-            if (!isset($this->examConfigurations[$examNameId]['types'][$examTypeId])) {
-                $this->examConfigurations[$examNameId]['types'][$examTypeId] = [
+            if (!isset($examConfigurations[$examNameId]['types'][$examTypeId])) {
+                $examConfigurations[$examNameId]['types'][$examTypeId] = [
                     'examType' => $config->examType,
                     'parts' => []
                 ];
             }
             
-            $this->examConfigurations[$examNameId]['types'][$examTypeId]['parts'][] = [
+            $examConfigurations[$examNameId]['types'][$examTypeId]['parts'][] = [
                 'examPart' => $config->examPart,
                 'examMode' => $config->examMode,
                 'config' => $config
             ];
         }
+        
+        return $examConfigurations;
     }
     
     public function getAllExamTypes()

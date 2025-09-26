@@ -24,6 +24,10 @@ class MyclassSection extends Model
         // 'id' is the primary key in the 'myclasses' table
     }
 
-    
+    public function teacher(){
+        return $this->belongsTo(Teacher::class, 'teacher_id', 'id');
+        // 'teacher_id' is the foreign key in the 'myclass_sections' table
+        // 'id' is the primary key in the 'teachers' table
+    }
 
 }

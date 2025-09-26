@@ -25,6 +25,9 @@ class ExamPartComp extends Component
     public $confirmingDeletion = false;
     public $deletingId = null;
     public $search = '';
+    public $showFinalizeModal = false;
+    public $finalizingId = null;
+    public $isDataFinalized = false;
 
     protected $rules = [
         'name' => 'required|string|max:255',
@@ -47,6 +50,7 @@ class ExamPartComp extends Component
     public function mount()
     {
         $this->resetForm();
+        $this->checkGlobalFinalizationStatus();
     }
 
     public function updatingSearch()
@@ -81,6 +85,11 @@ class ExamPartComp extends Component
 
     public function save()
     {
+        if ($this->isDataFinalized) {
+            session()->flash('error', 'Cannot modify data - it has been finalized.');
+            return;
+        }
+
         $this->validate();
 
         $data = [
@@ -156,11 +165,56 @@ class ExamPartComp extends Component
 
     public function toggleStatus($id)
     {
+        if ($this->isDataFinalized) {
+            session()->flash('error', 'Cannot modify data - it has been finalized.');
+            return;
+        }
+
         $examPart = Exam03Part::findOrFail($id);
         $examPart->update(['is_active' => !$examPart->is_active]);
         
         $status = $examPart->is_active ? 'activated' : 'deactivated';
         session()->flash('message', "Exam part {$status} successfully!");
+    }
+
+    protected function checkGlobalFinalizationStatus()
+    {
+        $this->isDataFinalized = Exam03Part::where('is_finalized', true)->exists();
+    }
+
+    public function confirmFinalize($id)
+    {
+        $this->finalizingId = $id;
+        $this->showFinalizeModal = true;
+    }
+
+    public function finalizeData()
+    {
+        if ($this->finalizingId) {
+            $examPart = Exam03Part::findOrFail($this->finalizingId);
+            $examPart->update(['is_finalized' => true]);
+            
+            $this->checkGlobalFinalizationStatus();
+            session()->flash('message', 'Exam part finalized successfully! No further changes allowed.');
+        }
+        
+        $this->showFinalizeModal = false;
+        $this->finalizingId = null;
+    }
+
+    public function unfinalizeData($id)
+    {
+        $examPart = Exam03Part::findOrFail($id);
+        $examPart->update(['is_finalized' => false]);
+        
+        $this->checkGlobalFinalizationStatus();
+        session()->flash('message', 'Exam part unfinalized successfully! Changes are now allowed.');
+    }
+
+    public function cancelFinalize()
+    {
+        $this->showFinalizeModal = false;
+        $this->finalizingId = null;
     }
 
     public function render()
@@ -171,6 +225,7 @@ class ExamPartComp extends Component
                       ->orWhere('description', 'like', '%' . $this->search . '%')
                       ->orWhere('status', 'like', '%' . $this->search . '%');
             })
+            ->orderBy('id', 'asc')
             ->orderBy('order_index', 'asc')
             ->orderBy('name', 'asc')
             ->paginate(10);

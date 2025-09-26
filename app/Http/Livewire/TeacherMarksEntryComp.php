@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\Teacher;
 use App\Models\Exam07AnsscrDist;
 use App\Models\Exam06ClassSubject;
+use Illuminate\Support\Facades\Log;
 
 class TeacherMarksEntryComp extends Component{
 
@@ -49,8 +50,64 @@ class TeacherMarksEntryComp extends Component{
     public function render()
     {
         return view('livewire.teacher-marks-entry-comp',[
+            'distributions' => $this->distributions,
             'distByTeacher' => $this->distributionsByTeacher,
-
         ]);
+    }
+
+    public function finalizeMarks($examClassSubjectId)
+    {
+        try {
+            $examClassSubject = Exam06ClassSubject::find($examClassSubjectId);
+            
+            if (!$examClassSubject) {
+                throw new \Exception('Exam class subject not found');
+            }
+            
+            $examClassSubject->update(['is_finalized' => true]);
+            
+            // Refresh distributions to reflect the change
+            $this->refreshDistributions();
+            
+            session()->flash('message', 'Marks have been finalized successfully. No further edits are allowed.');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error finalizing marks: ' . $e->getMessage());
+            session()->flash('error', 'Error finalizing marks: ' . $e->getMessage());
+        }
+    }
+
+    public function unfinalizeMarks($examClassSubjectId)
+    {
+        try {
+            $examClassSubject = Exam06ClassSubject::find($examClassSubjectId);
+            
+            if (!$examClassSubject) {
+                throw new \Exception('Exam class subject not found');
+            }
+            
+            $examClassSubject->update(['is_finalized' => false]);
+            
+            // Refresh distributions to reflect the change
+            $this->refreshDistributions();
+            
+            session()->flash('message', 'Marks have been unfinalized successfully. You can now edit marks.');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error unfinalizing marks: ' . $e->getMessage());
+            session()->flash('error', 'Error unfinalizing marks: ' . $e->getMessage());
+        }
+    }
+
+    private function refreshDistributions()
+    {
+        // Reload distributions with updated finalization status
+        $this->distributions = Exam07AnsscrDist::with([
+            'examDetail.examName',
+            'examDetail.examType',
+            'examDetail.examMode',
+            'myclassSection.section',
+            'myclassSection.myclass',
+            'examClassSubject.subject',
+            'teacher',
+        ])->whereHas('examClassSubject')->get();
     }
 }
