@@ -70,4 +70,11 @@ class User extends Authenticatable //implements MustVerifyEmail
         // 'studentdb_id' is the foreign key of the User model
         // 'id' is the primary key of the Studentdb model
     }
+    
+    public function studentdbs()
+    {
+        return $this->hasMany(Studentdb::class, 'user_id', 'id');
+        // 'user_id' is the foreign key in the Studentdb model
+        // 'id' is the primary key of the User model
+    }
 }

@@ -20,9 +20,15 @@ class StudentProfileComponent extends Component
         $user = Auth::user();
         
         if ($user && $user->studentdb_id) {
-            $this->studentdb = Studentdb::with(['myclass', 'sections', 'studentcrs.myclass', 'studentcrs.section', 'studentcrs.session'])->find($user->studentdb_id);
+            // Load studentdb with relationships, handling potential issues
+            $this->studentdb = Studentdb::with([
+                'studentcrs.myclass', 
+                'studentcrs.section', 
+                'studentcrs.session'
+            ])->find($user->studentdb_id);
             
             if ($this->studentdb) {
+                // Get the most recent studentcr record
                 $this->studentcr = Studentcr::with(['myclass', 'section', 'session'])
                     ->where('studentdb_id', $this->studentdb->id)
                     ->latest('created_at')

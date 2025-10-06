@@ -21,7 +21,6 @@ Route::get('/clear', function(){
     Artisan::call('config:clear');
     Artisan::call('route:clear');
     Artisan::call('view:clear');
-    Artisan::call('optimize:clear');
     // php artisan config:clear
     // php artisan route:clear
     // php artisan view:clear
@@ -33,6 +32,35 @@ Route::get('/link', function(){
     Artisan::call('storage:link');
     return '<h1>Storage link created</h1>';
 });
+
+// Debug route to check user authentication status
+Route::get('/debug-user', function () {
+    if (Auth::check()) {
+        $user = Auth::user();
+        return response()->json([
+            'authenticated' => true,
+            'user_id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role_id' => $user->role_id,
+            'studentdb_id' => $user->studentdb_id,
+            'is_requested' => $user->is_requested,
+            'role_description' => $user->role->description ?? 'No role'
+        ]);
+    } else {
+        return response()->json(['authenticated' => false]);
+    }
+})->name('debug.user');
+
+// Test controller routes
+Route::get('/test-user-info', [App\Http\Controllers\TestController::class, 'userDashboard']);
+Route::get('/test-user-dashboard-view', [App\Http\Controllers\TestController::class, 'testUserDashboardView']);
+
+// Test simplified user dashboard view
+Route::get('/test-simple-user-dashboard', function () {
+    return view('test-user-dashboard');
+})->name('test.simple.user.dashboard');
+
 Route::controller(App\Http\Controllers\NoticeController::class)->group(
     function () {
         Route::get('notices', 'index'); // all notices, in a tabluler form, add new notice, open create
@@ -44,6 +72,11 @@ Route::controller(App\Http\Controllers\NoticeController::class)->group(
         Route::get('notices/{id}/delete', 'destroy'); // delete any existing notice, goto inexes
     }
 );
+
+// Test route to check if user-dashboard view loads
+Route::get('/test-user-dashboard', function () {
+    return view('user-dashboard');
+})->name('test.user.dashboard');
 
 // Route::get('/dashboard', [App\Http\Controllers\SuperAdminController::class, 'dashboard']);
 
@@ -98,6 +131,35 @@ Route::group(
         
         Route::get('/profile', \App\Http\Livewire\StudentProfileComponent::class)
             ->name('user.profile');
+            
+        Route::get('/test-profile', function () {
+            return view('test-student-profile');
+        })->name('user.test.profile');
+            
+        Route::post('/request-teacher', [
+            App\Http\Controllers\UserController::class,
+            'requestToBeTeacher',
+        ])->name('user.request.teacher');
+        
+        Route::post('/cancel-request-teacher', [
+            App\Http\Controllers\UserController::class,
+            'cancelTeacherRequest',
+        ])->name('user.cancel.request.teacher');
+        
+        Route::post('/verify-student', [
+            App\Http\Controllers\UserController::class,
+            'verifyStudent',
+        ])->name('user.verify.student');
+        
+        Route::post('/fetch-student-details', [
+            App\Http\Controllers\UserController::class,
+            'fetchStudentDetails',
+        ])->name('user.fetch.student.details');
+        
+        Route::post('/verify-student-dob', [
+            App\Http\Controllers\UserController::class,
+            'verifyStudentDob',
+        ])->name('user.verify.student.dob');
     }
 );
 
@@ -109,8 +171,8 @@ Route::get('/test-admin-dashboard', function () {
 
 // Route::resource('/teachers', [TeacherController::class, 'index']);
 // Route::resource('/teachers', TeacherController::class);
-Route::resource('/exam', ExamController::class);
-Route::resource('/students', StudentdbController::class);
+// Route::resource('/exam', ExamController::class);
+// Route::resource('/students', StudentdbController::class);
 
 
 Route::get('/dashboard', function () {
@@ -143,7 +205,7 @@ Route::get('/dashboard', function () {
     }
 
     if (Auth::user()) {
-        // Any other authenticated users
+        // Any other authenticated users (including those with role_id = 0)
         return redirect(route('userDash'));
     }
 

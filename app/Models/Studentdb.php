@@ -29,6 +29,13 @@ class Studentdb extends Model
         // 'stsection_id' is the foreign key in the 'studentdbs' table
         // 'id' is the primary key in the 'sections' table
     }
+    
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
+        // 'user_id' is the foreign key in the 'studentdbs' table
+        // 'id' is the primary key in the 'users' table
+    }
 
 
 }

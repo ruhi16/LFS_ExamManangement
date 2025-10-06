@@ -3,31 +3,33 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 bg-white border-b border-gray-200 flex flex-row items-center justify-between">
-                    <div>You're logged in! as <span class="text-blue-500 font-bold">{{ auth()->user()->name ?? 'Not Found' }}</span></div>
+                    <div>You're logged in! as <span class="text-blue-500 font-bold">{{ auth()->user()->name ?? 'Not
+                            Found' }}</span></div>
                     <div class="flex flex-row gap-4">
-                        @if(auth()->user()->role_id == 0 || auth()->user()->studentdb_id == 0)
+                        @if(auth()->user()->role_id == 0 && auth()->user()->studentdb_id == 0)
                         <div>
                             <button wire:click='openStudentModal'
-                                class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-                                Verify Student!!
+                                class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex items-center">
+                                <i class="fas fa-user-graduate mr-2"></i>Student Verification
                             </button>
                         </div>
                         @elseif(auth()->user()->role_id == 1)
-                        <div class="text-green-500 font-bold">
-                            Student Role Assigned
+                        <div class="text-green-600 font-bold flex items-center">
+                            <i class="fas fa-user-graduate mr-2"></i>Student Role Assigned
                         </div>
                         @endif
 
-                        @if(auth()->user()->studentdb->id == 0)   <!-- already a Student -->
+                        @if(auth()->user()->role_id == 0 && auth()->user()->studentdb_id == 0)
+                        <!-- Not yet a Student -->
                         <div>
-                            @if(auth()->user()->is_requested == 0 || auth()->user()->is_requested == Null)
+                            @if(auth()->user()->is_requested == 0 || auth()->user()->is_requested == null)
                             <button wire:click='requestToBeTeacher'
-                                class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
-                                Request to be a Teacher
+                                class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded flex items-center">
+                                <i class="fas fa-chalkboard-teacher mr-2"></i>Request to be a Teacher
                             </button>
                             @else
-                            <div class="text-red-500 font-bold">
-                                Request Pending!!!
+                            <div class="text-red-600 font-bold flex items-center">
+                                <i class="fas fa-clock mr-2"></i>Request Pending!!!
                             </div>
                             @endif
                         </div>
@@ -197,90 +199,64 @@
         </div>
         @endif
 
-        @if(auth()->user()->studentdb->id == 0)
-        <div class="bg-slate-400 max-w-7xl mx-auto m-4 shadow-2xl rounded">
-            <div class="">
-                <div class="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 lg:px-8">
-                    <div class="min-w-fit mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                        <div
-                            class="max-w-sm bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
-                            <a href="#">
-                                <img class="rounded-t-lg" src="/docs/images/blog/image-1.jpg" alt="" />
-                            </a>
-                            <div class="p-5">
-                                <a href="#">
-                                    <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-                                        Noteworthy technology acquisitions 2021</h5>
-                                </a>
-                                <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">Here are the biggest
-                                    enterprise technology acquisitions of 2021 so far, in reverse chronological order.
-                                </p>
-                                <a href="#"
-                                    class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-                                    Read more
-                                    <svg class="rtl:rotate-180 w-3.5 h-3.5 ms-2" aria-hidden="true"
-                                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
-                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                            stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9" />
-                                    </svg>
-                                </a>
-                            </div>
+        @if(auth()->user()->role_id == 0 && auth()->user()->studentdb_id == 0)
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mt-8 max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <h3 class="text-lg font-semibold text-yellow-800">Account Verification Required</h3>
+                    <p class="text-yellow-600">Please verify your identity to access all features</p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button wire:click='openStudentModal'
+                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors flex items-center justify-center">
+                        <i class="fas fa-user-graduate mr-2"></i>Student Verification
+                    </button>
+                    @if(auth()->user()->is_requested == 0 || auth()->user()->is_requested == null)
+                    <button wire:click='requestToBeTeacher'
+                        class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md font-medium transition-colors flex items-center justify-center">
+                        <i class="fas fa-chalkboard-teacher mr-2"></i>Request to be a Teacher
+                    </button>
+                    @else
+                    <div
+                        class="px-4 py-2 bg-red-100 text-red-800 rounded-md font-medium flex items-center justify-center">
+                        <i class="fas fa-clock mr-2"></i>Teacher Request Pending
+                    </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+        @endif
+
+        <!-- Student Profile Display -->
+        @if(auth()->user()->role_id == 1 && auth()->user()->studentdb)
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mt-8">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 bg-white border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Student Profile</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <p class="text-gray-600">Name: <span class="font-medium">{{ auth()->user()->name }}</span>
+                            </p>
+                            <p class="text-gray-600">Email: <span class="font-medium">{{ auth()->user()->email }}</span>
+                            </p>
+                            <p class="text-gray-600">Class: <span class="font-medium">{{
+                                    auth()->user()->studentdb->myclass->name ?? 'N/A' }}</span></p>
+                            <p class="text-gray-600">Section: <span class="font-medium">{{
+                                    auth()->user()->studentdb->sections->name ?? 'N/A' }}</span></p>
                         </div>
-                        <!-- ... -->
-                        <div
-                            class="max-w-sm bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
-                            <a href="#">
-                                <img class="rounded-t-lg" src="/docs/images/blog/image-1.jpg" alt="" />
-                            </a>
-                            <div class="p-5">
-                                <a href="#">
-                                    <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-                                        Noteworthy technology acquisitions 2021</h5>
-                                </a>
-                                <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">Here are the biggest
-                                    enterprise technology acquisitions of 2021 so far, in reverse chronological order.
-                                </p>
-                                <a href="#"
-                                    class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-                                    Read more
-                                    <svg class="rtl:rotate-180 w-3.5 h-3.5 ms-2" aria-hidden="true"
-                                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
-                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                            stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9" />
-                                    </svg>
-                                </a>
-                            </div>
+                        <div>
+                            <p class="text-gray-600">Roll Number: <span class="font-medium">{{
+                                    auth()->user()->studentdb->studentcrs->first()->roll_no ?? 'N/A' }}</span></p>
+                            <p class="text-gray-600">Date of Birth: <span class="font-medium">{{
+                                    auth()->user()->studentdb->dob ?? 'N/A' }}</span></p>
+                            <p class="text-gray-600">Student ID: <span class="font-medium">{{
+                                    auth()->user()->studentdb->id }}</span></p>
                         </div>
-                        <!-- ... -->
-                        <div
-                            class="max-w-sm bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
-                            <a href="#">
-                                <img class="rounded-t-lg" src="/docs/images/blog/image-1.jpg" alt="" />
-                            </a>
-                            <div class="p-5">
-                                <a href="#">
-                                    <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-                                        Noteworthy technology acquisitions 2021</h5>
-                                </a>
-                                <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">Here are the biggest
-                                    enterprise technology acquisitions of 2021 so far, in reverse chronological order.
-                                </p>
-                                <a href="#"
-                                    class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-                                    Read more
-                                    <svg class="rtl:rotate-180 w-3.5 h-3.5 ms-2" aria-hidden="true"
-                                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
-                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                            stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9" />
-                                    </svg>
-                                </a>
-                            </div>
-                        </div>
-                        <!-- ... -->
                     </div>
                 </div>
             </div>
         </div>
         @endif
+
     </div>
 </div>

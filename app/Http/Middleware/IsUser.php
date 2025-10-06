@@ -17,7 +17,8 @@ class IsUser
      */
     public function handle(Request $request, Closure $next)
     {
-        if (Auth::check() && Auth::user()->role_id == 1) {
+        // Allow both verified users (role_id = 1) and unverified users (role_id = 0) to access user dashboard
+        if (Auth::check() && (Auth::user()->role_id == 1 || Auth::user()->role_id == 0)) {
             return $next($request);
         }
         

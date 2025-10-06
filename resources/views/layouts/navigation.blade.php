@@ -25,7 +25,7 @@
                         @endif
                     </x-nav-link>
                 </div>
-                
+
             </div>
 
 
@@ -52,7 +52,14 @@
             @endif --}}
             <!-- Special Menu, center at navbar -->
 
-
+            <!-- Profile Link for Students -->
+            @if(Auth::user() && Auth::user()->role_id == 1 && Auth::user()->studentdb_id)
+            <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                <x-nav-link :href="route('user.profile')" :active="request()->routeIs('user.profile')">
+                    {{ __('My Profile') }}
+                </x-nav-link>
+            </div>
+            @endif
 
             <!-- Settings Dropdown -->
             <div class="hidden sm:flex sm:items-center sm:ml-6">
@@ -129,6 +136,15 @@
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
         </div>
+
+        <!-- Profile Link for Students (Responsive) -->
+        @if(Auth::user() && Auth::user()->role_id == 1 && Auth::user()->studentdb_id)
+        <div class="pt-2 pb-3 space-y-1">
+            <x-responsive-nav-link :href="route('user.profile')" :active="request()->routeIs('user.profile')">
+                {{ __('My Profile') }}
+            </x-responsive-nav-link>
+        </div>
+        @endif
 
         <!-- Responsive Settings Options -->
         <div class="pt-4 pb-1 border-t border-gray-200">

@@ -159,10 +159,179 @@
                 <div class="max-w-8xl mx-auto">
                     <!-- Dashboard -->
                     @if($activeMenu === 'dashboard')
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <h2 class="text-xl font-semibold text-gray-800 mb-4">Dashboard Overview</h2>
-                        <p class="text-gray-600">Welcome to the Exam Management System dashboard. Select a menu item
-                            from the sidebar to navigate to different sections.</p>
+                    <div class="space-y-6">
+                        <!-- Institution Overview -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <!-- Total Students -->
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                                <div class="flex items-center">
+                                    <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="text-sm font-medium text-gray-500">Total Students</h3>
+                                        <p class="text-2xl font-semibold text-gray-900">{{
+                                            $student_stats['total_students'] ?? 0 }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Active Classes -->
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                                <div class="flex items-center">
+                                    <div class="p-3 rounded-full bg-green-100 text-green-600">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="text-sm font-medium text-gray-500">Classes</h3>
+                                        <p class="text-2xl font-semibold text-gray-900">{{
+                                            $academic_stats['total_classes'] ?? 0 }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Active Exams -->
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                                <div class="flex items-center">
+                                    <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="text-sm font-medium text-gray-500">Active Exams</h3>
+                                        <p class="text-2xl font-semibold text-gray-900">{{ $exam_stats['active_exams']
+                                            ?? 0 }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Teachers -->
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                                <div class="flex items-center">
+                                    <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="text-sm font-medium text-gray-500">Teachers</h3>
+                                        <p class="text-2xl font-semibold text-gray-900">{{
+                                            $system_stats['total_teachers'] ?? 0 }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Institution and Academic Stats -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Student Statistics -->
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-4">Student Statistics</h3>
+                                <div class="space-y-4">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Active Students</span>
+                                        <span class="font-medium">{{ $student_stats['active_students'] ?? 0 }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Students with Photos</span>
+                                        <span class="font-medium">{{ $student_stats['students_with_photos'] ?? 0
+                                            }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Recent Admissions (30 days)</span>
+                                        <span class="font-medium">{{ $student_stats['recent_admissions'] ?? 0 }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Academic Statistics -->
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-4">Academic Statistics</h3>
+                                <div class="space-y-4">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Total Sections</span>
+                                        <span class="font-medium">{{ $academic_stats['total_sections'] ?? 0 }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Total Subjects</span>
+                                        <span class="font-medium">{{ $academic_stats['total_subjects'] ?? 0 }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Class-Subject Assignments</span>
+                                        <span class="font-medium">{{ $academic_stats['class_subjects'] ?? 0 }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Examination Overview -->
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Examination Overview</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div class="text-center p-4 bg-gray-50 rounded-lg">
+                                    <p class="text-2xl font-bold text-blue-600">{{ $exam_stats['exam_names'] ?? 0 }}</p>
+                                    <p class="text-sm text-gray-600">Exam Names</p>
+                                </div>
+                                <div class="text-center p-4 bg-gray-50 rounded-lg">
+                                    <p class="text-2xl font-bold text-green-600">{{ $exam_stats['exam_types'] ?? 0 }}
+                                    </p>
+                                    <p class="text-sm text-gray-600">Exam Types</p>
+                                </div>
+                                <div class="text-center p-4 bg-gray-50 rounded-lg">
+                                    <p class="text-2xl font-bold text-yellow-600">{{ $exam_stats['exam_parts'] ?? 0 }}
+                                    </p>
+                                    <p class="text-sm text-gray-600">Exam Parts</p>
+                                </div>
+                                <div class="text-center p-4 bg-gray-50 rounded-lg">
+                                    <p class="text-2xl font-bold text-purple-600">{{ $exam_stats['exam_modes'] ?? 0 }}
+                                    </p>
+                                    <p class="text-sm text-gray-600">Exam Modes</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity -->
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+                            <div class="space-y-4">
+                                @if(isset($recent_activity['recent_students']) &&
+                                count($recent_activity['recent_students']) > 0)
+                                <div>
+                                    <h4 class="font-medium text-gray-700 mb-2">Recently Added Students</h4>
+                                    <div class="space-y-2">
+                                        @foreach($recent_activity['recent_students']->take(3) as $student)
+                                        <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
+                                            <div class="flex items-center">
+                                                <div
+                                                    class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                                    <span class="text-xs font-medium text-blue-800">{{
+                                                        substr($student->name, 0, 1) }}</span>
+                                                </div>
+                                                <div class="ml-3">
+                                                    <p class="text-sm font-medium text-gray-900">{{ $student->name }}
+                                                    </p>
+                                                    <p class="text-xs text-gray-500">{{ $student->myclass->name ?? 'N/A'
+                                                        }} - {{ $student->sections->first()->name ?? 'N/A' }}</p>
+                                                </div>
+                                            </div>
+                                            <span class="text-xs text-gray-500">{{ $student->created_at->diffForHumans()
+                                                }}</span>
+                                        </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
                     </div>
                     @endif
 
@@ -400,8 +569,8 @@
         }, 3000);
 
         // Auto-refresh data every 30 seconds
-        setInterval(function () {
-            @this.call('refreshData');
-        }, 30000);
+        // setInterval(function () {
+        //     @this.call('refreshData');
+        // }, 30000);
     </script>
 </div>

@@ -16,7 +16,8 @@ class UserAuthentication
      */
     public function handle(Request $request, Closure $next)
     {
-        if(auth()->user() && auth()->user()->role_id == 1 ){
+        // Allow both verified users (role_id = 1) and unverified users (role_id = 0) to access user areas
+        if(auth()->user() && (auth()->user()->role_id == 1 || auth()->user()->role_id == 0)) {
             return $next($request);
         }
 

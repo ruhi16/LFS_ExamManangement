@@ -64,6 +64,9 @@ class UserAccountComponent extends Component
         $user = User::find($this->user->id);
         $user->is_requested = true;
         $user->save();
+        
+        // Refresh the user data
+        $this->user = $user;
     }
 
     public function openStudentModal()
@@ -85,6 +88,7 @@ class UserAccountComponent extends Component
         $this->studentRoll = '';
         $this->studentDob = '';
         $this->selectedStudent = '';
+        $this->resetValidation();
     }
 
     public function verifyStudent()
