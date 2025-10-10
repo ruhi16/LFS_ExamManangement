@@ -26,7 +26,7 @@ class StudentProgressReportComp extends Component
     
     public function mount()
     {
-        $this->classes = Myclass::where('is_active', true)->orderBy('order')->get();
+        $this->classes = Myclass::where('is_active', true)->orderBy('id')->get();
         if ($this->classes instanceof Collection && $this->classes->isNotEmpty()) {
             $this->selectedClassId = $this->classes->first()->id;
             $this->loadSections();
@@ -71,7 +71,8 @@ class StudentProgressReportComp extends Component
     public function loadStudents()
     {
         $query = Studentcr::with(['studentdb', 'myclass', 'section'])
-            ->where('is_active', true);
+            // ->where('is_active', true)
+            ;
             
         if ($this->selectedClassId) {
             $query->where('myclass_id', $this->selectedClassId);
@@ -81,7 +82,7 @@ class StudentProgressReportComp extends Component
             $query->where('section_id', $this->selectedSectionId);
         }
         
-        $this->students = $query->orderBy('roll_number')->get();
+        $this->students = $query->orderBy('roll_no')->get();
     }
     
     public function loadProgressData()
@@ -100,7 +101,7 @@ class StudentProgressReportComp extends Component
         
         // Get all exam names
         $examNames = Exam01Name::where('is_active', true)
-            ->orderBy('name')
+            ->orderBy('id')
             ->get();
             
         // Get exam types (summative and formative)
