@@ -6,6 +6,9 @@ use Livewire\Component;
 use App\Models\Teacher;
 use App\Models\Exam07AnsscrDist;
 use App\Models\Exam06ClassSubject;
+use App\Models\Exam10MarksEntry;
+use App\Models\Studentcr;
+use App\Models\MyclassSection;
 use Illuminate\Support\Facades\Log;
 
 class TeacherMarksEntryComp extends Component{
@@ -14,6 +17,7 @@ class TeacherMarksEntryComp extends Component{
     public $distributions;
     public $distributionsByTeacher;
     public $subjectMap; // exam_class_subject_id => Exam06ClassSubject (with subject)
+    public $marksProgress = []; // To store marks entry progress statistics
 
     public function mount(){
 
@@ -31,10 +35,6 @@ class TeacherMarksEntryComp extends Component{
             'teacher',
         ])->whereHas('examClassSubject')->get(); // Only get distributions where examClassSubject exists
 
-        // Group by teacher for quick access in the view
-        // $this->distributionsByTeacher = $this->distributions->groupBy('teacher_id');
-        // dd($this->distributionsByTeacher);
-
         // Build subject map for resolving subject names quickly
         $examClassSubjectIds = $this->distributions
             ->pluck('exam_class_subject_id')
@@ -45,6 +45,9 @@ class TeacherMarksEntryComp extends Component{
             ->with('subject')
             ->get()
             ->keyBy('id');
+            
+        // Calculate marks entry progress for each distribution
+        $this->calculateMarksProgress();
     }
 
     public function render()
@@ -52,6 +55,7 @@ class TeacherMarksEntryComp extends Component{
         return view('livewire.teacher-marks-entry-comp',[
             'distributions' => $this->distributions,
             'distByTeacher' => $this->distributionsByTeacher,
+            'marksProgress' => $this->marksProgress,
         ]);
     }
 
@@ -109,5 +113,51 @@ class TeacherMarksEntryComp extends Component{
             'examClassSubject.subject',
             'teacher',
         ])->whereHas('examClassSubject')->get();
+        
+        // Recalculate marks progress
+        $this->calculateMarksProgress();
+    }
+    
+    private function calculateMarksProgress()
+    {
+        $this->marksProgress = [];
+        
+        foreach ($this->distributions as $distribution) {
+            // Skip if required relations are missing
+            if (!$distribution->examClassSubject || !$distribution->myclassSection) {
+                continue;
+            }
+            
+            $examClassSubjectId = $distribution->examClassSubject->id;
+            $myclassSectionId = $distribution->myclassSection->id;
+            $examDetailId = $distribution->exam_detail_id;
+            
+            // Get the class and section IDs from the myclassSection
+            $myclassId = $distribution->myclassSection->myclass_id;
+            $sectionId = $distribution->myclassSection->section_id;
+            
+            // Count total students in this class-section with active status
+            $totalStudents = Studentcr::where('myclass_id', $myclassId)
+                ->where('section_id', $sectionId)
+                ->where('crstatus', 'active')
+                ->count();
+                
+            // Count entered marks for this combination
+            $enteredMarks = Exam10MarksEntry::where('exam_class_subject_id', $examClassSubjectId)
+                ->where('myclass_section_id', $myclassSectionId)
+                ->where('exam_detail_id', $examDetailId)
+                ->where(function($query) {
+                    $query->whereNotNull('exam_marks')
+                          ->orWhere('is_absent', 1);
+                })
+                ->count();
+                
+            // Store progress data
+            $this->marksProgress[$examClassSubjectId] = [
+                'total' => $totalStudents,
+                'entered' => $enteredMarks,
+                'percentage' => $totalStudents > 0 ? round(($enteredMarks / $totalStudents) * 100, 1) : 0
+            ];
+        }
     }
 }
