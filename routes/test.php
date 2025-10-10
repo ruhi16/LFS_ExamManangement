@@ -5,6 +5,7 @@ use App\Http\Livewire\TeacherMarksEntryComp;
 use App\Http\Livewire\StudentProfileComponent;
 use App\Http\Livewire\SimpleStudentProfileComponent;
 use App\Http\Livewire\DebugStudentProfileComponent;
+use App\Http\Livewire\StudentProgressReportComp;
 
 // ================================
 // INDEX & DASHBOARD ROUTES
@@ -123,6 +124,10 @@ Route::get('/simple-student-profile', SimpleStudentProfileComponent::class)
 // Test route for Debug Student Profile component
 Route::get('/debug-student-profile', DebugStudentProfileComponent::class)
     ->name('debug.student.profile');
+
+// Test route for Student Progress Report component
+Route::get('/test-student-progress-report', StudentProgressReportComp::class)
+    ->name('test.student.progress.report');
 
 // ================================
 // EXAM CONFIGURATION ROUTES

@@ -267,6 +267,19 @@
                         </a>
                     </div>
                 </div>
+
+                <!-- Student Progress Report -->
+                <div class="test-card bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-chart-line text-indigo-500 text-2xl mr-3"></i>
+                        <h3 class="text-lg font-semibold">Progress Report</h3>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-4">View student progress reports</p>
+                    <a href="{{ route('test.student.progress.report') }}"
+                        class="inline-flex items-center px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-colors">
+                        <i class="fas fa-play mr-2"></i>Test Component
+                    </a>
+                </div>
             </div>
         </div>
 
