@@ -31,16 +31,16 @@ class ExamSettingTestSeeder extends Seeder
         ]);
 
         // Create Subject Types
-        $coreSubjects = SubjectType::firstOrCreate([
-            'name' => 'Core Subjects',
-            'description' => 'Core mandatory subjects',
+        $writtenType = SubjectType::firstOrCreate([
+            'name' => 'Written',
+            'description' => 'Written subjects',
             'order_index' => 1,
             'is_active' => true
         ]);
 
-        $optionalSubjects = SubjectType::firstOrCreate([
-            'name' => 'Optional Subjects',
-            'description' => 'Optional elective subjects',
+        $practicalType = SubjectType::firstOrCreate([
+            'name' => 'Practical',
+            'description' => 'Practical subjects',
             'order_index' => 2,
             'is_active' => true
         ]);
@@ -49,28 +49,28 @@ class ExamSettingTestSeeder extends Seeder
         $english = Subject::firstOrCreate([
             'name' => 'English',
             'code' => 'ENG',
-            'subject_type_id' => $coreSubjects->id,
+            'subject_type_id' => $writtenType->id,
             'is_active' => true
         ]);
 
         $math = Subject::firstOrCreate([
             'name' => 'Mathematics',
             'code' => 'MATH',
-            'subject_type_id' => $coreSubjects->id,
+            'subject_type_id' => $writtenType->id,
             'is_active' => true
         ]);
 
         $science = Subject::firstOrCreate([
             'name' => 'Science',
             'code' => 'SCI',
-            'subject_type_id' => $coreSubjects->id,
+            'subject_type_id' => $practicalType->id,
             'is_active' => true
         ]);
 
         $music = Subject::firstOrCreate([
             'name' => 'Music',
             'code' => 'MUS',
-            'subject_type_id' => $optionalSubjects->id,
+            'subject_type_id' => $practicalType->id,
             'is_active' => true
         ]);
 

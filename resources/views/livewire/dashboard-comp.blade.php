@@ -470,6 +470,11 @@
                     @livewire('teacher-marks-entry-comp')
                     @endif
 
+                    <!-- Marks Entry -->
+                    @if($activeMenu === 'progress-report')
+                    @livewire('student-progress-report-comp')
+                    @endif
+
                     <!-- System Logs -->
                     @if($activeMenu === 'logs-viewer')
                     @livewire('logs-viewer-comp')
@@ -513,7 +518,7 @@
                     'subject-types', 'subjects', 'MyClass', 'myclass-subjects', 'student-database', 'sessions',
                     'teachers', 'subject-teachers', 'exam-settings', 'exam-settings-view', 'exam-settings-fmpm',
                     'exam-names', 'exam-types', 'exam-parts', 'exam-modes', 'student-cr', 'answer-script-distribution',
-                    'answer-script-distribution2', 'marks-entry', 'logs-viewer', 'class-exam-subject', 'mark-register',
+                    'answer-script-distribution2', 'marks-entry', 'progress-report', 'logs-viewer', 'class-exam-subject', 'mark-register',
                     'user-roles', 'analytics',
                     'exam-config', 'exam-settings-fmpm2', 'class-section-tasks', 'teacher-entry']))
                     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
