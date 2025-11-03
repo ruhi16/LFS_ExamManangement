@@ -320,7 +320,7 @@
                                                     <p class="text-sm font-medium text-gray-900">{{ $student->name }}
                                                     </p>
                                                     <p class="text-xs text-gray-500">{{ $student->myclass->name ?? 'N/A'
-                                                        }} - {{ $student->sections->first()->name ?? 'N/A' }}</p>
+                                                        }} - {{ $student->sections ? $student->sections->first()->name : 'N/A' }}</p>
                                                 </div>
                                             </div>
                                             <span class="text-xs text-gray-500">{{ $student->created_at->diffForHumans()

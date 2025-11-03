@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Livewire\Contact;
 use App\Http\Livewire\Home;
 use App\Http\Livewire\About;
+use App\Http\Livewire\AdminStudentIdCardComp;
 use App\Http\Livewire\SubadminMarksEntryComponent;
 use App\Http\Livewire\SubadminMarksEntryEntityComponent;
 use Illuminate\Support\Facades\Artisan;
@@ -95,6 +96,9 @@ Route::group(
     function () {
         Route::get('/dashboard', [App\Http\Controllers\AdminController::class, 'dashboard'])
             ->name('adminDash');
+        
+        Route::get('studentcr/records/{uuid}/idcard', [AdminStudentIdCardComp::class, 'getIdcard'])
+            ->name('admin.student-idcard-comp');
     }
 );
 

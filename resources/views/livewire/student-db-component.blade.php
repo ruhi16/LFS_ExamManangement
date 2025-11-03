@@ -262,7 +262,7 @@
 
                         <!-- Actions -->
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div class="flex space-x-2">
+                            <div class="grid grid-cols-2 gap-2">
                                 <button wire:click="edit({{ $student->id }})"
                                     class="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors">
                                     <i class="fas fa-edit mr-1"></i>Edit
@@ -272,6 +272,10 @@
                                     class="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors">
                                     <i class="fas fa-trash mr-1"></i>Delete
                                 </button>
+                                <a href="{{ route('admin.student-idcard-comp', [ 'uuid' => $student->id ]) }}" target="_blank"
+                                class="px-3 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700 transition-colors">
+                                    <i class="fas fa-bug mr-1"></i>Id Card
+                                </a>
                                 @if($student->img_ref_profile)
                                 <button wire:click="testImagePath({{ $student->id }})"
                                     class="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors">
