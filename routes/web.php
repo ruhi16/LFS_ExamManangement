@@ -16,6 +16,9 @@ use Illuminate\Support\Facades\Artisan;
 
 // use App\Http\Livewire\Admin;
 // use App\View\Components\AdminDashboard;
+use Mpdf\Facades\MpdfFacade;
+use Mpdf\Laravel\PdfFacade;
+use Mpdf\PDF\PDF;
 
 Route::get('/clear', function(){
     Artisan::call('cache:clear');
@@ -32,6 +35,20 @@ Route::get('/clear', function(){
 Route::get('/link', function(){
     Artisan::call('storage:link');
     return '<h1>Storage link created</h1>';
+});
+
+Route::get('pdf', function () {
+    $mpdf = new \Mpdf\Mpdf([
+        'default_font_size' => 12,
+        'default_font' => 'nikosh',
+    ]);
+
+    $mpdf->WriteHTML('<h1>Hello World হ্যালো টেস্ট </h1>');
+    // $mpdf->Output('document.pdf', 'D');
+    $mpdf->Output();
+
+    // $pdf = MpdfFacade::loadView('pdf')->output();
+    // return $pdf->stream('document.pdf', ['Attachment' => false]);
 });
 
 // Debug route to check user authentication status
